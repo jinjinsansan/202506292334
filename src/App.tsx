@@ -52,6 +52,13 @@ function App() {
   // 自動同期フックを初期化（グローバルに公開）
   const autoSync = useAutoSync();
   
+  // グローバルに公開（コンポーネントからアクセスできるように）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.autoSync = autoSync;
+    }
+  }, [autoSync]);
+  
   // グローバルに公開は上記のuseEffectで実装済み
   // グローバルに公開（コンポーネントからアクセスできるように）
   useEffect(() => {

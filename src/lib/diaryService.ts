@@ -7,10 +7,10 @@ export const bulkDeleteDiaries = async (diaryIds: string[]): Promise<{
   error?: string;
   deletedCount: number;
 }> => {
-  if (!supabase) {
+  if (!diaryIds || diaryIds.length === 0) {
     return { 
       success: false, 
-      error: 'Supabase接続なし', 
+      error: '削除する日記が選択されていません', 
       deletedCount: 0 
     };
   }
@@ -30,20 +30,22 @@ export const bulkDeleteDiaries = async (diaryIds: string[]): Promise<{
     // Supabaseからの削除
     let supabaseDeletedCount = 0;
     
-    for (const diaryId of diaryIds) {
-      try {
-        const { error } = await supabase
-          .from('diary_entries')
-          .delete()
-          .eq('id', diaryId);
-        
-        if (!error) {
-          supabaseDeletedCount++;
-        } else {
-          console.error(`日記ID ${diaryId} の削除エラー:`, error);
+    if (supabase) {
+      for (const diaryId of diaryIds) {
+        try {
+          const { error } = await supabase
+            .from('diary_entries')
+            .delete()
+            .eq('id', diaryId);
+          
+          if (!error) {
+            supabaseDeletedCount++;
+          } else {
+            console.error(`日記ID ${diaryId} の削除エラー:`, error);
+          }
+        } catch (err) {
+          console.error(`日記ID ${diaryId} の削除中にエラー:`, err);
         }
-      } catch (err) {
-        console.error(`日記ID ${diaryId} の削除中にエラー:`, err);
       }
     }
 
