@@ -262,7 +262,14 @@ export const isAuthenticated = (): boolean => {
 // 現在のユーザーの取得
 export const getCurrentUser = (): { lineUsername: string } | null => {
   const session = getAuthSession();
-  if (!session) return null;
+  if (!session) {
+    // セッションがない場合はローカルストレージから取得
+    const lineUsername = localStorage.getItem('line-username');
+    if (lineUsername) {
+      return { lineUsername };
+    }
+    return null;
+  }
   
   return { lineUsername: session.lineUsername };
 };

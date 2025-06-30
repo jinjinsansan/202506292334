@@ -53,20 +53,27 @@ export const useAutoSync = (): AutoSyncState => {
   const initializeUser = useCallback(async () => {
     if (!supabase) {
       console.log('ローカルモードで動作中: Supabase接続なし');
+      // ローカルモードでも、ユーザー名が設定されていれば現在のユーザーとして扱う
+      const lineUsername = localStorage.getItem('line-username');
+      if (lineUsername) {
+        setCurrentUser({ id: 'local-user', line_username: lineUsername });
+      }
       return;
     }
     
     try {
       // 現在のユーザーを取得
       const user = getCurrentUser();
-      if (!user || !user.lineUsername) {
-        console.error('ユーザーがログインしていないか、ユーザー名がありません');
-        setError('ユーザー情報が不足しています');
+      // ユーザー情報がない場合はローカルストレージから取得
+      const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
+      
+      if (!lineUsername) {
+        console.log('ユーザー名が設定されていません。ローカルストレージを確認してください。');
         return;
       }
       
       // Supabaseでユーザーを作成または取得
-      const supabaseUser = await userService.createOrGetUser(user.lineUsername);
+      const supabaseUser = await userService.createOrGetUser(lineUsername);
       if (supabaseUser) {
         setCurrentUser(supabaseUser);
         console.log('ユーザー初期化完了:', supabaseUser.line_username);
@@ -95,8 +102,12 @@ export const useAutoSync = (): AutoSyncState => {
     try {
       // 現在のユーザーを取得
       const user = getCurrentUser();
-      if (!user || !user.lineUsername) {
-        console.log('ユーザーがログインしていないか、ユーザー名がありません');
+      // ユーザー情報がない場合はローカルストレージから取得
+      const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
+      
+      if (!lineUsername) {
+        console.log('ユーザー名が設定されていません。同期をスキップします。');
+        setError('ユーザー名が設定されていません');
         return false;
       }
       
@@ -104,8 +115,8 @@ export const useAutoSync = (): AutoSyncState => {
       let userId = currentUser?.id;
       
       // ユーザーIDがない場合は初期化
-      if (!userId && user.lineUsername) {
-        const supabaseUser = await userService.createOrGetUser(user.lineUsername);
+      if (!userId) {
+        const supabaseUser = await userService.createOrGetUser(lineUsername);
         if (!supabaseUser || !supabaseUser.id) {
           console.error('ユーザーの作成に失敗しました');
           setError('ユーザーの作成に失敗しました');

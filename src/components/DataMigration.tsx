@@ -53,8 +53,11 @@ const DataMigration: React.FC = () => {
     try {
       // 現在のユーザーを取得
       const user = getCurrentUser();
-      if (!user || !user.lineUsername) {
-        throw new Error('ユーザーがログインしていないか、ユーザー名がありません');
+      // ユーザー情報がない場合はローカルストレージから取得
+      const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
+      
+      if (!lineUsername) {
+        throw new Error('ユーザー名が設定されていません。ユーザー名を設定してください。');
       }
       
       setMigrationStatus('ユーザー情報を確認中...');
@@ -65,8 +68,8 @@ const DataMigration: React.FC = () => {
       
       // ユーザーIDがない場合は初期化
       if (!userId) {
-        setMigrationStatus('ユーザーを作成中...');
-        const supabaseUser = await userService.createOrGetUser(user.lineUsername);
+        setMigrationStatus(`ユーザー「${lineUsername}」を作成中...`);
+        const supabaseUser = await userService.createOrGetUser(lineUsername);
         if (!supabaseUser || !supabaseUser.id) {
           throw new Error('ユーザーの作成に失敗しました');
         }
@@ -135,9 +138,8 @@ const DataMigration: React.FC = () => {
         // 通常モードの場合は現在のユーザーのデータ数を取得
         const localEntries = localStorage.getItem('journalEntries');
         if (localEntries) {
-          let entries;
           try {
-            entries = JSON.parse(localEntries);
+            const entries = JSON.parse(localEntries);
             setLocalDataCount(Array.isArray(entries) ? entries.length : 0);
           } catch (error) {
             console.error('ローカルデータの解析エラー:', error);
