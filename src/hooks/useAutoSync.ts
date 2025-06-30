@@ -59,8 +59,10 @@ export const useAutoSync = (): AutoSyncState => {
     try {
       // 現在のユーザーを取得
       const user = getCurrentUser();
-      if (!user) {
-        console.log('ユーザーがログインしていません');
+      if (!user || !user.lineUsername) {
+        console.error('ユーザーがログインしていないか、ユーザー名がありません');
+        setError('ユーザー情報が不足しています');
+        return false;
         return;
       }
       
@@ -103,10 +105,12 @@ export const useAutoSync = (): AutoSyncState => {
       let userId = currentUser?.id;
       
       // ユーザーIDがない場合は初期化
-      if (!userId) {
+      if (!userId && user.lineUsername) {
         const supabaseUser = await userService.createOrGetUser(user.lineUsername);
         if (!supabaseUser || !supabaseUser.id) {
           console.error('ユーザーの作成に失敗しました');
+          setError('ユーザーの作成に失敗しました');
+          return false;
           return false;
         }
         
@@ -133,6 +137,23 @@ export const useAutoSync = (): AutoSyncState => {
         return true;
       }
       
+      let entries;
+      try {
+        entries = JSON.parse(savedEntries);
+      } catch (parseError) {
+        console.error('日記データの解析エラー:', parseError);
+        setError('日記データの解析に失敗しました');
+        return false;
+      }
+      
+      // 空の配列の場合は同期をスキップ
+      if (!entries || entries.length === 0) {
+        console.log('同期する日記データがありません（空の配列）');
+        setLastSyncTime(new Date().toISOString());
+        localStorage.setItem('last_sync_time', new Date().toISOString());
+        return true;
+      }
+      
       console.log('同期する日記データ:', entries.length, '件');
       
       // 日記データを同期
@@ -149,9 +170,9 @@ export const useAutoSync = (): AutoSyncState => {
 
       console.log('データ同期完了:', entries.length, '件', '時刻:', now);
       return true;
-    } catch (error) {
-      console.error('データ同期エラー:', error);
-      setError(error instanceof Error ? error.message : '不明なエラー');
+    } catch (err) {
+      console.error('データ同期エラー:', err);
+      setError(err instanceof Error ? err.message : '不明なエラー');
       return false;
     } finally {
       setIsSyncing(false);
