@@ -148,7 +148,7 @@ export const diaryService = {
       // 日記データの整形
       const formattedDiaries = diaries
         .filter(diary => diary && diary.id && diary.date && diary.emotion) // 無効なデータをフィルタリング
-        .map((diary, i) => {
+        .map((diary) => {
           // UUIDの形式を検証し、無効な場合は新しいUUIDを生成（より堅牢な方法）
           let diaryId = diary.id;
           if (!uuidRegex.test(diaryId)) {
@@ -171,11 +171,8 @@ export const diaryService = {
             }
           }
           
-          const formattedEntry = {
-          id: diaryId,
-          user_id: userId,
-          date: diary.date || new Date().toISOString().split('T')[0],
-          emotion: diary.emotion || '無価値感',
+          // 必須フィールドを含むエントリーを作成
+          const formattedEntry: any = {
             id: diaryId,
             user_id: userId,
             date: diary.date || new Date().toISOString().split('T')[0],
@@ -190,57 +187,87 @@ export const diaryService = {
                                 (typeof diary.worthlessnessScore === 'string' ? parseInt(diary.worthlessnessScore) : 
                                  (typeof diary.worthlessness_score === 'number' ? diary.worthlessness_score : 
                                   (typeof diary.worthlessness_score === 'string' ? parseInt(diary.worthlessness_score) : 50))),
+            event: diary.event || '',
+            realization: diary.realization || '',
             created_at: diary.created_at || new Date().toISOString()
           };
           
-          // オプションフィールドを追加
-          const optionalFields = {
-            counselor_memo: diary.counselor_memo || diary.counselorMemo || null,
-            is_visible_to_user: diary.is_visible_to_user !== undefined ? diary.is_visible_to_user : 
-                               (diary.isVisibleToUser !== undefined ? diary.isVisibleToUser : false),
-            counselor_name: diary.counselor_name || diary.counselorName || null,
-            assigned_counselor: diary.assigned_counselor || diary.assignedCounselor || null,
-            urgency_level: diary.urgency_level || diary.urgencyLevel || null
-            urgency_level: entry.urgency_level || entry.urgencyLevel || null
-          };
-          
-          // 同期前に最初のデータをログに出力（デバッグ用）
-          if (i === 0) {
-            console.log('同期するデータの例:', JSON.stringify({
-              ...formattedEntry,
-              ...optionalFields
-            }, null, 2).substring(0, 500) + '...');
-          }
-          
-          // 同期前に最初のデータをログに出力（デバッグ用）
-          if (i === 0 && diary) {
-            console.log('同期するデータの例:', JSON.stringify({
-              ...formattedEntry,
-              ...optionalFields
-            }, null, 2));
-          }
-          
-          // 値が存在するフィールドのみを追加
-          for (const [key, value] of Object.entries(optionalFields)) {
-            if (value !== undefined) {
-              formattedEntry[key] = value;
+          // スコアフィールドの処理
+          if (diary.emotion === '無価値感' || 
+              diary.emotion === '嬉しい' || 
+              diary.emotion === '感謝' || 
+              diary.emotion === '達成感' || 
+              diary.emotion === '幸せ') {
+            
+            // 自己肯定感スコアの処理
+            if (typeof diary.selfEsteemScore === 'number') {
+              formattedEntry.self_esteem_score = diary.selfEsteemScore;
+            } else if (typeof diary.selfEsteemScore === 'string') {
+              formattedEntry.self_esteem_score = parseInt(diary.selfEsteemScore) || 50;
+            } else if (typeof diary.self_esteem_score === 'number') {
+              formattedEntry.self_esteem_score = diary.self_esteem_score;
+            } else if (typeof diary.self_esteem_score === 'string') {
+              formattedEntry.self_esteem_score = parseInt(diary.self_esteem_score) || 50;
+            } else {
+              formattedEntry.self_esteem_score = 50;
+            }
+            
+            // 無価値感スコアの処理
+            if (typeof diary.worthlessnessScore === 'number') {
+              formattedEntry.worthlessness_score = diary.worthlessnessScore;
+            } else if (typeof diary.worthlessnessScore === 'string') {
+              formattedEntry.worthlessness_score = parseInt(diary.worthlessnessScore) || 50;
+            } else if (typeof diary.worthlessness_score === 'number') {
+              formattedEntry.worthlessness_score = diary.worthlessness_score;
+            } else if (typeof diary.worthlessness_score === 'string') {
+              formattedEntry.worthlessness_score = parseInt(diary.worthlessness_score) || 50;
+            } else {
+              formattedEntry.worthlessness_score = 50;
             }
           }
           
+          // カウンセラーメモの処理
+          if (diary.counselor_memo !== undefined) {
+            formattedEntry.counselor_memo = diary.counselor_memo;
+          } else if (diary.counselorMemo !== undefined) {
+            formattedEntry.counselor_memo = diary.counselorMemo;
+          }
+          
+          // 表示設定の処理
+          if (diary.is_visible_to_user !== undefined) {
+            formattedEntry.is_visible_to_user = diary.is_visible_to_user;
+          } else if (diary.isVisibleToUser !== undefined) {
+            formattedEntry.is_visible_to_user = diary.isVisibleToUser;
+          } else {
+            formattedEntry.is_visible_to_user = false;
+          }
+          
+          // カウンセラー名の処理
+          if (diary.counselor_name !== undefined) {
+            formattedEntry.counselor_name = diary.counselor_name;
+          } else if (diary.counselorName !== undefined) {
+            formattedEntry.counselor_name = diary.counselorName;
+          }
+          
+          // 担当カウンセラーの処理
+          if (diary.assigned_counselor !== undefined) {
+            formattedEntry.assigned_counselor = diary.assigned_counselor;
+          } else if (diary.assignedCounselor !== undefined) {
+            formattedEntry.assigned_counselor = diary.assignedCounselor;
+          }
+          
+          // 緊急度の処理
+          if (diary.urgency_level !== undefined) {
+            formattedEntry.urgency_level = diary.urgency_level;
+          } else if (diary.urgencyLevel !== undefined) {
+            formattedEntry.urgency_level = diary.urgencyLevel;
+          }
+          
+          
           return formattedEntry;
         });
-        
+      
       console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
-      
-      // 同期前にデータをログに出力（デバッグ用）
-      if (formattedDiaries.length > 0) {
-          console.log('同期するデータの最初の例:', JSON.stringify(formattedDiaries[0], null, 2).substring(0, 500) + '...');
-      }
-      
-      // 同期前にデータをログに出力（デバッグ用）
-      if (formattedDiaries.length > 0) {
-          console.log('同期するデータの最初の例:', JSON.stringify(formattedDiaries[0], null, 2).substring(0, 500) + '...');
-      }
       
       if (formattedDiaries.length === 0) {
         return { success: true, message: '有効な同期データがありません' };
@@ -249,12 +276,15 @@ export const diaryService = {
       // 一括挿入（競合時は更新）
       const { data, error } = await supabase
         .from('diary_entries')
-        .upsert(formattedDiaries, {
-          onConflict: 'id',
-          ignoreDuplicates: false,
-          returning: 'minimal'
-        });
-        
+        .upsert(
+          formattedDiaries, 
+          {
+            onConflict: 'id',
+            ignoreDuplicates: false,
+            returning: 'minimal'
+          }
+        );
+      
       if (error) {
         console.error('日記同期エラー:', error, 'データ件数:', formattedDiaries.length);
         return { success: false, error: error.message };
@@ -262,19 +292,10 @@ export const diaryService = {
       
       console.log('日記同期成功:', formattedDiaries.length, '件');
       return { success: true, data };
-    } catch (error) {
-      console.error('日記同期サービスエラー:', error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      
-      // エラーメッセージを詳細に
-      let detailedError = errorMessage;
-      if (errorMessage.includes('invalid input syntax for type uuid')) {
-        detailedError = 'UUID形式が無効です。データベース管理者に連絡してください。';
-      } else if (errorMessage.includes('violates foreign key constraint')) {
-        detailedError = '外部キー制約違反: ユーザーIDが存在しません。';
-      }
-      
-      return { success: false, error: detailedError };
+    } catch (err) {
+      console.error('日記同期サービスエラー:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      return { success: false, error: errorMessage };
     }
   },
   
