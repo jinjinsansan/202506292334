@@ -40,662 +40,574 @@ const DataMigration: React.FC = () => {
   }, []);
 
   // 手動同期ボタンのハンドラー
-  const handleManualSync = async () => {
-    if (!isConnected) {
-      if (window.confirm('Supabaseに接続されていません。再接続を試みますか？')) {
-        await retryConnection();
-        // 再接続後に接続状態を確認
-        if (!isConnected) {
-          alert('Supabaseへの接続に失敗しました。ネットワーク接続を確認してください。');
-          return;
+  useEffect(() => {
+    loadChartData();
+  }, [period]);
+
+  const loadChartData = () => {
+    setLoading(true);
+    try {
+      // ローカルストレージから日記データを取得
+      const savedInitialScores = localStorage.getItem('initialScores');
+      const savedEntries = localStorage.getItem('journalEntries');
+      
+      // 初期スコアを取得
+      if (savedInitialScores) {
+        try {
+          const parsedInitialScores = JSON.parse(savedInitialScores);
+          setInitialScore(parsedInitialScores);
+        } catch (error) {
+          console.error('初期スコア読み込みエラー:', error);
         }
       }
+      
+      if (savedEntries) {
+        const entries = JSON.parse(savedEntries);
+        if (!Array.isArray(entries)) {
+          console.error('journalEntriesが配列ではありません:', entries);
+          return;
+        }
+        
+        console.log('全エントリー数:', entries?.length || 0);
+        
+        // 無価値感の日記のみをフィルタリング
+        const worthlessnessEntries = entries?.filter((entry: any) => 
+          entry && (entry.emotion === '無価値感' || 
+                   entry.emotion === '嬉しい' || 
+                   entry.emotion === '感謝' || 
+                   entry.emotion === '達成感' || 
+                   entry.emotion === '幸せ') && 
+          entry.selfEsteemScore !== undefined && 
+          entry.worthlessnessScore !== undefined
+        ) || [];
+        
+        // 日記データをフォーマット
+        let formattedData = worthlessnessEntries.map((entry: any) => ({
+          date: entry.date,
+          selfEsteemScore: typeof entry.selfEsteemScore === 'number' ? entry.selfEsteemScore : 
+                          (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 50),
+          worthlessnessScore: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
+                             (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 50)
+        }));
+        
+        // 日付順にソート
+        formattedData.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          // 無効な日付の場合は比較しない
+          if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+            return 0;
+          }
+          return dateA.getTime() - dateB.getTime();
+        });
+        
+        // 初期スコアを追加（全期間表示の場合）
+        if (initialScore && period === 'all' && formattedData.length > 0) {
+          // 初期スコアの日付を作成（最初の日記の前日）
+          const firstEntryDate = new Date(formattedData[0].date);
+          firstEntryDate.setDate(firstEntryDate.getDate() - 1);
+          const initialScoreDate = firstEntryDate.toISOString().split('T')[0];
+          
+          // 初期スコアをデータの先頭に追加
+          formattedData = [{
+            date: initialScoreDate,
+            selfEsteemScore: typeof initialScore.selfEsteemScore === 'number' ? initialScore.selfEsteemScore : 
+                            (typeof initialScore.selfEsteemScore === 'string' ? parseInt(initialScore.selfEsteemScore) : 50),
+            worthlessnessScore: typeof initialScore.worthlessnessScore === 'number' ? initialScore.worthlessnessScore : 
+                               (typeof initialScore.worthlessnessScore === 'string' ? parseInt(initialScore.worthlessnessScore) : 50)
+          }, ...formattedData];
+        }
+        
+        setChartData(formattedData);
+        
+        // 全期間の感情の出現回数を集計
+        const counts: {[key: string]: number} = {};
+        entries?.filter(entry => entry && entry.emotion)?.forEach((entry: any) => {
+          counts[entry.emotion] = (counts[entry.emotion] || 0) + 1;
+        });
+        setAllEmotionCounts(counts);
+        
+        // 選択された期間の感情の出現回数を集計
+        const filteredCounts: {[key: string]: number} = {};
+        const entriesWithEmotion = entries?.filter((entry: any) => entry && entry.emotion) || [];
+        
+        // 期間でフィルタリング
+        const filteredAllEntries = period === 'all' 
+          ? entriesWithEmotion 
+          : filterEntriesByPeriod(entriesWithEmotion, period);
+          
+        filteredAllEntries?.forEach((entry: any) => {
+          filteredCounts[entry.emotion] = (filteredCounts[entry.emotion] || 0) + 1;
+        });
+        setFilteredEmotionCounts(filteredCounts);
+        
+        // 感情の出現回数を配列に変換してソート
+        const currentCounts = period === 'all' ? counts : filteredCounts;
+        const sortedEmotionCounts = Object.entries(currentCounts)
+          .map(([emotion, count]) => ({ emotion, count: count as number }))
+          .sort((a, b) => b.count - a.count);
+        
+        setEmotionCounts(sortedEmotionCounts);
+      }
+    } catch (error) {
+      console.error('チャートデータ読み込みエラー:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    // 無効な日付の場合は元の文字列を返す
+    if (isNaN(date.getTime())) {
+      return dateString || '日付なし';
+    }
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  };
+
+  const handleShare = () => {
+    if (displayedData.length === 0) {
+      alert('共有するデータがありません。');
       return;
     }
     
-    setMigrating(true);
-    setMigrationStatus('同期を開始しています...');
-    setMigrationProgress(10);
+    const username = localStorage.getItem('line-username') || 'ユーザー';
+    const latestData = displayedData[displayedData.length - 1];
     
-    try {
-      // 現在のユーザーを取得
-      const user = getCurrentUser();
-      
-      // ユーザー名を取得（ローカルストレージから）
-      const lineUsername = localStorage.getItem('line-username');
-      
-      if (!lineUsername) {
-        throw new Error('ユーザー名が設定されていません');
-      }
-      
-      setMigrationStatus('ユーザー情報を確認中...');
-      setMigrationProgress(20);
-      
-      // ユーザーIDを取得または作成
-      let userId;
-      
-      if (currentUser && currentUser.id) {
-        userId = currentUser.id;
-        console.log('既存のユーザーIDを使用:', userId);
-      } else {
-        // ユーザーIDがない場合は初期化
-        setMigrationStatus(`ユーザー「${lineUsername}」を作成中...`);
-        try {
-          const supabaseUser = await userService.createOrGetUser(lineUsername);
-          if (!supabaseUser || !supabaseUser.id) {
-            throw new Error('ユーザーの作成に失敗しました');
-          }
-          
-          userId = supabaseUser.id;
-          console.log('新しいユーザーを作成しました:', lineUsername, 'ID:', userId);
-        } catch (userError) {
-          console.error('ユーザー作成エラー:', userError);
-          throw new Error('ユーザーの作成に失敗しました: ' + (userError instanceof Error ? userError.message : String(userError)));
-        }
-      }
-      
-      if (!userId) {
-        throw new Error('ユーザーIDが取得できませんでした');
-      }
-      
-      setMigrationProgress(40);
-      
-      // ローカルストレージから日記データを取得
-      setMigrationStatus('ローカルデータを読み込み中...');
-      setMigrationProgress(50);
-      let savedEntries;
-      try {
-        savedEntries = localStorage.getItem('journalEntries');
-        if (!savedEntries || savedEntries === '[]') {
-          setMigrationStatus('同期するデータがありません');
-          setMigrationProgress(100);
-          setTimeout(() => {
-            setMigrationStatus(null);
-            setMigrationProgress(0);
-          }, 3000);
-          return;
-        }
-      } catch (error) {
-        console.error('ローカルデータ取得エラー:', error);
-        setMigrationStatus('同期するデータがありません');
-        setMigrationProgress(100);
-        setTimeout(() => {
-          setMigrationStatus(null);
-          setMigrationProgress(0);
-        }, 3000);
-        return;
-      }
-      
-      let entries = [];
-      try {
-        entries = JSON.parse(savedEntries);
-        if (!Array.isArray(entries)) {
-          throw new Error('journalEntriesが配列ではありません');
-        }
-      } catch (error) {
-        throw new Error('日記データの解析に失敗しました: ' + error);
-      }
-      
-      setMigrationStatus(`${entries.length}件のデータを同期中...`);
-      setMigrationProgress(70);
-      
-      // 日記データをSupabase形式に変換
-      const formattedEntries = entries
-        .filter((entry: any) => {
-          if (!entry || !entry.id || !entry.date || !entry.emotion) {
-            console.warn('無効なエントリーをスキップ:', entry);
-            return false;
-          }
-          return true;
-        }) // 無効なデータをフィルタリング
-        .map((entry: any) => {
-          // 必須フィールドのみを含める
-          const formattedEntry = {
-            id: entry.id,
-            user_id: userId,
-            date: entry.date,
-            emotion: entry.emotion,
-            event: entry.event || '',
-            realization: entry.realization || '',
-            self_esteem_score: typeof entry.selfEsteemScore === 'number' ? entry.selfEsteemScore : 
-                              (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 
-                               (typeof entry.self_esteem_score === 'number' ? entry.self_esteem_score : 
-                                (typeof entry.self_esteem_score === 'string' ? parseInt(entry.self_esteem_score) : 50))),
-            worthlessness_score: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
-                                (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 
-                                 (typeof entry.worthlessness_score === 'number' ? entry.worthlessness_score : 
-                                  (typeof entry.worthlessness_score === 'string' ? parseInt(entry.worthlessness_score) : 50))),
-            created_at: entry.created_at || new Date().toISOString()
-          };
-          
-          // オプションフィールドは存在する場合のみ追加
-          const optionalFields = {
-            assigned_counselor: entry.assigned_counselor || entry.assignedCounselor || null,
-            urgency_level: entry.urgency_level || entry.urgencyLevel || null,
-            is_visible_to_user: entry.is_visible_to_user !== undefined ? entry.is_visible_to_user : 
-                               (entry.isVisibleToUser !== undefined ? entry.isVisibleToUser : false),
-            counselor_name: entry.counselor_name || entry.counselorName || null,
-            counselor_memo: entry.counselor_memo || entry.counselorMemo || null
-          };
-          
-          // 値が存在するフィールドのみを追加
-          for (const [key, value] of Object.entries(optionalFields)) {
-            if (value !== undefined) {
-              formattedEntry[key] = value;
-            }
-          }
-          
-          return formattedEntry;
-        });
-      
-      // 日記データを同期
-      const { success, error } = await diaryService.syncDiaries(userId, formattedEntries);
-      console.log('同期結果:', success ? '成功' : '失敗', error || '', 'データ件数:', formattedEntries.length);
-      
-      if (!success) {
-        throw new Error(error || `日記の同期に失敗しました (${formattedEntries.length}件)`);
-      }
-      
-      // 同期時間を更新
-      const now = new Date().toISOString();
-      localStorage.setItem('last_sync_time', now);
-      console.log('同期完了時間:', now);
-      
-      setMigrationStatus(`同期が完了しました！${entries.length}件のデータを同期しました。`);
-      setMigrationProgress(100);
-      
-      // データ数を再読み込み
-      loadDataInfo();
-      
-      // 成功メッセージを表示
-      alert(`同期が完了しました！${entries.length}件のデータを同期しました。`);
-      
-      // 自動同期を有効化
-      localStorage.setItem('auto_sync_enabled', 'true');
-      setAutoSyncEnabled(true);
-      
-      setTimeout(() => {
-        setMigrationStatus(null);
-        setMigrationProgress(0);
-      }, 3000);
-      
-    } catch (error) {
-      console.error('手動同期エラー:', error);
-      setMigrationStatus(`同期エラー: ${error instanceof Error ? error.message : String(error)}`);
-      setMigrationProgress(100); // エラーでも100%にして完了を示す
-      
-      // エラーメッセージをアラートで表示
-      alert(`同期エラー: ${error instanceof Error ? error.message : String(error)}`);
-      
-      // 3秒後にステータスをクリア
-      setTimeout(() => {
-        setMigrationStatus(null);
-        setMigrationProgress(0);
-      }, 3000);
-    } finally {
-      setMigrating(false);
-    }
-  };
-
-
-  const loadDataInfo = async () => {
-    try {
-      console.log('データ情報を読み込み中...');
-      if (isAdminMode) {
-        // 管理者モードの場合は全体のデータ数を取得
-        await loadTotalData();
-      } else {
-        // 通常モードの場合は現在のユーザーのデータ数を取得
-        const localEntries = localStorage.getItem('journalEntries');
-        if (localEntries) {
-          const entries = JSON.parse(localEntries);
-          if (Array.isArray(entries)) {
-            setLocalDataCount(entries.length);
-            console.log('ローカルデータ数:', entries.length);
-          } else {
-            console.error('journalEntriesが配列ではありません:', entries);
-            setLocalDataCount(0);
-          }
-        }
-
-        // Supabaseデータ数を取得（接続されている場合のみ）
-        if (isConnected && currentUser) {
-          supabase.from('diary_entries')
-            .select('id', { count: 'exact' })
-            .eq('user_id', currentUser.id) 
-            .then(({ count, error }) => { 
-              if (error) {
-                console.error('Supabase日記データ数取得エラー:', error);
-                setSupabaseDataCount(0);
-              } else {
-                console.log('Supabase日記データ数:', count || 0);
-                setSupabaseDataCount(count || 0);
-              }
-            })
-            .catch((error) => {
-              console.error('Supabase日記データ数取得エラー:', error);
-              setSupabaseDataCount(0);
-            });
-        }
-      }
-    } catch (error) {
-      console.error('データ読み込みエラー:', error);
-    }
-  };
-
-  // 自動同期の有効/無効を切り替える
-  const toggleAutoSync = (enabled: boolean) => {
-    localStorage.setItem('auto_sync_enabled', enabled.toString());
-    setAutoSyncEnabled(enabled);
+    let shareText = `${username}の無価値感推移 📊\n\n`;
+    shareText += `🔵 自己肯定感: ${latestData?.selfEsteemScore || 0}\n`;
+    shareText += `🔴 無価値感: ${latestData?.worthlessnessScore || 0}\n\n`;
     
-    try {
-      const user = getCurrentUser();
-      console.log(`自動同期が${enabled ? '有効' : '無効'}になりました - ユーザー: ${user?.lineUsername || 'unknown'}`);
-    } catch (error) {
-      console.error('ログ記録エラー:', error);
+    // 感情の出現回数
+    if (emotionCounts.length > 0) {
+      shareText += `【感情の出現回数】\n`;
+      emotionCounts.slice(0, 3).forEach(item => {
+        shareText += `${item.emotion}: ${item.count}回\n`;
+      });
     }
     
-    setMigrationStatus(`自動同期が${enabled ? '有効' : '無効'}になりました`);
-  };
-
-  // 全体のデータ数を取得する関数
-  const loadTotalData = async () => {
-    try {
-      // ローカルストレージから全ユーザーのデータを取得
-      const allLocalData = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('journalEntries_')) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            const entries = JSON.parse(data);
-            allLocalData.push(...entries);
-          }
-        }
-      }
-      setTotalLocalDataCount(allLocalData.length);
-
-      // Supabaseから全データ数を取得
-      const { count, error } = await supabase
-        .from('diary_entries')
-        .select('id', { count: 'exact' });
-      
-      if (error) {
-        console.error('Supabase全データ数取得エラー:', error);
-        setTotalSupabaseDataCount(0);
-      } else {
-        setTotalSupabaseDataCount(count || 0);
-      }
-    } catch (error) {
-      console.error('全体データ読み込みエラー:', error);
-    }
-  };
-
-  // バックアップデータの作成
-  const handleCreateBackup = () => {
-    setBackupInProgress(true);
-    setMigrationStatus(null);
+    shareText += `\n#かんじょうにっき #感情日記 #自己肯定感\n\nhttps://apl.namisapo2.love/`;
     
-    try {
-      // ローカルストレージからデータを収集
-      const backupObject = {
-        journalEntries: localStorage.getItem('journalEntries') ? JSON.parse(localStorage.getItem('journalEntries')!) : [],
-        initialScores: localStorage.getItem('initialScores') ? JSON.parse(localStorage.getItem('initialScores')!) : null,
-        consentHistories: localStorage.getItem('consent_histories') ? JSON.parse(localStorage.getItem('consent_histories')!) : [],
-        lineUsername: localStorage.getItem('line-username'),
-        privacyConsentGiven: localStorage.getItem('privacyConsentGiven'),
-        privacyConsentDate: localStorage.getItem('privacyConsentDate'),
-        backupDate: new Date().toISOString(),
-        version: '1.0'
-      };
-      
-      // JSONに変換してダウンロード
-      const dataStr = JSON.stringify(backupObject, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      
-      // ファイル名にユーザー名と日付を含める
-      const user = getCurrentUser();
-      const username = user?.lineUsername || localStorage.getItem('line-username') || 'user';
-      const date = new Date().toISOString().split('T')[0];
-      const fileName = `kanjou-nikki-backup-${username}-${date}.json`;
-      
-      // ダウンロードリンクを作成して自動クリック
-      const downloadLink = document.createElement('a');
-      downloadLink.href = URL.createObjectURL(dataBlob);
-      downloadLink.download = fileName;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      
-      setMigrationStatus('バックアップが正常に作成されました！');
-    } catch (error) {
-      console.error('バックアップ作成エラー:', error);
-      setMigrationStatus('バックアップの作成に失敗しました。');
-    } finally {
-      setBackupInProgress(false);
+    if (navigator.share) {
+      navigator.share({
+        title: 'かんじょうにっき - 無価値感推移',
+        text: shareText,
+      }).catch((error) => {
+        console.log('シェアがキャンセルされました:', error);
+      });
+    } else {
+      navigator.clipboard.writeText(shareText).then(() => {
+        alert('シェア用テキストをクリップボードにコピーしました！\nSNSに貼り付けてシェアしてください。');
+      }).catch(() => {
+        prompt('以下のテキストをコピーしてSNSでシェアしてください:', shareText);
+      });
     }
   };
+
+  const handleTwitterShare = () => {
+    if (displayedData.length === 0) {
+      alert('共有するデータがありません。');
+      return;
+    }
+    
+    const username = localStorage.getItem('line-username') || 'ユーザー';
+    const latestData = displayedData[displayedData.length - 1];
+    
+    let shareText = `${username}の無価値感推移 📊\n\n`;
+    shareText += `🔵 自己肯定感: ${latestData?.selfEsteemScore || 0}\n`;
+    shareText += `🔴 無価値感: ${latestData?.worthlessnessScore || 0}\n\n`;
+    
+    // 感情の出現回数
+    if (emotionCounts.length > 0) {
+      shareText += `【感情の出現回数】\n`;
+      emotionCounts.slice(0, 3).forEach(item => {
+        shareText += `${item.emotion}: ${item.count}回\n`;
+      });
+    }
+    
+    shareText += `\n#かんじょうにっき #感情日記 #自己肯定感\n\nhttps://apl.namisapo2.love/`;
+    
+    const encodedShareText = encodeURIComponent(shareText);
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodedShareText}`;
+    
+    window.open(twitterUrl, '_blank');
+  };
+
+  // 期間でエントリーをフィルタリングする関数
+  const filterEntriesByPeriod = (entries: any[], selectedPeriod: RangeKey) => {
+    if (!entries || entries.length === 0) return [];
+    if (selectedPeriod === 'all') return entries;
+    
+    // データが持つ最新日を基準にする
+    const latestDate = entries.reduce((max, entry) => {
+      const entryDate = new Date(entry.date);
+      return entryDate > max ? entryDate : max;
+    }, new Date(0));
+    
+    const startDate = new Date(latestDate);
+    if (selectedPeriod === 'week') {
+      startDate.setDate(startDate.getDate() - 6); // 7日間（当日含む）
+    } else {
+      startDate.setDate(startDate.getDate() - 29); // 30日間（当日含む）
+    }
+    
+    return entries.filter((entry: any) => {
+      const entryDate = new Date(entry.date);
+      return entryDate >= startDate && entryDate <= latestDate;
+    });
+  };
+
+  // 表示用データを準備
+  const displayedData = useMemo(() => {
+    if (period === 'all' || chartData.length === 0) return chartData;
+    
+    // データが持つ最新日を基準にする
+    const latestDate = dayjs(
+      chartData.reduce((max, d) => (d.date > max ? d.date : max), chartData[0].date)
+    ).endOf('day');
+    
+    const from = period === 'week'
+      ? latestDate.subtract(6, 'day').startOf('day')   // 直近7日間
+      : latestDate.subtract(29,'day').startOf('day'); // 直近30日間
+    
+    const filtered = chartData.filter(d =>
+      dayjs(d.date).isBetween(from, latestDate, 'day', '[]')
+    );
+    
+    // データが 0 件ならフォールバックで全件返す（表示が空にならない保険）
+    return filtered.length ? filtered : chartData;
+  }, [chartData, period]);
+
+  // Y 軸スケール計算
+  const { min, max, span } = useMemo(() => {
+    if (displayedData.length === 0) {
+      return { min: 0, max: 100, span: 100 };
+    }
+    
+    const allScores = displayedData.flatMap(d => [
+      Number(d.selfEsteemScore || 0),
+      Number(d.worthlessnessScore || 0)
+    ]);
+    
+    let minVal = Math.min(...allScores);
+    let maxVal = Math.max(...allScores);
+    
+    // 上下に 10pt の余白を持たせつつ 0‒100 にクリップ
+    minVal = Math.max(0, minVal - 10);
+    maxVal = Math.min(100, maxVal + 10);
+    const yRange = maxVal - minVal || 1;   // 0 除算防止
+    
+    return { min: minVal, max: maxVal, span: yRange };
+  }, [displayedData]);
+
+  // 座標変換関数
+  const toX = (i: number, total: number) => (i / Math.max(1, total - 1)) * 100;
+  const toY = (val: number) => ((max - val) / span) * 100;
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-6 px-2">
       <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <Database className="w-8 h-8 text-blue-600" />
-            <h2 className="text-2xl font-jp-bold text-gray-900">データ管理</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-jp-bold text-gray-900">無価値感推移</h1>
+          <div className="flex space-x-2">
+            <button
+              onClick={handleShare}
+              className="flex items-center space-x-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-jp-medium transition-colors"
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">シェア</span>
+            </button>
+            <button
+              onClick={handleTwitterShare}
+              className="flex items-center space-x-2 px-3 py-2 bg-black hover:bg-gray-800 text-white rounded-lg text-sm font-jp-medium transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              <span className="hidden sm:inline">Xでシェア</span>
+            </button>
           </div>
+        </div>
+
+        {/* 期間フィルター */}
+        <div className="flex space-x-2 mb-6">
           <button
-            onClick={loadDataInfo}
-            className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-jp-medium transition-colors"
+            onClick={() => setPeriod('week')}
+            className={`px-4 py-2 rounded-lg text-sm font-jp-medium transition-colors ${
+              period === 'week'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
           >
-            <RefreshCw className="w-4 h-4" />
-            <span>更新</span>
+            1週間
+          </button>
+          <button
+            onClick={() => setPeriod('month')}
+            className={`px-4 py-2 rounded-lg text-sm font-jp-medium transition-colors ${
+              period === 'month'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            1ヶ月
+          </button>
+          <button
+            onClick={() => setPeriod('all')}
+            className={`px-4 py-2 rounded-lg text-sm font-jp-medium transition-colors ${
+              period === 'all'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            全期間
           </button>
         </div>
 
-        {/* 接続状態表示 */}
-        <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <div>
-                <h3 className="font-jp-bold text-gray-900 mb-2">自動同期設定</h3>
-                <p className="text-gray-700 font-jp-normal mb-4">
-                  Supabase: {isConnected ? '接続中' : '未接続'}
-                </p>
-                {!isConnected && (
-                  <button
-                    onClick={retryConnection}
-                    className="ml-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded-md font-jp-medium transition-colors"
+        {/* チャート表示エリア */}
+        {loading ? (
+          <div className="bg-gray-50 rounded-lg p-12 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600">
+              <span className="sr-only">読み込み中...</span>
+            </div>
+          </div>
+        ) : displayedData.length === 0 ? (
+          <div className="bg-gray-50 rounded-lg p-12 text-center">
+            <TrendingUp className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-jp-medium text-gray-500 mb-2">
+              データがありません
+            </h3>
+            <p className="text-gray-400 font-jp-normal mb-4">
+              選択した期間に無価値感を選んだ日記がありません
+            </p>
+            <button
+              onClick={loadChartData}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-jp-medium transition-colors"
+            >
+              <RefreshCw className="w-4 h-4 inline mr-2" />
+              再読み込み
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* グラフ */}
+            <div className="bg-white rounded-lg p-4 border border-gray-200 overflow-hidden relative">
+              {initialScore && period === 'all' && (
+                <div className="absolute top-2 left-2 bg-blue-50 rounded-lg p-2 border border-blue-200 text-xs z-10">
+                  <span className="font-jp-medium text-blue-800">初期スコア表示中</span>
+                </div>
+              )}
+              
+              <div className="w-full" style={{ height: '300px' }}>
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm font-jp-medium text-gray-700">自己肯定感</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <span className="text-sm font-jp-medium text-gray-700">無価値感</span>
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {period === 'week' ? '過去7日間' : period === 'month' ? '過去30日間' : '全期間'}
+                  </div>
+                </div>
+                
+                {/* グラフ本体 */}
+                <div className="relative w-full h-60 overflow-hidden">
+                  <svg
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                    className="absolute inset-0 w-full h-full graph-svg"
+                    shapeRendering="geometricPrecision"
                   >
-                    再接続
-                  </button>
-                )}
-              </div>
-            </div>
-            <div>
-              {isAdminMode && (
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-jp-medium border border-green-200">
-                  管理者モード
-                </span>
-              )}
-              {currentUser && (
-                <span className="ml-2 text-sm text-gray-500">
-                  {currentUser.line_username}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
+                    {/* グリッド */}
+                    <g stroke="#e5e7eb" strokeWidth="0.4" vectorEffect="non-scaling-stroke">
+                      {[0, 25, 50, 75, 100].map(tick => (
+                        <g key={tick}>
+                          <line x1="0" y1={toY(tick)} x2="100" y2={toY(tick)} />
+                          <text
+                            x="0"
+                            y={toY(tick) - 1.5}
+                            fontSize="3"
+                            fill="#9ca3af"
+                            style={{ userSelect: 'none' }}
+                          >
+                            {tick}
+                          </text>
+                        </g>
+                      ))}
+                    </g>
 
-        {/* データ数表示 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <h3 className="font-jp-bold text-gray-900 mb-2">
-              {isAdminMode ? '全体のローカルデータ' : 'ローカルデータ'}
-            </h3>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700 font-jp-normal">
-                {isAdminMode ? '総日記数:' : '日記数:'}
-              </span>
-              <span className="text-2xl font-jp-bold text-blue-600">{localDataCount}</span>
-            </div>
-          </div>
-          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <h3 className="font-jp-bold text-gray-900 mb-2">
-              {isAdminMode ? '全体のSupabaseデータ' : 'Supabaseデータ'}
-            </h3>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700 font-jp-normal">
-                {isAdminMode ? '総日記数:' : '日記数:'}
-              </span>
-              <span className="text-2xl font-jp-bold text-green-600">{supabaseDataCount}</span>
-            </div>
-          </div>
-        </div>
+                    {/* 折れ線 */}
+                    {[
+                      { key: 'selfEsteemScore', color: '#3b82f6' },
+                      { key: 'worthlessnessScore', color: '#ef4444' },
+                    ].map(({ key, color }) => (
+                      <polyline
+                        key={key}
+                        points={displayedData
+                          .map((d, i) =>
+                            `${toX(i, displayedData.length)},${toY(Number(d[key as keyof ScoreEntry] as number))}`
+                          )
+                          .join(' ')}
+                        fill="none"
+                        stroke={color}
+                        strokeWidth="1"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    ))}
 
-        {/* 一般ユーザー向け自動同期設定 */}
-        {!isAdminMode && (
-          <div className="bg-blue-50 rounded-lg p-6 border border-blue-200 mb-6">
-            <div className="mb-4">
-              <div className="flex items-start space-x-3 mb-4">
-                <RefreshCw className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-jp-bold text-gray-900 mb-2">自動同期設定</h3>
-                  <p className="text-gray-700 font-jp-normal mb-4">
-                    自動同期機能は5分ごとにデータをクラウドに保存します。端末を変更する際にもデータが引き継がれます。
-                  </p>
+                    {/* 点 */}
+                    {displayedData.map((d, i) => {
+                      const x = toX(i, displayedData.length);
+                      return ['selfEsteemScore', 'worthlessnessScore'].map((k, idx) => (
+                        <circle
+                          key={`${k}-${i}`}
+                          cx={x}
+                          cy={toY(Number(d[k as keyof ScoreEntry] as number))}
+                          r="2"
+                          fill={idx ? '#ef4444' : '#3b82f6'}
+                          stroke="#fff"
+                          strokeWidth="0.3"
+                          vectorEffect="non-scaling-stroke"
+                        >
+                          <title>
+                            {`${d.date} ${idx ? '無価値感' : '自己肯定感'} ${
+                              d[k as keyof ScoreEntry]
+                            }`}
+                          </title>
+                        </circle>
+                      ));
+                    })}
+                    
+                    {/* X軸ラベル */}
+                    {displayedData.map((data, index) => (
+                      <text
+                        key={`x-label-${index}`}
+                        x={toX(index, displayedData.length)}
+                        y="98"
+                        fontSize="3"
+                        textAnchor="middle"
+                        fill="#6b7280"
+                      >
+                        {index === 0 && period === 'all' && initialScore 
+                          ? '初期' 
+                          : formatDate(data.date)}
+                      </text>
+                    ))}
+                  </svg>
                 </div>
               </div>
-            
-              <button
-                onClick={handleManualSync} 
-                disabled={migrating || !isConnected}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
-              >
-                {migrating ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>同期中...</span>
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4" />
-                    <span>今すぐ同期する</span>
-                  </>
-                )}
-              </button>
-            
-              <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${autoSyncEnabled ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <span className="font-jp-medium text-gray-900">自動同期</span>
+            </div>
+
+            {/* 最新スコア */}
+            {displayedData.length > 0 ? (
+              <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-jp-bold text-gray-900 text-lg">最新スコア</h3>
+                  <div className="text-sm font-medium text-gray-700">
+                    {formatDate(displayedData[displayedData.length - 1].date)}
+                  </div>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={autoSyncEnabled} 
-                    onChange={(e) => toggleAutoSync(e.target.checked)}
-                    className="sr-only peer" 
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-white rounded-lg p-4 border border-blue-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700 font-jp-medium text-lg">自己肯定感スコア</span>
+                      <span className="text-3xl font-jp-bold text-blue-600">
+                        {displayedData[displayedData.length - 1].selfEsteemScore}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 border border-red-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700 font-jp-medium text-lg">無価値感スコア</span>
+                      <span className="text-3xl font-jp-bold text-red-600">
+                        {displayedData[displayedData.length - 1].worthlessnessScore}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {initialScore && period === 'all' && (
+                  <div className="mt-4 pt-4 border-t border-blue-200">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-jp-medium text-gray-900 text-base">初期スコア</h4>
+                      <div className="text-sm font-medium text-gray-700">
+                        {initialScore.measurementMonth}月{initialScore.measurementDay}日
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="bg-white rounded-lg p-3 border border-blue-100">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700 font-jp-medium text-base">自己肯定感スコア</span>
+                          <span className="text-2xl font-jp-bold text-blue-600">
+                            {initialScore.selfEsteemScore}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-red-100">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700 font-jp-medium text-base">無価値感スコア</span>
+                          <span className="text-2xl font-jp-bold text-red-600">
+                            {initialScore.worthlessnessScore}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-            
-              <div className="mt-4 bg-green-50 rounded-lg p-4 border border-green-200">
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-green-800 font-jp-normal">
-                    <p className="font-jp-medium mb-1">自動同期のメリット</p>
-                    <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>端末変更時にデータが引き継がれます</li>
-                      <li>ブラウザのキャッシュクリアでデータが失われません</li>
-                      <li>カウンセラーがあなたの日記を確認できます</li>
-                    </ul>
+            ) : (
+              <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
+                <div className="flex items-start space-x-3">
+                  <div className="text-yellow-500 text-xl">⚠️</div>
+                  <div>
+                    <p className="text-yellow-800 font-jp-medium">
+                      無価値感を選んだ日記がありません。無価値感を選んだ日記を書くとグラフが表示されます。
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
-            
-            {/* データバックアップセクション */}
-            <div className="mt-6 pt-4 border-t border-blue-200">
-              <div className="flex items-start space-x-3 mb-4">
-                <Save className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="font-jp-bold text-gray-900 mb-2">データのバックアップ</h4>
-                  <p className="text-sm text-gray-700 font-jp-normal">
-                    現在のデータをファイルとして保存できます。端末変更時や万が一の時に復元できます。
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleCreateBackup}
-                disabled={backupInProgress}
-                className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-jp-medium transition-colors w-full mb-3"
-              >
-                {backupInProgress ? (
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Download className="w-5 h-5" />
-                )}
-                <span>バックアップを作成</span>
-              </button>
-            </div>
-          </div>
-        )}
-        
-        {/* 管理者向けデータ移行セクション */}
-        {isAdminMode && (
-          <div className="bg-indigo-50 rounded-lg p-6 border border-indigo-200 mb-6">
-            <div className="mb-4">
-              <div className="flex items-start space-x-3 mb-4">
-                <Database className="w-6 h-6 text-indigo-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-jp-bold text-gray-900 mb-2">データ移行</h3>
-                  <p className="text-gray-700 font-jp-normal mb-4">
-                    ローカルデータとSupabaseデータを同期します。
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <button
-              onClick={handleManualSync}
-              disabled={migrating || !isConnected}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
-            >
-              {migrating ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>同期中...</span>
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4" />
-                  <span>今すぐ同期する</span>
-                </>
-              )}
-            </button>
+            )}
 
-            {/* 同期方向選択 */}
-            <div className="mb-4 bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex space-x-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    checked={syncDirection === 'local-to-supabase'}
-                    onChange={() => setSyncDirection('local-to-supabase')}
-                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700 font-jp-normal">ローカル → Supabase</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    checked={syncDirection === 'supabase-to-local'}
-                    onChange={() => setSyncDirection('supabase-to-local')}
-                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700 font-jp-normal">Supabase → ローカル</span>
-                </label>
-              </div>
-            </div>
-
-            {/* 管理者向けバックアップセクション */}
-            <div className="mt-6 pt-4 border-t border-indigo-200">
-              <div className="flex items-start space-x-3 mb-4">
-                <Save className="w-5 h-5 text-indigo-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="font-jp-bold text-gray-900 mb-2">データのバックアップ</h4>
-                  <p className="text-sm text-gray-700 font-jp-normal">
-                    現在のデータをファイルとして保存できます。管理者用バックアップを作成します。
-                  </p>
+            {/* 感情の出現頻度 */}
+            {emotionCounts.length > 0 && (
+              <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-jp-bold text-gray-900 text-lg">感情の出現頻度</h3>
+                  <div className="text-sm font-medium text-gray-700">
+                    {period === 'week' ? '過去7日間' : period === 'month' ? '過去30日間' : '全期間'}
+                  </div>
                 </div>
-              </div>
-              <button
-                onClick={handleCreateBackup}
-                disabled={backupInProgress}
-                className="flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-jp-medium transition-colors w-full mb-3"
-              >
-                {backupInProgress ? (
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Download className="w-5 h-5" />
-                )}
-                <span>管理者バックアップを作成</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 進捗表示 */}
-        {migrationStatus && (
-          <div className={`rounded-lg p-4 border ${
-            migrationStatus.includes('エラー') || migrationStatus.includes('失敗')
-              ? 'bg-red-50 border-red-200 text-red-800' 
-              : migrationStatus.includes('完了') 
-                ? 'bg-green-50 border-green-200 text-green-800' 
-                : 'bg-blue-50 border-blue-200 text-blue-800'
-          }`}>
-            <div className="flex items-center space-x-2 mb-2">
-              {migrationStatus.includes('エラー') ? (
-                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-              ) : migrationStatus.includes('完了') ? (
-                <CheckCircle className="w-5 h-5" />
-              ) : (
-                <RefreshCw className={`w-5 h-5 ${migrating ? 'animate-spin' : ''}`} />
-              )}
-              <span className="font-jp-medium">{migrationStatus}</span>
-            </div>
-            {migrating && migrationProgress > 0 && (
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                <div 
-                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                  style={{ width: `${migrationProgress}%` }}
-                ></div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {emotionCounts.map((item, index) => (
+                    <div key={index} className="bg-white rounded-lg p-3 border border-gray-200">
+                      <div className="text-center">
+                        <div className="text-lg font-jp-bold text-gray-900 mb-1">{item.emotion}</div>
+                        <div className="text-base font-medium text-gray-600">{item.count}回</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-          </div>
-        )}
 
-        {/* 説明セクション */}
-        <div className={`mt-6 ${isAdminMode ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} rounded-lg p-4 border`}>
-          <div className="flex items-start space-x-3">
-            <Info className={`w-5 h-5 ${isAdminMode ? 'text-green-600' : 'text-blue-600'} mt-0.5 flex-shrink-0`} />
-            <div className={`text-sm ${isAdminMode ? 'text-green-800' : 'text-blue-800'} font-jp-normal`}>
-              <p className="font-jp-medium mb-2">{isAdminMode ? 'データ管理について' : '自動同期について'}</p>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                {isAdminMode ? (
-                  <>
-                    <li>ローカルデータはブラウザに保存されています</li>
-                    <li>Supabaseデータはクラウドに保存されます</li>
-                    <li>管理者モードでは全体のデータ数が表示されます</li>
-                    <li>ブラウザのキャッシュをクリアするとローカルデータは失われます</li>
-                    <li>端末を変更する場合は、先にデータをSupabaseに移行してください</li>
-                  </>
-                ) : (
-                  <>
-                    <li>自動同期は5分ごとにバックグラウンドで実行されます</li>
-                    <li>ブラウザのキャッシュをクリアしても、データは安全に保存されます</li>
-                    <li>端末を変更する場合も、自動的にデータが引き継がれます</li>
-                    <li>自動同期を無効にすると、データが失われる可能性があります</li>
-                  </>
-                )}
-                {isAdminMode && <li className="font-jp-bold text-green-700">管理者モードでは、すべてのユーザーのデータを管理できます</li>}
-              </ul>
-            </div>
-          </div>
-        </div>
-        
-        {/* 最終同期時間表示 */}
-        {!isAdminMode && (
-          <div className="mt-4 text-center text-sm text-gray-500">
-            {localStorage.getItem('last_sync_time') ? (
-              <p>
-                最終同期: {new Date(localStorage.getItem('last_sync_time') || '').toLocaleString('ja-JP')}
-              </p>
-            ) : (
-              <p>同期履歴はまだありません</p>
+            {/* 初期スコアが設定されていない場合の警告メッセージ */}
+            {!initialScore && period === 'all' && (
+              <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200 mt-4">
+                <div className="flex items-start space-x-3">
+                  <div className="text-yellow-500 text-xl">⚠️</div>
+                  <div>
+                    <p className="text-yellow-800 font-jp-medium">
+                      初期スコアが設定されていません。最初にやることページで自己肯定感計測を行ってください。
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -704,4 +616,4 @@ const DataMigration: React.FC = () => {
   );
 };
 
-export default DataMigration;
+export default WorthlessnessChart;
