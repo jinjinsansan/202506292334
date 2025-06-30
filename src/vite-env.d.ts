@@ -1,13 +1,11 @@
 /// <reference types="vite/client" />
 
-// Supabaseクライアントをwindowオブジェクトに追加
+// グローバルオブジェクトの型定義
 interface Window {
-  supabase: any;
-  autoSync: any;
-}
-
-// Supabaseクライアントをwindowオブジェクトに追加
-interface Window {
-  supabase: any;
-  autoSync: any;
+  // SupabaseクライアントとautoSyncをwindowオブジェクトに追加
+  supabase: import('@supabase/supabase-js').SupabaseClient | null;
+  autoSync: {
+    triggerManualSync: () => Promise<boolean>;
+    syncDeleteDiary: (diaryId: string) => Promise<boolean>;
+  } | null;
 }
