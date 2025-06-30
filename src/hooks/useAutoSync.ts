@@ -275,44 +275,6 @@ export const useAutoSync = (): AutoSyncState => {
             optionalFields.counselor_memo = entry.counselorMemo;
           }
           
-          // オプションフィールドを追加
-          const optionalFields: Record<string, any> = {};
-          
-          // assigned_counselor
-          if (entry.assigned_counselor !== undefined) {
-            optionalFields.assigned_counselor = entry.assigned_counselor;
-          } else if (entry.assignedCounselor !== undefined) {
-            optionalFields.assigned_counselor = entry.assignedCounselor;
-          }
-          
-          // urgency_level
-          if (entry.urgency_level !== undefined) {
-            optionalFields.urgency_level = entry.urgency_level;
-          } else if (entry.urgencyLevel !== undefined) {
-            optionalFields.urgency_level = entry.urgencyLevel;
-          }
-          
-          // is_visible_to_user
-          if (entry.is_visible_to_user !== undefined) {
-            optionalFields.is_visible_to_user = entry.is_visible_to_user;
-          } else if (entry.isVisibleToUser !== undefined) {
-            optionalFields.is_visible_to_user = entry.isVisibleToUser;
-          }
-          
-          // counselor_name
-          if (entry.counselor_name !== undefined) {
-            optionalFields.counselor_name = entry.counselor_name;
-          } else if (entry.counselorName !== undefined) {
-            optionalFields.counselor_name = entry.counselorName;
-          }
-          
-          // counselor_memo
-          if (entry.counselor_memo !== undefined) {
-            optionalFields.counselor_memo = entry.counselor_memo;
-          } else if (entry.counselorMemo !== undefined) {
-            optionalFields.counselor_memo = entry.counselorMemo;
-          }
-          
           // 値が存在するフィールドのみを追加
           for (const [key, value] of Object.entries(optionalFields)) {
             formattedEntry[key] = value;
