@@ -659,6 +659,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                       <span className="text-sm font-jp-medium text-gray-700">カウンセラーメモ: </span>
                       <span className="text-sm text-gray-900 font-jp-normal">{entry.counselor_memo}</span>
                     </div>
+                    </div>
                   )}
                 </div>
 
