@@ -170,7 +170,7 @@ const WorthlessnessChart: React.FC = () => {
     const username = localStorage.getItem('line-username') || 'ユーザー';
     const latestData = displayedData[displayedData.length - 1];
     
-    let shareText = `${username}の感情スコア推移 📊\n\n`;
+    let shareText = `${username}の無価値感推移 📊\n\n`;
     shareText += `🔵 自己肯定感: ${latestData?.selfEsteemScore || 0}\n`;
     shareText += `🔴 無価値感: ${latestData?.worthlessnessScore || 0}\n\n`;
     
@@ -209,7 +209,7 @@ const WorthlessnessChart: React.FC = () => {
     const username = localStorage.getItem('line-username') || 'ユーザー';
     const latestData = displayedData[displayedData.length - 1];
     
-    let shareText = `${username}の感情スコア推移 📊\n\n`;
+    let shareText = `${username}の無価値感推移 📊\n\n`;
     shareText += `🔵 自己肯定感: ${latestData?.selfEsteemScore || 0}\n`;
     shareText += `🔴 無価値感: ${latestData?.worthlessnessScore || 0}\n\n`;
     
@@ -325,7 +325,7 @@ const WorthlessnessChart: React.FC = () => {
     <div className="w-full max-w-4xl mx-auto space-y-6 px-2">
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-jp-bold text-gray-900">感情スコア推移</h1>
+          <h1 className="text-2xl font-jp-bold text-gray-900">無価値感推移</h1>
           <div className="flex space-x-2">
             <button
               onClick={handleShare}
@@ -584,10 +584,9 @@ const WorthlessnessChart: React.FC = () => {
               <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
                 <div className="flex items-start space-x-3">
                   <div className="text-yellow-500 text-xl flex-shrink-0">⚠️</div>
-                  <div className="flex-1">
+                  <div>
                     <p className="text-yellow-800 font-jp-medium">
-                      スコア対象の感情（無価値感、嬉しい、感謝、達成感、幸せ）を選んだ日記がありません。
-                      これらの感情を選んだ日記を書くとグラフが表示されます。
+                      無価値感を選んだ日記がありません。無価値感を選んだ日記を書くとグラフが表示されます。
                     </p>
                   </div>
                 </div>
