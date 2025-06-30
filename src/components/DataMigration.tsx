@@ -156,8 +156,126 @@ const DataMigration: React.FC = () => {
     }
   };
 
+  // 手動同期ボタンのハンドラー
+  const handleManualSync = async () => {
+    if (!isConnected) {
+      if (window.confirm('Supabaseに接続されていません。再接続を試みますか？')) {
+        retryConnection();
+      }
+      return;
+    }
+    
+    setMigrating(true);
+    setMigrationStatus('同期を開始しています...');
+    setMigrationProgress(10);
+    
+    try {
+      // 現在のユーザーを取得
+      const user = getCurrentUser();
+      // ユーザー情報がない場合はローカルストレージから取得
+      const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
+      
+      if (!lineUsername) {
+        throw new Error('ユーザー名が設定されていません');
+      }
+      
+      setMigrationStatus('ユーザー情報を確認中...');
+      setMigrationProgress(20);
+      
+      // ユーザーIDを取得
+      let userId = currentUser?.id;
+      
+      // ユーザーIDがない場合は初期化
+      if (!userId && lineUsername) {
+        setMigrationStatus(`ユーザー「${lineUsername}」を作成中...`);
+        const supabaseUser = await userService.createOrGetUser(lineUsername);
+        if (!supabaseUser || !supabaseUser.id) {
+          throw new Error('ユーザーの作成に失敗しました');
+        }
+        
+        userId = supabaseUser.id;
+        console.log('新しいユーザーを作成しました:', lineUsername, 'ID:', userId);
+        setMigrationProgress(40);
+      }
+      
+      // ローカルストレージから日記データを取得
+      setMigrationStatus('ローカルデータを読み込み中...');
+      setMigrationProgress(50);
+      let savedEntries;
+      try {
+        savedEntries = localStorage.getItem('journalEntries');
+        if (!savedEntries || savedEntries === '[]') {
+          setMigrationStatus('同期するデータがありません');
+          setMigrationProgress(100);
+          setTimeout(() => {
+            setMigrationStatus(null);
+            setMigrationProgress(0);
+          }, 3000);
+          return;
+        }
+      } catch (error) {
+        console.error('ローカルデータ取得エラー:', error);
+        setMigrationStatus('同期するデータがありません');
+        setMigrationProgress(100);
+        setTimeout(() => {
+          setMigrationStatus(null);
+          setMigrationProgress(0);
+        }, 3000);
+        return;
+      }
+      
+      let entries = [];
+      try {
+        entries = JSON.parse(savedEntries);
+        if (!Array.isArray(entries)) {
+          throw new Error('journalEntriesが配列ではありません');
+        }
+      } catch (error) {
+        throw new Error('日記データの解析に失敗しました: ' + error);
+      }
+      
+      setMigrationStatus(`${entries.length}件のデータを同期中...`);
+      setMigrationProgress(70);
+      
+      // 日記データを同期
+      const { success, error } = await diaryService.syncDiaries(userId, entries);
+      console.log('同期結果:', success ? '成功' : '失敗', error || '');
+      
+      if (!success && error) {
+        throw new Error(error || '日記の同期に失敗しました');
+      }
+      
+      // 同期時間を更新
+      const now = new Date().toISOString();
+      localStorage.setItem('last_sync_time', now);
+      console.log('同期完了時間:', now);
+      
+      setMigrationStatus(`同期が完了しました！${entries.length}件のデータを同期しました。`);
+      setMigrationProgress(100);
+      
+      // データ数を再読み込み
+      loadDataInfo();
+      
+      // 成功メッセージを表示
+      alert(`同期が完了しました！${entries.length}件のデータを同期しました。`);
+      
+      setTimeout(() => {
+        setMigrationStatus(null);
+        setMigrationProgress(0);
+      }, 3000);
+      
+    } catch (error) {
+      console.error('手動同期エラー:', error);
+      setMigrationStatus(`同期エラー: ${error instanceof Error ? error.message : String(error)}`);
+      setMigrationProgress(0);
+    } finally {
+      setMigrating(false);
+    }
+  };
+
   const loadDataInfo = async () => {
     try {
+      console.log('データ情報を読み込み中...');
       console.log('データ情報を読み込み中...');
       if (isAdminMode) {
         // 管理者モードの場合は全体のデータ数を取得
@@ -174,6 +292,12 @@ const DataMigration: React.FC = () => {
             console.error('journalEntriesが配列ではありません:', entries);
             setLocalDataCount(0);
           }
+            setLocalDataCount(entries.length);
+            console.log('ローカルデータ数:', entries.length);
+          } else {
+            console.error('journalEntriesが配列ではありません:', entries);
+            setLocalDataCount(0);
+          }
         }
 
         // Supabaseデータ数を取得（接続されている場合のみ）
@@ -181,9 +305,14 @@ const DataMigration: React.FC = () => {
           supabase.from('diary_entries')
             .select('id', { count: 'exact' })
             .eq('user_id', currentUser.id) 
-            .then(({ count, error }) => {
+            .then(({ count, error }) => { 
               if (error) {
                 console.error('Supabase日記データ数取得エラー:', error);
+                setSupabaseDataCount(0);
+              } else {
+                console.log('Supabase日記データ数:', count || 0);
+                setSupabaseDataCount(count || 0);
+              }
                 setSupabaseDataCount(0);
               } else {
                 console.log('Supabase日記データ数:', count || 0);
@@ -317,9 +446,19 @@ const DataMigration: React.FC = () => {
             <div className="flex items-center space-x-3">
               <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
               <div>
-                <span className="font-jp-medium text-gray-900">
-                  Supabase: {isConnected ? '接続中' : '未接続'}
-                </span>
+                <div>
+                  <span className="font-jp-medium text-gray-900">
+                    Supabase: {isConnected ? '接続中' : '未接続'}
+                  </span>
+                  {!isConnected && (
+                    <button
+                      onClick={retryConnection}
+                      className="ml-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded-md font-jp-medium transition-colors"
+                    >
+                      再接続
+                    </button>
+                  )}
+                </div>
                 {!isConnected && (
                   <button
                     onClick={retryConnection}
@@ -376,11 +515,13 @@ const DataMigration: React.FC = () => {
           <div className="bg-blue-50 rounded-lg p-6 border border-blue-200 mb-6">
             <div className="mb-4">
               <div className="flex items-start space-x-3 mb-4">
-                <RefreshCw className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" /> 
+                <RefreshCw className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-jp-bold text-gray-900 mb-2">自動同期設定</h3>
                   <p className="text-gray-700 font-jp-normal mb-4">
                     自動同期機能は5分ごとにデータをクラウドに保存します。端末を変更する際にもデータが引き継がれます。
+                  </p>
+                </div>
                   </p>
                 </div>
               </div>
@@ -432,6 +573,24 @@ const DataMigration: React.FC = () => {
                   </ul>
                 </div>
               </div>
+              
+              <button
+                onClick={handleManualSync}
+                disabled={migrating || !isConnected}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
+              >
+                {migrating ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>同期中...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    <span>今すぐ同期する</span>
+                  </>
+                )}
+              </button>
             </div>
             
             {/* データバックアップセクション */}
@@ -466,11 +625,13 @@ const DataMigration: React.FC = () => {
           <div className="bg-indigo-50 rounded-lg p-6 border border-indigo-200 mb-6">
             <div className="mb-4">
               <div className="flex items-start space-x-3 mb-4">
-                <RefreshCw className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
+                <Database className="w-6 h-6 text-indigo-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-jp-bold text-gray-900 mb-2">自動同期設定</h3>
+                  <h3 className="font-jp-bold text-gray-900 mb-2">データ移行</h3>
                   <p className="text-gray-700 font-jp-normal mb-4">
-                    自動同期機能は5分ごとにデータをクラウドに保存します。端末を変更する際にもデータが引き継がれます。
+                    ローカルデータとSupabaseデータを同期します。
+                  </p>
+                </div>
                   </p>
                 </div>
               </div>
@@ -516,6 +677,24 @@ const DataMigration: React.FC = () => {
                   <span className="text-gray-700 font-jp-normal">Supabase → ローカル</span>
                 </label>
               </div>
+              
+              <button
+                onClick={handleManualSync}
+                disabled={migrating || !isConnected}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
+              >
+                {migrating ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>同期中...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    <span>今すぐ同期する</span>
+                  </>
+                )}
+              </button>
             </div>
 
             {/* 管理者向けバックアップセクション */}
@@ -612,6 +791,8 @@ const DataMigration: React.FC = () => {
                 最終同期: {new Date(localStorage.getItem('last_sync_time') || '').toLocaleString('ja-JP')}
               </p>
             ) : (
+              <p>同期履歴はまだありません</p>
+            )}
               <p>同期履歴はまだありません</p>
             )}
           </div>
