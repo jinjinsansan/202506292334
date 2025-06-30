@@ -124,6 +124,18 @@ const DiarySearchPage: React.FC = () => {
     });
   };
 
+  const handleViewEntry = (entry: JournalEntry) => {
+    setEditingEntry(entry);
+    setEditFormData({
+      date: entry.date,
+      emotion: entry.emotion,
+      event: entry.event,
+      realization: entry.realization,
+      selfEsteemScore: entry.selfEsteemScore,
+      worthlessnessScore: entry.worthlessnessScore
+    });
+  };
+
   const handleSaveEdit = async () => {
     if (!editingEntry) return;
 
@@ -710,9 +722,9 @@ const DiarySearchPage: React.FC = () => {
                     </div>
                     <div className="flex space-x-2">
                       <button 
-                        onClick={() => handleEdit(entry)}
+                        onClick={() => handleViewEntry(entry)}
                         className="text-blue-600 hover:text-blue-700 p-1 cursor-pointer"
-                        title="編集"
+                        title="詳細"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
@@ -818,9 +830,9 @@ const DiarySearchPage: React.FC = () => {
                 </div>
                 <div className="flex space-x-2">
                   <button 
-                    onClick={() => handleEdit(entry)}
+                    onClick={() => handleViewEntry(entry)}
                     className="text-blue-600 hover:text-blue-700 p-1"
-                    title="編集"
+                    title="詳細"
                   >
                     <Eye className="w-4 h-4" />
                   </button>
