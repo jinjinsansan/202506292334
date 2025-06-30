@@ -170,14 +170,25 @@ const DiarySearchPage: React.FC = () => {
     });
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('この日記を削除しますか？')) {
       try {
+        // ローカルストレージからの削除
         // ローカルストレージからの削除
         // ローカルストレージからの削除
         const updatedEntries = entries.filter(entry => entry.id !== id);
         setEntries(updatedEntries);
         localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+        
+        // Supabaseからの削除（autoSyncが利用可能な場合）
+        if (window.autoSync) {
+          try {
+            await window.autoSync.syncDeleteDiary(id);
+            console.log('Supabaseからも削除しました:', id);
+          } catch (syncError) {
+            console.error('Supabase同期削除エラー:', syncError);
+            // 同期エラーがあっても、ローカルの削除は完了しているので
+            // ユーザーにはエラーを表示せず、ログだけ残す
+          }
+        }
         
         // Supabaseからの削除（autoSyncが利用可能な場合）
         if (window.autoSync) {
