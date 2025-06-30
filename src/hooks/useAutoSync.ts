@@ -236,7 +236,17 @@ export const useAutoSync = (): AutoSyncState => {
             emotion: entry.emotion,
             event: entry.event || '',
             realization: entry.realization || '',
-            self_esteem_score: typeof entry.selfEsteemScore === 'number' 
+            self_esteem_score: typeof entry.selfEsteemScore === 'number'
+              ? entry.selfEsteemScore
+              : (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore)
+                 : (typeof entry.self_esteem_score === 'number' ? entry.self_esteem_score
+                    : (typeof entry.self_esteem_score === 'string' ? parseInt(entry.self_esteem_score) : 50))),
+            worthlessness_score: typeof entry.worthlessnessScore === 'number'
+              ? entry.worthlessnessScore
+              : (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore)
+                 : (typeof entry.worthlessness_score === 'number' ? entry.worthlessness_score
+                    : (typeof entry.worthlessness_score === 'string' ? parseInt(entry.worthlessness_score) : 50))),
+            created_at: entry.created_at || new Date().toISOString(),
           }
           const optionalFields: Record<string, any> = {};
           
