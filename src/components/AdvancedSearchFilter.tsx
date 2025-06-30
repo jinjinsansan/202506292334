@@ -127,7 +127,6 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
     setLoading(true);
     try {
       let query = supabase
-        .from('diary_entries')
         .select(`
           *,
           users(line_username)
