@@ -17,18 +17,19 @@ export function cn(...inputs: ClassValue[]) {
 export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
   return {
     id: diaryEntry.id,
-    user_id: userId,
+    user_id: diaryEntry.user_id || userId,
     date: diaryEntry.date,
     emotion: diaryEntry.emotion,
     event: diaryEntry.event,
     realization: diaryEntry.realization,
     self_esteem_score: diaryEntry.selfEsteemScore || 0,
     worthlessness_score: diaryEntry.worthlessnessScore || 0,
-    counselor_memo: diaryEntry.counselor_memo || null,
-    is_visible_to_user: diaryEntry.is_visible_to_user || false,
-    counselor_name: diaryEntry.counselor_name || null,
-    assigned_counselor: diaryEntry.assigned_counselor || null,
-    urgency_level: diaryEntry.urgency_level || null
+    counselor_memo: diaryEntry.counselor_memo || diaryEntry.counselorMemo || null,
+    is_visible_to_user: diaryEntry.is_visible_to_user || diaryEntry.isVisibleToUser || false,
+    counselor_name: diaryEntry.counselor_name || diaryEntry.counselorName || null,
+    assigned_counselor: diaryEntry.assigned_counselor || diaryEntry.assignedCounselor || null,
+    urgency_level: diaryEntry.urgency_level || diaryEntry.urgencyLevel || null,
+    created_at: diaryEntry.created_at || new Date().toISOString()
   };
 }
 
@@ -40,16 +41,19 @@ export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
 export function formatDiaryForLocal(supabaseEntry: any) {
   return {
     id: supabaseEntry.id,
+    user_id: supabaseEntry.user_id,
     date: supabaseEntry.date,
     emotion: supabaseEntry.emotion,
     event: supabaseEntry.event,
     realization: supabaseEntry.realization,
     selfEsteemScore: supabaseEntry.self_esteem_score || 0,
     worthlessnessScore: supabaseEntry.worthlessness_score || 0,
-    counselor_memo: supabaseEntry.counselor_memo || null,
-    is_visible_to_user: supabaseEntry.is_visible_to_user || false,
-    counselor_name: supabaseEntry.counselor_name || null,
-    assigned_counselor: supabaseEntry.assigned_counselor || null,
-    urgency_level: supabaseEntry.urgency_level || null
+    counselor_memo: supabaseEntry.counselor_memo || null, 
+    is_visible_to_user: supabaseEntry.is_visible_to_user || false, 
+    counselor_name: supabaseEntry.counselor_name || null, 
+    assigned_counselor: supabaseEntry.assigned_counselor || null, 
+    urgency_level: supabaseEntry.urgency_level || null,
+    created_at: supabaseEntry.created_at || new Date().toISOString(),
+    user: supabaseEntry.users || { line_username: 'Unknown User' }
   };
 }

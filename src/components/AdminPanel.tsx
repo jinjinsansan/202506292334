@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Card, CardContent } from './ui/card';
 import { Calendar, Search, MessageCircle, Settings, Users, AlertTriangle, Edit3, Trash2, Save, X, CheckCircle, Eye, EyeOff, User, Clock, Filter, Shield, Database, RefreshCw, Download, Loader } from 'lucide-react';
 import AdvancedSearchFilter from './AdvancedSearchFilter';
 import CounselorManagement from './CounselorManagement';
@@ -24,6 +23,7 @@ interface JournalEntry {
   user?: {
     line_username: string;
   };
+  user_id?: string;
   assigned_counselor?: string;
   urgency_level?: 'high' | 'medium' | 'low';
   counselor_memo?: string;
@@ -61,10 +61,33 @@ const AdminPanel: React.FC = () => {
     try {
       // ローカルストレージからデータを取得
       const savedEntries = localStorage.getItem('journalEntries');
-      let localEntries = [];
+      let localEntries: JournalEntry[] = [];
       
       if (savedEntries) {
-        localEntries = JSON.parse(savedEntries);
+        try {
+          const parsedEntries = JSON.parse(savedEntries);
+          if (Array.isArray(parsedEntries)) {
+            localEntries = parsedEntries.map(entry => {
+              // ユーザー名がない場合はローカルストレージから取得
+              if (!entry.user || !entry.user.line_username) {
+                const username = localStorage.getItem('line-username') || 'Unknown User';
+                return {
+                  ...entry,
+                  user: { line_username: username },
+                  created_at: entry.created_at || new Date().toISOString()
+                };
+              }
+              return {
+                ...entry,
+                created_at: entry.created_at || new Date().toISOString()
+              };
+            });
+          } else {
+            console.error('journalEntriesが配列ではありません:', parsedEntries);
+          }
+        } catch (error) {
+          console.error('ローカルデータの解析エラー:', error);
+        }
       }
       
       // Supabaseからデータを取得（接続されている場合）
@@ -82,7 +105,10 @@ const AdminPanel: React.FC = () => {
           if (error) {
             console.error('Supabaseデータ取得エラー:', error);
           } else if (data) {
-            supabaseEntries = data;
+            supabaseEntries = data.map(entry => ({
+              ...entry,
+              user: entry.users
+            }));
             console.log('Supabaseから取得したエントリー:', data.length);
           }
         } catch (supabaseError) {
@@ -92,14 +118,6 @@ const AdminPanel: React.FC = () => {
       
       // データを結合（重複を避けるため、IDをキーとして使用）
       const entriesMap = new Map();
-      
-      // ローカルデータを追加
-      localEntries.forEach((entry: any) => {
-        entriesMap.set(entry.id, {
-          ...entry,
-          source: 'local'
-        });
-      });
       
       // Supabaseデータを追加（同じIDの場合は上書き）
       supabaseEntries.forEach((entry: any) => {
@@ -121,6 +139,16 @@ const AdminPanel: React.FC = () => {
           source: 'supabase'
         };
         entriesMap.set(entry.id, formattedEntry);
+      });
+      
+      // ローカルデータを追加（Supabaseデータがある場合は上書きしない）
+      localEntries.forEach((entry: any) => {
+        if (!entriesMap.has(entry.id)) {
+          entriesMap.set(entry.id, {
+            ...entry,
+            source: 'local'
+          });
+        }
       });
       
       // Mapから配列に変換
@@ -574,9 +602,14 @@ const AdminPanel: React.FC = () => {
                               <span className="text-gray-900 font-jp-medium">
                                 {entry.user?.line_username || 'Unknown User'}
                               </span>
-                              <span className="text-gray-500 text-sm">
-                                {formatDate(entry.date)}
-                              </span>
+                              <div className="flex flex-col">
+                                <span className="text-gray-500 text-sm">
+                                  {formatDate(entry.date)}
+                                </span>
+                                <span className="text-gray-400 text-xs">
+                                  {new Date(entry.created_at).toLocaleString('ja-JP')}
+                                </span>
+                              </div>
                             </div>
                             <div className="flex items-center space-x-2">
                               {entry.urgency_level && (
@@ -648,8 +681,13 @@ const AdminPanel: React.FC = () => {
 
                           <div className="flex justify-between items-center text-sm">
                             <div className="flex items-center space-x-2 text-gray-500">
-                              <Clock className="w-4 h-4" />
+                              <Clock className="w-4 h-4 text-gray-400" />
                               <span>{new Date(entry.created_at).toLocaleString('ja-JP')}</span>
+                              {entry.source && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                                  {entry.source}
+                                </span>
+                              )}
                             </div>
                             <div className="flex items-center space-x-2">
                               {entry.assigned_counselor && (

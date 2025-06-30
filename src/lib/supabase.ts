@@ -112,27 +112,24 @@ export const diaryService = {
       // 日記データの整形
       const formattedDiaries = diaries
         .filter(diary => diary && diary.id && diary.date && diary.emotion) // 無効なデータをフィルタリング
-        .map(diary => {
-          // 日記データをSupabase形式に変換
-          return {
-            id: diary.id,
-            user_id: userId,
-            date: diary.date,
-            emotion: diary.emotion,
-            event: diary.event || '',
-            realization: diary.realization || '',
-            self_esteem_score: typeof diary.selfEsteemScore === 'number' ? diary.selfEsteemScore : 
-                              (typeof diary.selfEsteemScore === 'string' ? parseInt(diary.selfEsteemScore) : 0),
-            worthlessness_score: typeof diary.worthlessnessScore === 'number' ? diary.worthlessnessScore : 
-                                (typeof diary.worthlessnessScore === 'string' ? parseInt(diary.worthlessnessScore) : 0),
-            counselor_memo: diary.counselor_memo || null,
-            is_visible_to_user: diary.is_visible_to_user || false,
-            counselor_name: diary.counselor_name || null,
-            assigned_counselor: diary.assigned_counselor || null,
-            urgency_level: diary.urgency_level || null,
-            created_at: diary.created_at || new Date().toISOString()
-          };
-        });
+        .map(diary => ({
+          id: diary.id,
+          user_id: userId,
+          date: diary.date,
+          emotion: diary.emotion,
+          event: diary.event || '',
+          realization: diary.realization || '',
+          self_esteem_score: typeof diary.selfEsteemScore === 'number' ? diary.selfEsteemScore : 
+                            (typeof diary.selfEsteemScore === 'string' ? parseInt(diary.selfEsteemScore) : 0),
+          worthlessness_score: typeof diary.worthlessnessScore === 'number' ? diary.worthlessnessScore : 
+                              (typeof diary.worthlessnessScore === 'string' ? parseInt(diary.worthlessnessScore) : 0),
+          counselor_memo: diary.counselor_memo || diary.counselorMemo || null,
+          is_visible_to_user: diary.is_visible_to_user || diary.isVisibleToUser || false,
+          counselor_name: diary.counselor_name || diary.counselorName || null,
+          assigned_counselor: diary.assigned_counselor || diary.assignedCounselor || null,
+          urgency_level: diary.urgency_level || diary.urgencyLevel || null,
+          created_at: diary.created_at || new Date().toISOString()
+        }));
       
       console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
       
@@ -169,11 +166,21 @@ export const diaryService = {
   // ユーザーの日記を取得
   async getUserDiaries(userId: string) {
     if (!supabase) return [];
-
+    
+    if (!userId) {
+      console.error('ユーザーIDが指定されていません');
+      return [];
+    }
+    
     try {
       const { data, error } = await supabase
         .from('diary_entries')
-        .select('*')
+        .select(`
+          *,
+          users (
+            line_username
+          )
+        `)
         .eq('user_id', userId)
         .order('date', { ascending: false });
       
@@ -182,7 +189,11 @@ export const diaryService = {
         return [];
       }
       
-      return data || [];
+      // ユーザー情報を含めて返す
+      return data?.map(entry => ({
+        ...entry,
+        user: entry.users
+      })) || [];
     } catch (error) {
       console.error('日記取得サービスエラー:', error);
       return [];

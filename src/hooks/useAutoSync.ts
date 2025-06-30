@@ -117,12 +117,10 @@ export const useAutoSync = (): AutoSyncState => {
       // 現在のユーザーを取得
       const user = getCurrentUser();
       // ユーザー情報がない場合はローカルストレージから取得
-      const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
+      const lineUsername = user?.lineUsername || localStorage.getItem('line-username') || 'Unknown User';
       
-      if (!lineUsername) {
-        console.error('ユーザーがログインしていないか、ユーザー名がありません');
-        setError('ユーザー名が設定されていません');
-        return false;
+      if (!lineUsername || lineUsername === 'Unknown User') {
+        console.warn('ユーザー名が設定されていないか、デフォルト値です');
       }
       
       console.log('同期を開始します。ユーザー:', lineUsername);
@@ -133,7 +131,7 @@ export const useAutoSync = (): AutoSyncState => {
       // ユーザーIDがない場合は初期化
       if (!userId) {
         const supabaseUser = await userService.createOrGetUser(lineUsername);
-        if (!supabaseUser || !supabaseUser.id) {
+        if (!supabaseUser) {
           console.error('ユーザーの作成に失敗しました');
           setError('ユーザーの作成に失敗しました');
           return false;
@@ -157,8 +155,9 @@ export const useAutoSync = (): AutoSyncState => {
       try {
         entries = JSON.parse(savedEntries);
         if (!Array.isArray(entries)) {
-          console.error('journalEntriesが配列ではありません:', entries);
-          entries = [];
+          console.error('日記データが配列ではありません:', entries);
+          setError('日記データの形式が正しくありません');
+          return false;
         }
       } catch (parseError) {
         console.error('日記データの解析エラー:', parseError);
@@ -168,7 +167,7 @@ export const useAutoSync = (): AutoSyncState => {
       
       // 空の配列の場合は同期をスキップ
       if (!entries || entries.length === 0) {
-        console.log('同期する日記データがありません（空の配列）');
+        console.log('同期する日記データがありません');
         const now = new Date().toISOString();
         setLastSyncTime(now);
         localStorage.setItem('last_sync_time', now);
@@ -178,7 +177,19 @@ export const useAutoSync = (): AutoSyncState => {
       console.log('同期する日記データ:', entries.length, '件', 'ユーザーID:', userId);
 
       // 各エントリーをSupabase形式に変換
-      const formattedEntries = entries.map((entry: any) => formatDiaryForSupabase(entry, userId));
+      const formattedEntries = entries.map((entry: any) => {
+        // ユーザー情報がない場合は追加
+        if (!entry.user || !entry.user.line_username) {
+          entry.user = { line_username: lineUsername };
+        }
+        
+        // 作成日時がない場合は追加
+        if (!entry.created_at) {
+          entry.created_at = new Date().toISOString();
+        }
+        
+        return formatDiaryForSupabase(entry, userId);
+      });
       
       // 日記データを同期
       const { success, error } = await diaryService.syncDiaries(userId, formattedEntries);

@@ -20,12 +20,17 @@ export const cleanupTestData = async (): Promise<{
       
       // テストデータを識別（例：特定のパターンを持つデータ）
       const realEntries = entries.filter((entry: any) => {
+        if (!entry || !entry.event) return true; // 無効なエントリーはスキップ
+        
         // テストデータの特徴（例：特定の文字列を含むか、特定の日付範囲内か）
         const isTestData = 
           (entry.event && entry.event.includes('テストデータ')) || 
           (entry.realization && entry.realization.includes('テストデータ')) ||
           (entry.event && entry.event.includes('This is a test entry')) ||
-          (entry.realization && entry.realization.includes('This is a test realization'));
+          (entry.realization && entry.realization.includes('This is a test realization')) ||
+          (entry.event && entry.event.includes('テスト用')) ||
+          (entry.event && entry.event.includes('仁さんテスト')) ||
+          (entry.event && entry.event.includes('vivaldiさんテスト'));
         
         if (isTestData) {
           localRemoved++;
