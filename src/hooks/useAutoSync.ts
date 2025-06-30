@@ -237,6 +237,7 @@ export const useAutoSync = (): AutoSyncState => {
             event: entry.event || '',
             realization: entry.realization || '',
             self_esteem_score: typeof entry.selfEsteemScore === 'number' 
+          }
           const optionalFields: Record<string, any> = {};
           
           // assigned_counselor
@@ -315,6 +316,7 @@ export const useAutoSync = (): AutoSyncState => {
           // 値が存在するフィールドのみを追加
           for (const [key, value] of Object.entries(optionalFields)) {
             formattedEntry[key] = value;
+          }
           return formattedEntry;
         });
       
