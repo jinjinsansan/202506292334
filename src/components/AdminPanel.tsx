@@ -49,6 +49,9 @@ const AdminPanel: React.FC = () => {
   const [savingMemo, setSavingMemo] = useState(false);
   const [activeTab, setActiveTab] = useState('search');
   const [deleting, setDeleting] = useState(false);
+  const [selectedEntries, setSelectedEntries] = useState<string[]>([]);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   useEffect(() => {
     // カウンセラー名を取得
@@ -97,6 +100,11 @@ const AdminPanel: React.FC = () => {
       // Supabaseからデータを取得（接続されている場合）
       let supabaseEntries = [];
       // 方法1: autoSyncを使用（優先）- グローバルオブジェクトから取得
+        // 方法1: autoSyncを使用（優先）- グローバルオブジェクトから取得
+        if (window.autoSync && window.autoSync.syncDeleteDiary) {
+          console.log('autoSyncが利用可能です');
+        } 
+        // 方法2: 直接supabaseを使用（フォールバック）
       if (window.autoSync && window.autoSync.syncDeleteDiary) {
         console.log('autoSyncが利用可能です');
       } 
@@ -193,24 +201,28 @@ const AdminPanel: React.FC = () => {
     
     try {
       // ローカルストレージからの削除
-      const savedEntries = localStorage.getItem('journalEntries');
-      if (savedEntries) {
-        const entries = JSON.parse(savedEntries);
-        const updatedEntries = entries.map((entry: any) => {
-          if (entry.id === selectedEntry.id) {
-            return {
-              ...entry,
-              counselor_memo: memoText,
-              is_visible_to_user: isVisibleToUser,
-              urgency_level: urgencyLevel || undefined,
-              assigned_counselor: assignedCounselor || undefined,
-              counselor_name: isVisibleToUser ? currentCounselor : undefined
-            };
-          }
-          return entry;
-        });
-        
-        localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+      try {
+        const savedEntries = localStorage.getItem('journalEntries');
+        if (savedEntries) {
+          const entries = JSON.parse(savedEntries);
+          const updatedEntries = entries.map((entry: any) => {
+            if (entry.id === selectedEntry.id) {
+              return {
+                ...entry,
+                counselor_memo: memoText,
+                is_visible_to_user: isVisibleToUser,
+                urgency_level: urgencyLevel || undefined,
+                assigned_counselor: assignedCounselor || undefined,
+                counselor_name: isVisibleToUser ? currentCounselor : undefined
+              };
+            }
+            return entry;
+          });
+          
+          localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+        }
+      } catch (localError) {
+        console.error('ローカルストレージ更新エラー:', localError);
       }
       
       // 2. Supabaseからの削除
@@ -374,6 +386,81 @@ const AdminPanel: React.FC = () => {
     
     try {
       // ローカルストレージの更新
+      try {
+        const savedEntries = localStorage.getItem('journalEntries');
+        if (savedEntries) {
+      // 2. Supabaseからの削除
+      // 方法1: autoSyncを使用（優先）- グローバルオブジェクトから取得
+      if (window.autoSync && typeof window.autoSync.syncDeleteDiary === 'function') {
+          localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+          const syncResult = await window.autoSync.syncDeleteDiary(entryId);
+          if (!syncResult) {
+            console.warn('Supabaseとの同期に失敗しましたが、ローカルデータは削除されました');
+          } else {
+            console.log('autoSyncを使用してSupabaseから削除しました:', entryId);
+      if (window.autoSync && typeof window.autoSync.syncBulkDeleteDiaries === 'function') {
+        } catch (syncError) {
+          console.error('autoSync削除エラー:', syncError);
+          // エラーをログに残すが、処理は続行する
+        }
+      } 
+      // 方法2: 直接supabaseを使用（フォールバック）
+      else if (supabase && entryId) {
+        try {
+          const { error } = await supabase
+            .from('diary_entries')
+            .delete()
+            .eq('id', entryId);
+          
+          if (error) {
+            console.error('Supabase削除エラー:', error);
+          }
+        } catch (supabaseError) {
+          console.error('Supabase接続エラー:', supabaseError);
+        }
+      } else {
+        console.warn('自動同期機能が利用できないため、ローカルデータのみ削除されました');
+      }
+      
+      // 3. UI表示の更新
+      setEntries(prevEntries => prevEntries.filter(entry => entry.id !== entryId));
+      setFilteredEntries(prevEntries => prevEntries.filter(entry => entry.id !== entryId));      
+      );
+      
+      setFilteredEntries(prevEntries => 
+        prevEntries.filter(entry => !selectedEntries.includes(entry.id))
+      );
+      
+      // 選択をクリア
+      setSelectedEntries([]);
+      
+      alert(`${selectedEntries.length}件の日記を削除しました！`);
+    } catch (error) {
+      console.error('一括削除エラー:', error);
+      // エラーメッセージをより具体的に
+      const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+      alert(`削除中にエラーが発生しました: ${errorMessage}\nもう一度お試しください。`);
+    } finally {
+      setBulkDeleting(false);
+      setShowBulkDeleteConfirm(false);
+    }
+  };
+  // 一括削除処理
+  const handleBulkDelete = async () => {
+    if (selectedEntries.length === 0) {
+      alert('削除する日記が選択されていません');
+      return;
+    }
+    
+    setShowBulkDeleteConfirm(true);
+  };
+
+  // 一括削除の確認
+  const confirmBulkDelete = async () => {
+    setBulkDeleting(true);
+    
+    try {
+      // ローカルストレージの更新
       const savedEntries = localStorage.getItem('journalEntries');
       if (savedEntries) {
         const allEntries = JSON.parse(savedEntries);
@@ -412,6 +499,27 @@ const AdminPanel: React.FC = () => {
       setShowBulkDeleteConfirm(false);
     }
   };
+
+  // 日記の選択/選択解除
+  const toggleEntrySelection = (entryId: string) => {
+    setSelectedEntries(prev => 
+      prev.includes(entryId)
+        ? prev.filter(id => id !== entryId)
+        : [...prev, entryId]
+    );
+  };
+
+  // すべての日記を選択/選択解除
+  const toggleSelectAll = () => {
+    if (selectedEntries.length === entries.length) {
+      // すべて選択解除
+      setSelectedEntries([]);
+    } else {
+      // すべて選択
+      setSelectedEntries(entries.map(entry => entry.id));
+    }
+  };
+
 
   // 日記の選択/選択解除
   const toggleEntrySelection = (entryId: string) => {
@@ -728,9 +836,45 @@ const AdminPanel: React.FC = () => {
                     </div>
                   ) : (
                     <div>
+                      {/* 一括削除ボタン */}
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedEntries.length === entries.length && entries.length > 0}
+                            onChange={toggleSelectAll}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-600 font-jp-normal">
+                            {selectedEntries.length > 0 
+                              ? `${selectedEntries.length}件選択中` 
+                              : 'すべて選択'}
+                          </span>
+                        </div>
+                        
+                        {selectedEntries.length > 0 && (
+                          <button
+                            onClick={handleBulkDelete}
+                            className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm font-jp-medium transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>{selectedEntries.length}件を削除</span>
+                          </button>
+                        )}
+                      </div>
+                      
                       <div className="space-y-4">
                         {entries.map((entry) => (
                           <div key={entry.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                            <div className="flex justify-between items-start mb-3 gap-2">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedEntries.includes(entry.id)}
+                                  onChange={() => toggleEntrySelection(entry.id)}
+                                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                              </div>
                             <div className="flex justify-between items-start mb-3 gap-2">
                               <div className="flex items-center space-x-2">
                                 <input
@@ -858,6 +1002,7 @@ const AdminPanel: React.FC = () => {
                           </div>
                         ))}
                       </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -904,6 +1049,50 @@ const AdminPanel: React.FC = () => {
 
       {/* 詳細モーダル */}
       {renderEntryDetailsModal()}
+
+      {/* 一括削除確認モーダル */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-start space-x-3 mb-6">
+              <AlertTriangle className="w-6 h-6 text-red-600 mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="text-xl font-jp-bold text-gray-900 mb-2">一括削除の確認</h3>
+                <p className="text-gray-700 font-jp-normal">
+                  選択した{selectedEntries.length}件の日記を削除します。この操作は元に戻せません。本当に削除しますか？
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex space-x-4">
+              <button
+                onClick={confirmBulkDelete}
+                disabled={bulkDeleting}
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2"
+              >
+                {bulkDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>削除中...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>削除する</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                disabled={bulkDeleting}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-jp-medium transition-colors"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 一括削除確認モーダル */}
       {showBulkDeleteConfirm && (

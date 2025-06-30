@@ -183,8 +183,14 @@ const DiarySearchPage: React.FC = () => {
       if (savedEntries) {
         const entries = JSON.parse(savedEntries);
         const updatedEntries = entries.filter((entry: any) => entry.id !== id);
+    try {
+      // 1. ローカルストレージからの削除
+      const savedEntries = localStorage.getItem('journalEntries');
+      if (savedEntries) {
+        const entries = JSON.parse(savedEntries);
+        const updatedEntries = entries.filter((entry: any) => entry.id !== id);
         localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
-      }
+      
       
       // 2. Supabaseからの削除
       // 方法1: autoSyncを使用（優先）- グローバルオブジェクトから取得
@@ -197,6 +203,21 @@ const DiarySearchPage: React.FC = () => {
         console.warn('自動同期機能が利用できないため、ローカルデータのみ削除されました');
       }
       
+      // 3. UI表示の更新
+      setEntries(prevEntries => prevEntries.filter(entry => entry.id !== id));
+      
+      // 直近の日記も更新
+      const updatedEntries = entries.filter(entry => entry.id !== id);
+      const sortedEntries = [...updatedEntries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setRecentEntries(sortedEntries.slice(0, 5));
+      
+      alert('日記を削除しました！');
+      
+    } catch (error) {
+      console.error('削除エラー:', error);
+      alert('削除に失敗しました。もう一度お試しください。');
+    } finally {
+      setSyncing(false);
       // 3. UI表示の更新
       setEntries(prevEntries => prevEntries.filter(entry => entry.id !== id));
       

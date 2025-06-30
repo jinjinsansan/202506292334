@@ -6,6 +6,7 @@ import { useAutoSync } from './hooks/useAutoSync';
 import { getCurrentUser } from './lib/deviceAuth';
 
 
+
 // コンポーネントのインポート
 import MaintenanceMode from './components/MaintenanceMode';
 import PrivacyConsent from './components/PrivacyConsent';
@@ -52,6 +53,13 @@ function App() {
   // 自動同期フックを初期化
   const autoSync = useAutoSync();
   
+  // グローバルに公開（コンポーネントからアクセスできるように）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.autoSync = autoSync;
+    }
+  }, [autoSync]);
+
   // グローバルに公開（コンポーネントからアクセスできるように）
   useEffect(() => {
     if (typeof window !== 'undefined') {

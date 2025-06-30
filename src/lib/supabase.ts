@@ -27,6 +27,11 @@ if (typeof window !== 'undefined') {
   window.supabase = supabase;
 }
 
+// グローバルにsupabaseを公開（コンポーネントからアクセスできるように）
+if (typeof window !== 'undefined') {
+  window.supabase = supabase;
+}
+
 // ユーザーサービス
 export const userService = {
   // ユーザーの作成または取得
@@ -110,6 +115,11 @@ export const diaryService = {
   async syncDiaries(userId: string, diaries: any[]) {
     if (!supabase) return { success: false, error: 'Supabase接続なし' };
     
+    // ローカルモードの場合は同期をスキップ
+    if (isLocalMode) {
+      return { success: true, message: 'ローカルモードのため同期をスキップしました' };
+    }
+
     // ローカルモードの場合は同期をスキップ
     if (isLocalMode) {
       return { success: true, message: 'ローカルモードのため同期をスキップしました' };
@@ -241,6 +251,34 @@ export const diaryService = {
       return { success: true, data };
     } catch (err) {
       console.error('日記同期サービスエラー:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      return { success: false, error: errorMessage };
+    }
+  },
+  
+  // 日記の削除
+  async deleteDiary(id: string) {
+    if (!supabase) return { success: false, error: 'Supabase接続なし' };
+
+    // ローカルモードの場合は削除をスキップ
+    if (isLocalMode) {
+      return { success: true, message: 'ローカルモードのため削除をスキップしました' };
+    }
+
+    try {
+      const { error } = await supabase
+        .from('diary_entries')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('日記削除エラー:', error);
+        return { success: false, error: error.message };
+      }
+      
+      return { success: true };
+    } catch (err) {
+      console.error('日記削除サービスエラー:', err);
       const errorMessage = err instanceof Error ? err.message : String(err);
       return { success: false, error: errorMessage };
     }

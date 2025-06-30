@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Trash2, RefreshCw, CheckCircle, AlertTriangle, Shield, Database, AlertCircle } from 'lucide-react';
-import { cleanupTestData, deleteAllDiaries, bulkDeleteDiaries } from '../lib/cleanupTestData';
+import { cleanupTestData, deleteAllDiaries } from '../lib/cleanupTestData';
 
 const DataCleanup: React.FC = () => {
   const [cleaning, setCleaning] = useState(false);
