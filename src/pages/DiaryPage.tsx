@@ -338,6 +338,10 @@ const DiaryPage: React.FC = () => {
           finalFormData.emotion === '感謝' || 
           finalFormData.emotion === '達成感' || 
           finalFormData.emotion === '幸せ') {
+          finalFormData.emotion === '嬉しい' || 
+          finalFormData.emotion === '感謝' || 
+          finalFormData.emotion === '達成感' || 
+          finalFormData.emotion === '幸せ') {
         // 数値型として保存（NaNを防ぐため0をデフォルト値に）
         newEntry.selfEsteemScore = Number(finalWorthlessnessScores.todaySelfEsteem) || 50;
         newEntry.worthlessnessScore = Number(finalWorthlessnessScores.todayWorthlessness) || 50;
@@ -361,6 +365,10 @@ const DiaryPage: React.FC = () => {
       
       // 無価値感を選んだ場合、次回のために今回のスコアを前日のスコアとして設定
       if (finalFormData.emotion === '無価値感' || 
+          finalFormData.emotion === '嬉しい' || 
+          finalFormData.emotion === '感謝' || 
+          finalFormData.emotion === '達成感' || 
+          finalFormData.emotion === '幸せ') {
           finalFormData.emotion === '嬉しい' || 
           finalFormData.emotion === '感謝' || 
           finalFormData.emotion === '達成感' || 
@@ -837,9 +845,13 @@ const DiaryPage: React.FC = () => {
           formData.emotion === '感謝' || 
           formData.emotion === '達成感' || 
           formData.emotion === '幸せ') && (
+          formData.emotion === '嬉しい' || 
+          formData.emotion === '感謝' || 
+          formData.emotion === '達成感' || 
+          formData.emotion === '幸せ') && (
           <div className="bg-red-50 rounded-lg p-4 sm:p-6 border border-red-200 mb-6">
             <h3 className={`${formData.emotion === '無価値感' ? 'text-red-800' : 'text-green-800'} font-jp-bold mb-4`}>
-              「${formData.emotion}」を選んだ場合の入力
+              「{formData.emotion}」を選んだ場合の入力
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
