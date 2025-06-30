@@ -1,45 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { Database, Upload, Download, RefreshCw, CheckCircle, AlertTriangle, Shield, Info, Save } from 'lucide-react';
-import { supabase, userService, diaryService, syncService } from '../lib/supabase';
-import { useSupabase } from '../hooks/useSupabase';
-import { getCurrentUser } from '../lib/deviceAuth';
-import { formatDiaryForSupabase } from '../lib/utils';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Calendar, LineChart, Share2, Download, Filter, RefreshCw, TrendingUp } from 'lucide-react';
+import dayjs from 'dayjs'; 
+import isBetween from 'dayjs/plugin/isBetween'; 
+dayjs.extend(isBetween);
 
-const DataMigration: React.FC = () => {
-  const [localDataCount, setLocalDataCount] = useState<number>(0);
-  const [supabaseDataCount, setSupabaseDataCount] = useState<number>(0);
-  const [migrating, setMigrating] = useState(false);
-  const [migrationStatus, setMigrationStatus] = useState<string | null>(null);
-  const [migrationProgress, setMigrationProgress] = useState(0);
-  const [isCreatingUser, setIsCreatingUser] = useState(false);
-  const [userExists, setUserExists] = useState(false);
-  const [userCreationError, setUserCreationError] = useState<string | null>(null);
-  const [syncDirection, setSyncDirection] = useState<'local-to-supabase' | 'supabase-to-local'>('local-to-supabase');
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
-  const [autoSyncEnabled, setAutoSyncEnabled] = useState<boolean>(true);
-  const [backupInProgress, setBackupInProgress] = useState(false);
+/* 型例：日記データ */
+interface ScoreEntry {
+  date: string;                // ISO 形式 '2025-06-04'
+  selfEsteemScore: number;     // 0‒100
+  worthlessnessScore: number;  // 0‒100
+}
 
-  // 全体のデータ数を保持する状態
-  const [totalLocalDataCount, setTotalLocalDataCount] = useState<number>(0);
-  const [totalSupabaseDataCount, setTotalSupabaseDataCount] = useState<number>(0);
+interface InitialScore {
+  selfEsteemScore: number | string;
+  worthlessnessScore: number | string;
+  measurementMonth: string;
+  measurementDay: string;
+}
 
-  const { isConnected, currentUser, initializeUser, retryConnection } = useSupabase();
+interface EmotionCount {
+  emotion: string;
+  count: number;
+}
 
-  useEffect(() => {
-    loadDataInfo();
-    // 自動同期設定を読み込み
-    const autoSyncSetting = localStorage.getItem('auto_sync_enabled');
-    setAutoSyncEnabled(autoSyncSetting !== 'false'); // デフォルトはtrue
+/* ----- ★ タブ state ----- */
+type RangeKey = 'week' | 'month' | 'all';
 
-    // カウンセラーとしてログインしているかチェック
-    const counselorName = localStorage.getItem('current_counselor');
-    if (counselorName) {
-      setIsAdminMode(true);
-    }
-  }, []);
+const WorthlessnessChart: React.FC = () => {
+  const [chartData, setChartData] = useState<ScoreEntry[]>([]);
+  const [period, setPeriod] = useState<RangeKey>('week');
+  const [loading, setLoading] = useState(true);
+  const [allEmotionCounts, setAllEmotionCounts] = useState<{[key: string]: number}>({});
+  const [filteredEmotionCounts, setFilteredEmotionCounts] = useState<{[key: string]: number}>({});
+  const [emotionCounts, setEmotionCounts] = useState<EmotionCount[]>([]);
+  const [initialScore, setInitialScore] = useState<InitialScore | null>(null);
 
-  // 手動同期ボタンのハンドラー
   useEffect(() => {
     loadChartData();
   }, [period]);

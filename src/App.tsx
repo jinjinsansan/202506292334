@@ -1,699 +1,700 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Upload, Download, RefreshCw, CheckCircle, AlertTriangle, Shield, Info, Save } from 'lucide-react';
-import { supabase, userService, diaryService, syncService } from '../lib/supabase';
-import { useSupabase } from '../hooks/useSupabase';
-import { getCurrentUser } from '../lib/deviceAuth';
-import { formatDiaryForSupabase } from '../lib/utils';
+import { Heart, BookOpen, Search, BarChart2, HelpCircle, MessageCircle, Settings, Home, User, Menu, X, FileText, ArrowRight, Shield, BarChart, Database, LogOut, ExternalLink } from 'lucide-react';
+import { useMaintenanceStatus } from './hooks/useMaintenanceStatus';
+import { useSupabase } from './hooks/useSupabase';
+import { useAutoSync } from './hooks/useAutoSync';
+import { getCurrentUser } from './lib/deviceAuth';
 
-const DataMigration: React.FC = () => {
-  const [localDataCount, setLocalDataCount] = useState<number>(0);
-  const [supabaseDataCount, setSupabaseDataCount] = useState<number>(0);
-  const [migrating, setMigrating] = useState(false);
-  const [migrationStatus, setMigrationStatus] = useState<string | null>(null);
-  const [migrationProgress, setMigrationProgress] = useState(0);
-  const [isCreatingUser, setIsCreatingUser] = useState(false);
-  const [userExists, setUserExists] = useState(false);
-  const [userCreationError, setUserCreationError] = useState<string | null>(null);
-  const [syncDirection, setSyncDirection] = useState<'local-to-supabase' | 'supabase-to-local'>('local-to-supabase');
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
-  const [autoSyncEnabled, setAutoSyncEnabled] = useState<boolean>(true);
-  const [backupInProgress, setBackupInProgress] = useState(false);
+// コンポーネントのインポート
+import MaintenanceMode from './components/MaintenanceMode';
+import PrivacyConsent from './components/PrivacyConsent';
+import DeviceAuthLogin from './components/DeviceAuthLogin';
+import DeviceAuthRegistration from './components/DeviceAuthRegistration';
+import Chat from './components/Chat';
+import DataMigration from './components/DataMigration';
+import AdminPanel from './components/AdminPanel';
+import UserDataManagement from './components/UserDataManagement';
 
-  // 全体のデータ数を保持する状態
-  const [totalLocalDataCount, setTotalLocalDataCount] = useState<number>(0);
-  const [totalSupabaseDataCount, setTotalSupabaseDataCount] = useState<number>(0);
+// ページコンポーネントのインポート
+import DiaryPage from './pages/DiaryPage';
+import DiarySearchPage from './pages/DiarySearchPage';
+import EmotionTypes from './pages/EmotionTypes';
+import FirstSteps from './pages/FirstSteps';
+import HowTo from './pages/HowTo';
+import NextSteps from './pages/NextSteps';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import WorthlessnessChart from './pages/WorthlessnessChart';
+import Support from './pages/Support';
+import WelcomePage from './pages/WelcomePage';
 
-  const { isConnected, currentUser, initializeUser, retryConnection } = useSupabase();
+function App() {
+  // 状態管理
+  const [activeTab, setActiveTab] = useState<string>('home');
+  const [showPrivacyConsent, setShowPrivacyConsent] = useState(false);
+  const [lineUsername, setLineUsername] = useState<string | null>(null);
+  const [showDeviceAuth, setShowDeviceAuth] = useState(false);
+  const [isDeviceRegistration, setIsDeviceRegistration] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showWelcomePage, setShowWelcomePage] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
+  // カスタムフックの初期化
+  const { isMaintenanceMode, config, isAdminBypass } = useMaintenanceStatus();
+  const { isConnected, error: supabaseError, retryConnection } = useSupabase();
+  
+  // ローカルモードの確認
+  const isLocalMode = import.meta.env.VITE_LOCAL_MODE === 'true';
+  
+  // 自動同期フックを初期化
+  const autoSync = useAutoSync();
+  
+  // グローバルに公開（他のコンポーネントからアクセスできるように）
   useEffect(() => {
-    loadDataInfo();
-    // 自動同期設定を読み込み
-    const autoSyncSetting = localStorage.getItem('auto_sync_enabled');
-    setAutoSyncEnabled(autoSyncSetting !== 'false'); // デフォルトはtrue
+    if (typeof window !== 'undefined') {
+      window.autoSync = autoSync;
+    }
+  }, [autoSync]);
 
-    // カウンセラーとしてログインしているかチェック
-    const counselorName = localStorage.getItem('current_counselor');
-    if (counselorName) {
-      setIsAdminMode(true);
+  // 初期化
+  useEffect(() => {
+    // プライバシーポリシー同意状態の確認
+    const consentGiven = localStorage.getItem('privacyConsentGiven');
+    if (consentGiven !== 'true') {
+      setShowPrivacyConsent(true);
+    }
+
+    // ユーザー名の取得
+    const savedUsername = localStorage.getItem('line-username');
+    if (savedUsername) {
+      setLineUsername(savedUsername);
+    }
+
+    // 管理者状態の確認
+    const currentCounselor = localStorage.getItem('current_counselor');
+    if (currentCounselor) {
+      setIsAdmin(true);
     }
   }, []);
 
-  // 手動同期ボタンのハンドラー
-  const handleManualSync = async () => {
-    if (!isConnected) {
-      if (window.confirm('Supabaseに接続されていません。再接続を試みますか？')) {
-        retryConnection();
-        // 再接続は非同期なので、すぐに確認しても意味がない
-        // 代わりに、ユーザーに再試行を促す
-        alert('再接続を試みました。しばらくしてから再度お試しください。');
-        return;
-      }
-      return;
-    }
-    
-    setMigrating(true);
-    setMigrationStatus('同期を開始しています...');
-    setMigrationProgress(10);
-    
-    try {
-      // 現在のユーザーを取得
-      const user = getCurrentUser();
+  // 自動同期の状態を確認
+  useEffect(() => {
+    if (isConnected && autoSync.currentUser && autoSync.isAutoSyncEnabled) {
+      console.log('自動同期が有効です。5分ごとにデータが同期されます。ユーザー:', autoSync.currentUser.line_username);
       
-      // ユーザー情報がない場合はローカルストレージから取得
-      const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
-      
-      if (!lineUsername) {
-        throw new Error('ユーザー名が設定されていません');
-      }
-      
-      setMigrationStatus('ユーザー情報を確認中...');
-      setMigrationProgress(20);
-      
-      // ユーザーIDを取得
-      let userId = currentUser?.id;
-      
-      // ユーザーIDがない場合は初期化
-      if (!userId && lineUsername) {
-        setMigrationStatus(`ユーザー「${lineUsername}」を作成中...`);
-          }
-          
-          userId = supabaseUser.id;
-          console.log('新しいユーザーを作成しました:', lineUsername, 'ID:', userId);
-        } catch (userError) {
-          console.error('ユーザー作成エラー:', userError);
-          throw new Error('ユーザーの作成に失敗しました: ' + (userError instanceof Error ? userError.message : String(userError)));
-        }
-      }
-      
-      if (!userId) {
-        throw new Error('ユーザーIDが取得できませんでした');
-      }
-      
-      setMigrationProgress(40);
-      
-      // ローカルストレージから日記データを取得
-      setMigrationStatus('ローカルデータを読み込み中...');
-      setMigrationProgress(50);
-      let savedEntries;
-      try {
-        savedEntries = localStorage.getItem('journalEntries');
-        if (!savedEntries || savedEntries === '[]') {
-          setMigrationStatus('同期するデータがありません');
-          setMigrationProgress(100);
-          setTimeout(() => {
-            setMigrationStatus(null);
-            setMigrationProgress(0);
-          }, 3000);
-          return;
-        }
-      } catch (error) {
-        console.error('ローカルデータ取得エラー:', error);
-        setMigrationStatus('同期するデータがありません');
-        setMigrationProgress(100);
-        setTimeout(() => {
-          setMigrationStatus(null);
-          setMigrationProgress(0);
-        }, 3000);
-        return;
-      }
-      
-      let entries = [];
-      try {
-        entries = JSON.parse(savedEntries);
-        if (!Array.isArray(entries)) {
-          throw new Error('journalEntriesが配列ではありません');
-        }
-      } catch (error) {
-        throw new Error('日記データの解析に失敗しました: ' + error);
-      }
-      
-      setMigrationStatus(`${entries.length}件のデータを同期中...`);
-      setMigrationProgress(70);
-      
-      // 日記データをSupabase形式に変換
-      const formattedEntries = entries
-        .filter((entry: any) => {
-          if (!entry || !entry.id || !entry.date || !entry.emotion) {
-            console.warn('無効なエントリーをスキップ:', entry);
-            return false;
-          }
-          return true;
-        }) // 無効なデータをフィルタリング
-        .map((entry: any) => {
-          // 必須フィールドのみを含める
-          const formattedEntry = {
-            id: entry.id,
-            user_id: userId,
-            date: entry.date,
-            emotion: entry.emotion,
-            event: entry.event || '',
-            realization: entry.realization || '',
-            self_esteem_score: typeof entry.selfEsteemScore === 'number' ? entry.selfEsteemScore : 
-                              (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 
-                               (typeof entry.self_esteem_score === 'number' ? entry.self_esteem_score : 
-                                (typeof entry.self_esteem_score === 'string' ? parseInt(entry.self_esteem_score) : 50))),
-            worthlessness_score: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
-                                (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 
-                                 (typeof entry.worthlessness_score === 'number' ? entry.worthlessness_score : 
-                                  (typeof entry.worthlessness_score === 'string' ? parseInt(entry.worthlessness_score) : 50))),
-            created_at: entry.created_at || new Date().toISOString()
-          };
-          
-          // オプションフィールドは存在する場合のみ追加
-          const optionalFields = {
-            assigned_counselor: entry.assigned_counselor || entry.assignedCounselor || null,
-            urgency_level: entry.urgency_level || entry.urgencyLevel || null,
-            is_visible_to_user: entry.is_visible_to_user !== undefined ? entry.is_visible_to_user : 
-                               (entry.isVisibleToUser !== undefined ? entry.isVisibleToUser : false),
-            counselor_name: entry.counselor_name || entry.counselorName || null,
-            counselor_memo: entry.counselor_memo || entry.counselorMemo || null
-          };
-          
-          // 値が存在するフィールドのみを追加
-          for (const [key, value] of Object.entries(optionalFields)) {
-            if (value !== undefined) {
-              formattedEntry[key] = value;
-            }
-          }
-          
-          return formattedEntry;
+      // アプリ起動時に手動で同期を実行
+      setTimeout(() => {
+        autoSync.triggerManualSync().catch(error => {
+          console.error('初期同期エラー:', error);
         });
+      }, 2000);
+    }
+  }, [isConnected, autoSync.currentUser, autoSync.isAutoSyncEnabled]);
+
+  // プライバシーポリシー同意処理
+  const handlePrivacyConsent = (accepted: boolean) => {
+    if (accepted) {
+      // PrivacyConsentコンポーネントでユーザー名を入力してもらう
+      const username = localStorage.getItem('line-username');
+      localStorage.setItem('privacyConsentGiven', 'true');
+      localStorage.setItem('privacyConsentDate', new Date().toISOString());
+      setLineUsername(username);
       
-      // 日記データを同期
-      const { success, error } = await diaryService.syncDiaries(userId, formattedEntries);
-      console.log('同期結果:', success ? '成功' : '失敗', error || '', 'データ件数:', formattedEntries.length);
-      
-      if (!success) {
-        throw new Error(error || `日記の同期に失敗しました (${formattedEntries.length}件)`);
-      }
-      
-      // 同期時間を更新
-      const now = new Date().toISOString();
-      localStorage.setItem('last_sync_time', now);
-      console.log('同期完了時間:', now);
-      
-      setMigrationStatus(`同期が完了しました！${entries.length}件のデータを同期しました。`);
-      setMigrationProgress(100);
-      
-      // データ数を再読み込み
-      loadDataInfo();
-      
-      // 成功メッセージを表示
-      alert(`同期が完了しました！${entries.length}件のデータを同期しました。`);
-      
-      // 自動同期を有効化
-      localStorage.setItem('auto_sync_enabled', 'true');
-      setAutoSyncEnabled(true);
-      
-      setTimeout(() => {
-        setMigrationStatus(null);
-        setMigrationProgress(0);
-      }, 3000);
-      
-    } catch (error) {
-      console.error('手動同期エラー:', error);
-      setMigrationStatus(`同期エラー: ${error instanceof Error ? error.message : String(error)}`);
-      setMigrationProgress(100); // エラーでも100%にして完了を示す
-      
-      // エラーメッセージをアラートで表示
-      alert(`同期エラー: ${error instanceof Error ? error.message : String(error)}`);
-      
-      // 3秒後にステータスをクリア
-      setTimeout(() => {
-        setMigrationStatus(null);
-        setMigrationProgress(0);
-      }, 3000);
-    } finally {
-      setMigrating(false);
+      // 同意後に自動的にSupabaseユーザーを作成して同期を開始
+      if (isConnected && autoSync.isAutoSyncEnabled) {
+        setTimeout(() => {
+          autoSync.triggerManualSync().catch(error => {
+            console.error('初期同期エラー:', error);
+          });
+         }, 1000);
+       }
+       
+      setShowPrivacyConsent(false);
+    } else {
+      alert('プライバシーポリシーに同意いただけない場合、サービスをご利用いただけません。');
     }
   };
 
-
-  const loadDataInfo = async () => {
-    try {
-      console.log('データ情報を読み込み中...');
-      if (isAdminMode) {
-        // 管理者モードの場合は全体のデータ数を取得
-        await loadTotalData();
-      } else {
-        // 通常モードの場合は現在のユーザーのデータ数を取得
-        const localEntries = localStorage.getItem('journalEntries');
-        if (localEntries) {
-          const entries = JSON.parse(localEntries);
-          if (Array.isArray(entries)) {
-            setLocalDataCount(entries.length);
-            console.log('ローカルデータ数:', entries.length);
-          } else {
-            console.error('journalEntriesが配列ではありません:', entries);
-            setLocalDataCount(0);
-          }
-        }
-
-        // Supabaseデータ数を取得（接続されている場合のみ）
-        if (isConnected && currentUser) {
-          supabase.from('diary_entries')
-            .select('id', { count: 'exact' })
-            .eq('user_id', currentUser.id) 
-            .then(({ count, error }) => { 
-              if (error) {
-                console.error('Supabase日記データ数取得エラー:', error);
-                setSupabaseDataCount(0);
-              } else {
-                console.log('Supabase日記データ数:', count || 0);
-                setSupabaseDataCount(count || 0);
-              }
-            })
-            .catch((error) => {
-              console.error('Supabase日記データ数取得エラー:', error);
-              setSupabaseDataCount(0);
-            });
-        }
-      }
-    } catch (error) {
-      console.error('データ読み込みエラー:', error);
-    }
+  // デバイス認証処理
+  const handleDeviceAuthLogin = (username: string) => {
+    setLineUsername(username);
+    setShowDeviceAuth(false);
   };
 
-  // 自動同期の有効/無効を切り替える
-  const toggleAutoSync = (enabled: boolean) => {
-    localStorage.setItem('auto_sync_enabled', enabled.toString());
-    setAutoSyncEnabled(enabled);
+  // 管理者ログイン処理
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    // メールアドレスとパスワードの組み合わせをチェック
+    const counselorCredentials = [
+      { email: 'jin@namisapo.com', name: '心理カウンセラー仁', password: 'counselor123' },
+      { email: 'aoi@namisapo.com', name: '心理カウンセラーAOI', password: 'counselor123' },
+      { email: 'asami@namisapo.com', name: '心理カウンセラーあさみ', password: 'counselor123' },
+      { email: 'shu@namisapo.com', name: '心理カウンセラーSHU', password: 'counselor123' },
+      { email: 'yucha@namisapo.com', name: '心理カウンセラーゆーちゃ', password: 'counselor123' },
+      { email: 'sammy@namisapo.com', name: '心理カウンセラーSammy', password: 'counselor123' }
+    ];
     
-    try {
-      const user = getCurrentUser();
-      console.log(`自動同期が${enabled ? '有効' : '無効'}になりました - ユーザー: ${user?.lineUsername || 'unknown'}`);
-    } catch (error) {
-      console.error('ログ記録エラー:', error);
-    }
+    const counselor = counselorCredentials.find(c => c.email === adminEmail && c.password === adminPassword);
     
-    setMigrationStatus(`自動同期が${enabled ? '有効' : '無効'}になりました`);
-  };
-
-  // 全体のデータ数を取得する関数
-  const loadTotalData = async () => {
-    try {
-      // ローカルストレージから全ユーザーのデータを取得
-      const allLocalData = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('journalEntries_')) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            const entries = JSON.parse(data);
-            allLocalData.push(...entries);
-          }
-        }
-      }
-      setTotalLocalDataCount(allLocalData.length);
-
-      // Supabaseから全データ数を取得
-      const { count, error } = await supabase
-        .from('diary_entries')
-        .select('id', { count: 'exact' });
-      
-      if (error) {
-        console.error('Supabase全データ数取得エラー:', error);
-        setTotalSupabaseDataCount(0);
-      } else {
-        setTotalSupabaseDataCount(count || 0);
-      }
-    } catch (error) {
-      console.error('全体データ読み込みエラー:', error);
+    if (counselor) {
+        localStorage.setItem('current_counselor', counselor.name);
+        setIsAdmin(true);
+        setShowAdminLogin(false);
+        alert(`${counselor.name}としてログインしました。`);
+    } else {
+      alert('メールアドレスまたはパスワードが正しくありません。');
     }
   };
 
-  // バックアップデータの作成
-  const handleCreateBackup = () => {
-    setBackupInProgress(true);
-    setMigrationStatus(null);
+  // 管理者ログアウト処理
+  const handleAdminLogout = () => {
+    if (window.confirm('管理者ログアウトしますか？')) {
+      localStorage.removeItem('current_counselor');
+      setIsAdmin(false);
+      alert('管理者ログアウトしました。');
+    }
+  };
+
+  // ホームタブをクリックした時の処理
+  const handleHomeClick = () => {
+    setActiveTab('home');
+    setShowWelcomePage(true);
+  };
+
+  // はじめるボタンをクリックした時の処理
+  const handleStartClick = () => {
+    setShowWelcomePage(false);
+    setActiveTab('diary');
+  };
+
+  // WelcomePageからのイベントリスナー
+  useEffect(() => {
+    const handleStartApp = () => {
+      handleStartClick();
+    };
     
-    try {
-      // ローカルストレージからデータを収集
-      const backupObject = {
-        journalEntries: localStorage.getItem('journalEntries') ? JSON.parse(localStorage.getItem('journalEntries')!) : [],
-        initialScores: localStorage.getItem('initialScores') ? JSON.parse(localStorage.getItem('initialScores')!) : null,
-        consentHistories: localStorage.getItem('consent_histories') ? JSON.parse(localStorage.getItem('consent_histories')!) : [],
-        lineUsername: localStorage.getItem('line-username'),
-        privacyConsentGiven: localStorage.getItem('privacyConsentGiven'),
-        privacyConsentDate: localStorage.getItem('privacyConsentDate'),
-        backupDate: new Date().toISOString(),
-        version: '1.0'
-      };
-      
-      // JSONに変換してダウンロード
-      const dataStr = JSON.stringify(backupObject, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      
-      // ファイル名にユーザー名と日付を含める
-      const user = getCurrentUser();
-      const username = user?.lineUsername || localStorage.getItem('line-username') || 'user';
-      const date = new Date().toISOString().split('T')[0];
-      const fileName = `kanjou-nikki-backup-${username}-${date}.json`;
-      
-      // ダウンロードリンクを作成して自動クリック
-      const downloadLink = document.createElement('a');
-      downloadLink.href = URL.createObjectURL(dataBlob);
-      downloadLink.download = fileName;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      
-      setMigrationStatus('バックアップが正常に作成されました！');
-    } catch (error) {
-      console.error('バックアップ作成エラー:', error);
-      setMigrationStatus('バックアップの作成に失敗しました。');
-    } finally {
-      setBackupInProgress(false);
-    }
+    window.addEventListener('startApp', handleStartApp);
+    
+    return () => {
+      window.removeEventListener('startApp', handleStartApp);
+    };
+  }, []);
+
+  // メニューの開閉
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <Database className="w-8 h-8 text-blue-600" />
-            <h2 className="text-2xl font-jp-bold text-gray-900">データ管理</h2>
-          </div>
-          <button
-            onClick={loadDataInfo}
-            className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-jp-medium transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span>更新</span>
-          </button>
-        </div>
+  // メンテナンスモードの場合
+  if (isMaintenanceMode && !isAdminBypass) {
+    return <MaintenanceMode config={config} onRetry={retryConnection} />;
+  }
 
-        {/* 接続状態表示 */}
-        <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <div>
-                <h3 className="font-jp-bold text-gray-900 mb-2">自動同期設定</h3>
-                <p className="text-gray-700 font-jp-normal mb-4">
-                  Supabase: {isConnected ? '接続中' : '未接続'}
-                </p>
-                {!isConnected && (
-                  <button
-                    onClick={retryConnection}
-                    className="ml-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded-md font-jp-medium transition-colors"
-                  >
-                    再接続
-                  </button>
-                )}
-              </div>
+  // プライバシーポリシー同意画面
+  if (showPrivacyConsent) {
+    return <PrivacyConsent onConsent={handlePrivacyConsent} />;
+  }
+
+  // デバイス認証画面
+  if (showDeviceAuth) {
+    if (isDeviceRegistration) {
+      return (
+        <DeviceAuthRegistration
+          onRegistrationComplete={handleDeviceAuthLogin}
+          onBack={() => setShowDeviceAuth(false)}
+        />
+      );
+    } else {
+      return (
+        <DeviceAuthLogin
+          onLoginSuccess={handleDeviceAuthLogin}
+          onRegister={() => setIsDeviceRegistration(true)}
+          onBack={() => setShowDeviceAuth(false)}
+        />
+      );
+    }
+  }
+
+  // 管理者ログイン画面
+  if (showAdminLogin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
+          <div className="flex flex-col items-center mb-6">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <Shield className="w-8 h-8 text-blue-600" />
             </div>
+            <h1 className="text-2xl font-jp-bold text-gray-900 text-center">カウンセラーログイン</h1>
+            <p className="text-gray-600 text-sm mt-2">専用アカウントでログインしてください</p>
+          </div>
+          
+          <form onSubmit={handleAdminLogin} className="space-y-6">
             <div>
-              {isAdminMode && (
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-jp-medium border border-green-200">
-                  管理者モード
-                </span>
-              )}
-              {currentUser && (
-                <span className="ml-2 text-sm text-gray-500">
-                  {currentUser.line_username}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* データ数表示 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <h3 className="font-jp-bold text-gray-900 mb-2">
-              {isAdminMode ? '全体のローカルデータ' : 'ローカルデータ'}
-            </h3>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700 font-jp-normal">
-                {isAdminMode ? '総日記数:' : '日記数:'}
-              </span>
-              <span className="text-2xl font-jp-bold text-blue-600">{localDataCount}</span>
-            </div>
-          </div>
-          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <h3 className="font-jp-bold text-gray-900 mb-2">
-              {isAdminMode ? '全体のSupabaseデータ' : 'Supabaseデータ'}
-            </h3>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700 font-jp-normal">
-                {isAdminMode ? '総日記数:' : '日記数:'}
-              </span>
-              <span className="text-2xl font-jp-bold text-green-600">{supabaseDataCount}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 一般ユーザー向け自動同期設定 */}
-        {!isAdminMode && (
-          <div className="bg-blue-50 rounded-lg p-6 border border-blue-200 mb-6">
-            <div className="mb-4">
-              <div className="flex items-start space-x-3 mb-4">
-                <RefreshCw className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-jp-bold text-gray-900 mb-2">自動同期設定</h3>
-                  <p className="text-gray-700 font-jp-normal mb-4">
-                    自動同期機能は5分ごとにデータをクラウドに保存します。端末を変更する際にもデータが引き継がれます。
-                  </p>
-                </div>
-              </div>
-            
-              <button
-                onClick={handleManualSync} 
-                disabled={migrating || !isConnected}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
-              >
-                {migrating ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>同期中...</span>
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4" />
-                    <span>今すぐ同期する</span>
-                  </>
-                )}
-              </button>
-            
-              <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${autoSyncEnabled ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <span className="font-jp-medium text-gray-900">自動同期</span>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={autoSyncEnabled} 
-                    onChange={(e) => toggleAutoSync(e.target.checked)}
-                    className="sr-only peer" 
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-            
-              <div className="mt-4 bg-green-50 rounded-lg p-4 border border-green-200">
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-green-800 font-jp-normal">
-                    <p className="font-jp-medium mb-1">自動同期のメリット</p>
-                    <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>端末変更時にデータが引き継がれます</li>
-                      <li>ブラウザのキャッシュクリアでデータが失われません</li>
-                      <li>カウンセラーがあなたの日記を確認できます</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
+              <label className="block text-sm font-jp-medium text-gray-700 mb-2">
+                メールアドレス
+              </label>
+              <input
+                type="email"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal"
+                placeholder="例: jin@namisapo.com"
+              />
             </div>
             
-            {/* データバックアップセクション */}
-            <div className="mt-6 pt-4 border-t border-blue-200">
-              <div className="flex items-start space-x-3 mb-4">
-                <Save className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="font-jp-bold text-gray-900 mb-2">データのバックアップ</h4>
-                  <p className="text-sm text-gray-700 font-jp-normal">
-                    現在のデータをファイルとして保存できます。端末変更時や万が一の時に復元できます。
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleCreateBackup}
-                disabled={backupInProgress}
-                className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-jp-medium transition-colors w-full mb-3"
-              >
-                {backupInProgress ? (
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Download className="w-5 h-5" />
-                )}
-                <span>バックアップを作成</span>
-              </button>
+            <div>
+              <label className="block text-sm font-jp-medium text-gray-700 mb-2">
+                パスワード
+              </label>
+              <input
+                type="password"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal"
+                placeholder="パスワードを入力してください"
+              />
             </div>
-          </div>
-        )}
-        
-        {/* 管理者向けデータ移行セクション */}
-        {isAdminMode && (
-          <div className="bg-indigo-50 rounded-lg p-6 border border-indigo-200 mb-6">
-            <div className="mb-4">
-              <div className="flex items-start space-x-3 mb-4">
-                <Database className="w-6 h-6 text-indigo-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-jp-bold text-gray-900 mb-2">データ移行</h3>
-                  <p className="text-gray-700 font-jp-normal mb-4">
-                    ローカルデータとSupabaseデータを同期します。
-                  </p>
+            
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <div className="flex items-start space-x-2">
+                <div className="text-blue-600 mt-0.5">🔒</div>
+                <div className="text-sm text-blue-800">
+                  <p className="font-jp-medium">カウンセラー専用アカウント</p>
+                  <p className="text-xs mt-1">登録されたカウンセラー用メールアドレスとパスワードを入力してください。</p>
+                  <p className="text-xs mt-1">※ アカウント情報は管理者にお問い合わせください</p>
                 </div>
               </div>
             </div>
             
             <button
-              onClick={handleManualSync}
-              disabled={migrating || !isConnected}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-jp-bold transition-colors shadow-md hover:shadow-lg"
             >
-              {migrating ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>同期中...</span>
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4" />
-                  <span>今すぐ同期する</span>
-                </>
-              )}
+              ログイン
             </button>
+            
+            <button
+              type="button"
+              onClick={() => setShowAdminLogin(false)}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-jp-medium transition-colors mt-2"
+            >
+              キャンセル
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
-            {/* 同期方向選択 */}
-            <div className="mb-4 bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex space-x-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    checked={syncDirection === 'local-to-supabase'}
-                    onChange={() => setSyncDirection('local-to-supabase')}
-                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700 font-jp-normal">ローカル → Supabase</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    checked={syncDirection === 'supabase-to-local'}
-                    onChange={() => setSyncDirection('supabase-to-local')}
-                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700 font-jp-normal">Supabase → ローカル</span>
-                </label>
-              </div>
+  // メインコンテンツ
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* ヘッダー */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Heart className="w-6 h-6 text-orange-300" />
+              <h1 className="ml-2 text-xl font-jp-bold text-gray-900">かんじょうにっき</h1>
             </div>
-
-            {/* 管理者向けバックアップセクション */}
-            <div className="mt-6 pt-4 border-t border-indigo-200">
-              <div className="flex items-start space-x-3 mb-4">
-                <Save className="w-5 h-5 text-indigo-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="font-jp-bold text-gray-900 mb-2">データのバックアップ</h4>
-                  <p className="text-sm text-gray-700 font-jp-normal">
-                    現在のデータをファイルとして保存できます。管理者用バックアップを作成します。
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleCreateBackup}
-                disabled={backupInProgress}
-                className="flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-jp-medium transition-colors w-full mb-3"
-              >
-                {backupInProgress ? (
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Download className="w-5 h-5" />
-                )}
-                <span>管理者バックアップを作成</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 進捗表示 */}
-        {migrationStatus && (
-          <div className={`rounded-lg p-4 border ${
-            migrationStatus.includes('エラー') || migrationStatus.includes('失敗')
-              ? 'bg-red-50 border-red-200 text-red-800' 
-              : migrationStatus.includes('完了') 
-                ? 'bg-green-50 border-green-200 text-green-800' 
-                : 'bg-blue-50 border-blue-200 text-blue-800'
-          }`}>
-            <div className="flex items-center space-x-2 mb-2">
-              {migrationStatus.includes('エラー') ? (
-                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-              ) : migrationStatus.includes('完了') ? (
-                <CheckCircle className="w-5 h-5" />
-              ) : (
-                <RefreshCw className={`w-5 h-5 ${migrating ? 'animate-spin' : ''}`} />
-              )}
-              <span className="font-jp-medium">{migrationStatus}</span>
-            </div>
-            {migrating && migrationProgress > 0 && (
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                <div 
-                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                  style={{ width: `${migrationProgress}%` }}
-                ></div>
+            
+            {lineUsername && (
+              <div className="flex items-center space-x-2 ml-4">
+                <User className="w-5 h-5 text-gray-500" />
+                <span className="text-sm font-jp-medium text-gray-700">{lineUsername}さん</span>
               </div>
             )}
-          </div>
-        )}
-
-        {/* 説明セクション */}
-        <div className={`mt-6 ${isAdminMode ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} rounded-lg p-4 border`}>
-          <div className="flex items-start space-x-3">
-            <Info className={`w-5 h-5 ${isAdminMode ? 'text-green-600' : 'text-blue-600'} mt-0.5 flex-shrink-0`} />
-            <div className={`text-sm ${isAdminMode ? 'text-green-800' : 'text-blue-800'} font-jp-normal`}>
-              <p className="font-jp-medium mb-2">{isAdminMode ? 'データ管理について' : '自動同期について'}</p>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                {isAdminMode ? (
-                  <>
-                    <li>ローカルデータはブラウザに保存されています</li>
-                    <li>Supabaseデータはクラウドに保存されます</li>
-                    <li>管理者モードでは全体のデータ数が表示されます</li>
-                    <li>ブラウザのキャッシュをクリアするとローカルデータは失われます</li>
-                    <li>端末を変更する場合は、先にデータをSupabaseに移行してください</li>
-                  </>
-                ) : (
-                  <>
-                    <li>自動同期は5分ごとにバックグラウンドで実行されます</li>
-                    <li>ブラウザのキャッシュをクリアしても、データは安全に保存されます</li>
-                    <li>端末を変更する場合も、自動的にデータが引き継がれます</li>
-                    <li>自動同期を無効にすると、データが失われる可能性があります</li>
-                  </>
-                )}
-                {isAdminMode && <li className="font-jp-bold text-green-700">管理者モードでは、すべてのユーザーのデータを管理できます</li>}
-              </ul>
-            </div>
+            
+            <div className="flex-1"></div>
+            
+            <button 
+              onClick={toggleMenu}
+              className="p-2 rounded-md text-gray-500 hover:text-gray-700 focus:outline-none"
+            >
+              {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
-        
-        {/* 最終同期時間表示 */}
-        {!isAdminMode && (
-          <div className="mt-4 text-center text-sm text-gray-500">
-            {localStorage.getItem('last_sync_time') ? (
-              <p>
-                最終同期: {new Date(localStorage.getItem('last_sync_time') || '').toLocaleString('ja-JP')}
-              </p>
-            ) : (
-              <p>同期履歴はまだありません</p>
+      </header>
+
+      {/* サイドメニュー */}
+      <div className={`fixed inset-0 z-40 ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} transition-opacity duration-300 ease-in-out`}>
+        <div className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={toggleMenu}></div>
+        <div className={`relative max-w-md w-full h-full bg-amber-50 shadow-xl flex flex-col transform ${menuOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out overflow-hidden`}>
+          {/* 装飾的な円形要素 */}
+          <div className="absolute top-20 left-40 w-24 h-24 bg-amber-100 rounded-full opacity-50"></div>
+          <div className="absolute bottom-40 right-5 w-32 h-32 bg-amber-100 rounded-full opacity-50"></div>
+          <div className="absolute top-1/3 right-20 w-16 h-16 bg-amber-100 rounded-full opacity-30"></div>
+          <div className="absolute bottom-1/4 left-5 w-20 h-20 bg-amber-100 rounded-full opacity-40"></div>
+          <div className="absolute top-2/3 left-3/4 transform -translate-x-1/2 w-40 h-40 bg-amber-100 rounded-full opacity-20"></div>
+          
+          {/* メニュー内容 */}
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Heart className="w-6 h-6 text-orange-300" />
+                <h2 className="ml-2 text-xl font-jp-bold text-gray-900">かんじょうにっき</h2>
+              </div>
+              <button
+                onClick={toggleMenu}
+                className="p-2 rounded-md text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            {lineUsername && (
+              <div className="mt-4 flex items-center space-x-2">
+                <User className="w-5 h-5 text-gray-500" />
+                <span className="text-sm font-jp-medium text-gray-700">{lineUsername}さん</span>
+              </div>
             )}
           </div>
-        )}
+          
+          <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto relative z-10">
+            <button 
+              onClick={() => {
+                setActiveTab('home');
+                setShowWelcomePage(true);
+                toggleMenu();
+              }}
+              className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                activeTab === 'home' ? 'bg-amber-100 text-amber-900' : 'text-gray-700 hover:bg-amber-50'
+              }`}
+            >
+              <Home className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">TOP</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('howto');
+                setShowWelcomePage(false);
+                toggleMenu();
+              }}
+              className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                activeTab === 'howto' ? 'bg-amber-100 text-amber-900' : 'text-gray-700 hover:bg-amber-50'
+              }`}
+            >
+              <HelpCircle className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">使い方</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('first');
+                setShowWelcomePage(false);
+                toggleMenu();
+              }}
+              className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                activeTab === 'first' ? 'bg-amber-100 text-amber-900' : 'text-gray-700 hover:bg-amber-50'
+              }`}
+            >
+              <FileText className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">最初にやること</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('next');
+                setShowWelcomePage(false);
+                toggleMenu();
+              }}
+              className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                activeTab === 'next' ? 'bg-amber-100 text-amber-900' : 'text-gray-700 hover:bg-amber-50'
+              }`}
+            >
+              <ArrowRight className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">次にやること</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('chart');
+                setShowWelcomePage(false);
+                toggleMenu();
+              }}
+              className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                activeTab === 'chart' ? 'bg-amber-100 text-amber-900' : 'text-gray-700 hover:bg-amber-50'
+              }`}
+            >
+              <BarChart2 className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">感情の種類</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('support');
+                setShowWelcomePage(false);
+                toggleMenu();
+              }}
+              className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                activeTab === 'support' ? 'bg-amber-100 text-amber-900' : 'text-gray-700 hover:bg-amber-50'
+              }`}
+            >
+              <Shield className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">サポートについて</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('privacy');
+                setShowWelcomePage(false);
+                toggleMenu();
+              }}
+              className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                activeTab === 'privacy' ? 'bg-amber-100 text-amber-900' : 'text-gray-700 hover:bg-amber-50'
+              }`}
+            >
+              <Shield className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">同意文</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('diary');
+                setShowWelcomePage(false);
+                toggleMenu();
+              }}
+              className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                activeTab === 'diary' ? 'bg-amber-100 text-amber-900' : 'text-gray-700 hover:bg-amber-50'
+              }`}
+            >
+              <BookOpen className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">日記</span>
+            </button>
+             <button
+              onClick={() => {
+                setActiveTab('search');
+                setShowWelcomePage(false);
+                toggleMenu();
+              }}
+              className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                activeTab === 'search' ? 'bg-amber-100 text-amber-900' : 'text-gray-700 hover:bg-amber-50'
+              }`}
+            >
+              <Search className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">日記検索</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('worthlessness');
+                setShowWelcomePage(false);
+                toggleMenu();
+              }}
+              className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                activeTab === 'worthlessness' ? 'bg-amber-100 text-amber-900' : 'text-gray-700 hover:bg-amber-50'
+              }`}
+            >
+              <BarChart className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">無価値感推移</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('data');
+                setShowWelcomePage(false);
+                toggleMenu();
+              }}
+              className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                activeTab === 'data' ? 'bg-amber-100 text-amber-900' : 'text-gray-700 hover:bg-amber-50'
+              }`}
+            >
+              <Database className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">{isAdmin ? 'データ管理' : '同期設定'}</span>
+            </button>
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setActiveTab('admin');
+                  setShowWelcomePage(false);
+                  toggleMenu();
+                }}
+                className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                  activeTab === 'admin' ? 'bg-green-100 text-green-900' : 'text-green-700 hover:bg-amber-50'
+                }`}
+              >
+                <User className="w-5 h-5 mr-3" />
+                <span className="font-jp-medium">管理画面</span>
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setActiveTab('backup');
+                  setShowWelcomePage(false);
+                  toggleMenu();
+                }}
+                className={`flex items-center px-3 py-2 w-full rounded-md text-base ${
+                  activeTab === 'backup' ? 'bg-green-100 text-green-900' : 'text-green-700 hover:bg-amber-50'
+                }`}
+              >
+                <Database className="w-5 h-5 mr-3" />
+                <span className="font-jp-medium">データ管理</span>
+              </button>
+            )}
+            <a
+              href="https://ryksl1di.autosns.app/line"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center px-3 py-2 w-full rounded-md text-gray-700 hover:bg-amber-50 text-base"
+              onClick={toggleMenu}
+            >
+              <ExternalLink className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">お問い合わせ</span>
+            </a>
+            <button
+              onClick={() => {
+                if (window.confirm('ログアウトしますか？')) {
+                  localStorage.removeItem('line-username');
+                  localStorage.removeItem('privacyConsentGiven');
+                  localStorage.removeItem('privacyConsentDate');
+                  window.location.reload();
+                }
+                toggleMenu();
+              }}
+              className="flex items-center px-3 py-2 w-full rounded-md text-red-700 hover:bg-amber-50 text-base"
+            >
+              <LogOut className="w-5 h-5 mr-3" />
+              <span className="font-jp-medium">ログアウト</span>
+            </button>
+          </nav>
+          
+          <div className="p-4 border-t border-amber-200 relative z-10">
+            {isAdmin ? (
+              <button
+                onClick={handleAdminLogout}
+                className="flex items-center px-3 py-2 w-full rounded-md text-red-700 hover:bg-amber-50 text-base"
+              >
+                <span className="font-jp-medium">管理者ログアウト</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowAdminLogin(true)}
+                className="flex items-center px-3 py-2 w-full rounded-md text-gray-700 hover:bg-amber-50 text-base"
+              >
+                <span className="font-jp-medium">カウンセラーログイン</span>
+              </button>
+            )}
+          </div>
+        </div>
       </div>
+      {/* メインコンテンツ */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* ウェルカムページ表示 */}
+        {activeTab === 'home' && showWelcomePage ? (
+          <WelcomePage />
+        ) : (
+          <div className="space-y-6">
+            {/* 管理者モード表示 */}
+            {isAdmin && (
+              <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-green-800 font-jp-medium text-sm">管理者モード: {localStorage.getItem('current_counselor')}</span>
+                  </div>
+                  <button
+                    onClick={handleAdminLogout}
+                    className="text-xs text-red-600 hover:text-red-800 font-jp-medium"
+                  >
+                    ログアウト
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* メンテナンスモード表示（管理者バイパス時） */}
+            {isMaintenanceMode && isAdminBypass && (
+              <div className="bg-red-50 rounded-lg p-3 border border-red-200">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-red-800 font-jp-medium text-sm">メンテナンスモード中（管理者アクセス）</span>
+                </div>
+              </div>
+            )}
+
+            {/* Supabase接続エラー表示（ローカルモードでない場合のみ） */}
+            {supabaseError && !isLocalMode && (
+              <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                <div className="flex items-start space-x-3">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full mt-1"></div>
+                  <div>
+                    <h3 className="font-jp-medium text-yellow-800 text-sm">Supabase接続エラー</h3>
+                    <p className="text-yellow-700 text-xs mt-1">{supabaseError}</p>
+                    <button
+                      onClick={retryConnection}
+                      className="mt-2 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-3 py-1 rounded-md font-jp-medium transition-colors"
+                    >
+                      再接続
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* ローカルモード表示 */}
+            {isLocalMode && (
+              <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-green-800 font-jp-medium text-sm">ローカルモードで動作中（Supabase接続なし）</span>
+                </div>
+              </div>
+            )}
+
+            {/* アクティブなタブに応じたコンテンツ表示 */}
+            {activeTab === 'home' && !showWelcomePage && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h2 className="text-2xl font-jp-bold text-gray-900 mb-6">ダッシュボード</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+                    <h3 className="font-jp-bold text-gray-900 mb-4">最近の日記</h3>
+                    <p className="text-gray-600 font-jp-normal">
+                      最近の日記を確認したり、新しい日記を書いたりできます。
+                    </p>
+                    <button
+                      onClick={() => setActiveTab('diary')}
+                      className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-jp-medium transition-colors"
+                    >
+                      日記を書く
+                    </button>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-6 border border-green-200">
+                    <h3 className="font-jp-bold text-gray-900 mb-4">無価値感推移</h3>
+                    <p className="text-gray-600 font-jp-normal">
+                      あなたの無価値感の推移を確認できます。
+                    </p>
+                    <button
+                      onClick={() => setActiveTab('chart')}
+                      className="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-jp-medium transition-colors"
+                    >
+                      グラフを見る
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => setShowWelcomePage(true)}
+                    className="text-blue-600 hover:text-blue-800 font-jp-medium text-sm"
+                  >
+                    ウェルカム画面に戻る
+                  </button>
+                </div>
+              </div>
+            )}
+            {activeTab === 'diary' && <DiaryPage />}
+            {activeTab === 'search' && <DiarySearchPage />}
+            {activeTab === 'chart' && <EmotionTypes />}
+            {activeTab === 'howto' && <HowTo />}
+            {activeTab === 'first' && <FirstSteps />}
+            {activeTab === 'next' && <NextSteps />}
+            {activeTab === 'support' && <Support />}
+            {activeTab === 'privacy' && <PrivacyPolicy />}
+            {activeTab === 'worthlessness' && <WorthlessnessChart />}
+            {activeTab === 'chat' && <Chat />}
+            {activeTab === 'data' && <DataMigration />}
+            {activeTab === 'backup' && <UserDataManagement />}
+            {activeTab === 'admin' && isAdmin && <AdminPanel />}
+          </div>
+        )}
+      </main>
+
     </div>
   );
-};
+}
 
-export default DataMigration;
+export default App;
