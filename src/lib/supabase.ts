@@ -171,7 +171,7 @@ export const diaryService = {
             }
           }
           
-          return {
+          const formattedEntry = {
           id: diaryId,
           user_id: userId,
           date: diary.date || new Date().toISOString().split('T')[0],
@@ -187,33 +187,39 @@ export const diaryService = {
           
           // オプションフィールドを追加
           const optionalFields = {
+            counselor_memo: diary.counselor_memo || diary.counselorMemo,
             counselor_memo: diary.counselor_memo || diary.counselorMemo || null,
             is_visible_to_user: diary.is_visible_to_user !== undefined ? diary.is_visible_to_user : 
                                (diary.isVisibleToUser !== undefined ? diary.isVisibleToUser : false),
             counselor_name: diary.counselor_name || diary.counselorName || null,
             assigned_counselor: diary.assigned_counselor || diary.assignedCounselor || null,
             urgency_level: diary.urgency_level || diary.urgencyLevel || null
-        
-            counselor_name: diary.counselor_name || diary.counselorName || null,
-            assigned_counselor: diary.assigned_counselor || diary.assignedCounselor || null,
-            urgency_level: diary.urgency_level || diary.urgencyLevel || null
           };
           
           // 同期前にデータをログに出力（デバッグ用）
-          if (formattedDiaries.length > 0) {
-            console.log('同期するデータの例:', formattedDiaries[0]);
-          }
-          // 値が存在するフィールドのみを追加
-          for (const [key, value] of Object.entries(optionalFields)) {
-            if (value !== undefined && value !== null) {
-              diaryId[key] = value;
-            }
+          if (i === 0) {
+            console.log('同期するデータの例:', formattedEntry);
           }
           
-          return diaryId;
+          // 値が存在するフィールドのみを追加
+          for (const [key, value] of Object.entries(optionalFields)) {
+            formattedEntry[key] = value;
+          }
+          
+          return formattedEntry;
         });
+        
+        // 同期前にデータをログに出力（デバッグ用）
+        if (formattedDiaries.length > 0) {
+          console.log('同期するデータの例:', formattedDiaries[0]);
+        }
       
       console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
+      
+      // 同期前にデータをログに出力（デバッグ用）
+      if (formattedDiaries.length > 0) {
+        console.log('同期するデータの最初の例:', JSON.stringify(formattedDiaries[0], null, 2));
+      }
       
       if (formattedDiaries.length === 0) {
         return { success: true, message: '有効な同期データがありません' };

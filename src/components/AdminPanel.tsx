@@ -211,7 +211,8 @@ const AdminPanel: React.FC = () => {
       // Supabaseの更新（接続されている場合）
       if (supabase && selectedEntry.id) {
         try {
-          console.log('Supabaseにメモを保存します:', {
+          console.log('Supabaseにカウンセラーメモを保存します:', {
+            id: selectedEntry.id,
             counselor_memo: memoText,
             is_visible_to_user: isVisibleToUser,
             urgency_level: urgencyLevel || null,
@@ -235,13 +236,10 @@ const AdminPanel: React.FC = () => {
             throw new Error(`Supabaseメモ更新エラー: ${error.message}`);
           } else {
             console.log('Supabaseメモ更新成功:', data);
-            throw new Error(`Supabaseメモ更新エラー: ${error.message}`);
-          } else {
-            console.log('Supabaseメモ更新成功:', data);
           }
         } catch (supabaseError) {
           console.error('Supabase接続エラー:', supabaseError);
-          throw supabaseError;
+          throw new Error(`Supabase接続エラー: ${supabaseError}`);
         }
       }
       
@@ -328,15 +326,9 @@ const AdminPanel: React.FC = () => {
       // 方法2: 直接supabaseを使用（フォールバック）
       else if (supabase && entryId) {
         try {
-          console.log('Supabaseにメモを保存します:', {
-            counselor_memo: memoText,
-            is_visible_to_user: isVisibleToUser,
-            urgency_level: urgencyLevel || null,
-            assigned_counselor: assignedCounselor || null,
-            counselor_name: isVisibleToUser ? currentCounselor : null
-          });
+          console.log('Supabaseから日記を削除します:', entryId);
           
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from('diary_entries')
             .delete()
             .eq('id', entryId);
@@ -346,7 +338,7 @@ const AdminPanel: React.FC = () => {
           }
         } catch (supabaseError) {
           console.error('Supabase接続エラー:', supabaseError);
-          throw supabaseError;
+          throw new Error(`Supabase接続エラー: ${supabaseError}`);
         }
       }
       
@@ -355,6 +347,19 @@ const AdminPanel: React.FC = () => {
       setFilteredEntries(prevEntries => prevEntries.filter(entry => entry.id !== entryId));      
       
       alert('日記を削除しました！');
+      
+      // 自動同期を実行して確実にSupabaseに反映させる
+      if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
+        try {
+          console.log('カウンセラーメモ保存後に自動同期を実行します');
+          setTimeout(async () => {
+            const syncResult = await window.autoSync.triggerManualSync();
+            console.log('自動同期結果:', syncResult ? '成功' : '失敗');
+          }, 1000); // 1秒後に実行して保存処理が完了するのを待つ
+        } catch (syncError) {
+          console.error('自動同期エラー:', syncError);
+        }
+      }
       
     } catch (error) {
       console.error('削除エラー:', error);
