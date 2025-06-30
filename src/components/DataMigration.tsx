@@ -42,7 +42,7 @@ const DataMigration: React.FC = () => {
   // 手動同期ボタンのハンドラー
   const handleManualSync = async () => {
     if (!isConnected) {
-      alert('Supabaseに接続されていません。接続を確認してください。');
+      alert('Supabaseに接続されていません。再接続してから試してください。');
       return;
     }
     
@@ -57,7 +57,7 @@ const DataMigration: React.FC = () => {
       const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
       
       if (!lineUsername) {
-        throw new Error('ユーザー名が設定されていません。ユーザー名を設定してください。');
+        throw new Error('ユーザー名が設定されていません');
       }
       
       setMigrationStatus('ユーザー情報を確認中...');
@@ -67,7 +67,7 @@ const DataMigration: React.FC = () => {
       let userId = currentUser?.id;
       
       // ユーザーIDがない場合は初期化
-      if (!userId) {
+      if (!userId && lineUsername) {
         setMigrationStatus(`ユーザー「${lineUsername}」を作成中...`);
         const supabaseUser = await userService.createOrGetUser(lineUsername);
         if (!supabaseUser || !supabaseUser.id) {
@@ -75,6 +75,7 @@ const DataMigration: React.FC = () => {
         }
         
         userId = supabaseUser.id;
+        console.log('新しいユーザーを作成しました:', lineUsername, 'ID:', userId);
         setMigrationProgress(40);
       }
       
@@ -82,7 +83,7 @@ const DataMigration: React.FC = () => {
       setMigrationStatus('ローカルデータを読み込み中...');
       setMigrationProgress(50);
       const savedEntries = localStorage.getItem('journalEntries');
-      if (!savedEntries) {
+      if (!savedEntries || savedEntries === '[]') {
         setMigrationStatus('同期するデータがありません');
         setMigrationProgress(100);
         setTimeout(() => {
@@ -92,8 +93,15 @@ const DataMigration: React.FC = () => {
         return;
       }
       
-      const entries = JSON.parse(savedEntries);
-      console.log('同期する日記データ:', entries.length, '件');
+      let entries = [];
+      try {
+        entries = JSON.parse(savedEntries);
+        if (!Array.isArray(entries)) {
+          throw new Error('journalEntriesが配列ではありません');
+        }
+      } catch (error) {
+        throw new Error('日記データの解析に失敗しました: ' + error);
+      }
       
       setMigrationStatus(`${entries.length}件のデータを同期中...`);
       setMigrationProgress(70);
@@ -101,7 +109,7 @@ const DataMigration: React.FC = () => {
       // 日記データを同期
       const { success, error } = await diaryService.syncDiaries(userId, entries);
       
-      if (!success) {
+      if (!success && error) {
         throw new Error(error || '日記の同期に失敗しました');
       }
       
@@ -109,7 +117,7 @@ const DataMigration: React.FC = () => {
       const now = new Date().toISOString();
       localStorage.setItem('last_sync_time', now);
       
-      setMigrationStatus('同期が完了しました！');
+      setMigrationStatus(`同期が完了しました！${entries.length}件のデータを同期しました。`);
       setMigrationProgress(100);
       
       // データ数を再読み込み
@@ -122,7 +130,7 @@ const DataMigration: React.FC = () => {
       
     } catch (error) {
       console.error('手動同期エラー:', error);
-      setMigrationStatus(`同期エラー: ${error instanceof Error ? error.message : '不明なエラー'}`);
+      setMigrationStatus(`同期エラー: ${error instanceof Error ? error.message : String(error)}`);
       setMigrationProgress(0);
     } finally {
       setMigrating(false);
@@ -131,6 +139,7 @@ const DataMigration: React.FC = () => {
 
   const loadDataInfo = async () => {
     try {
+      console.log('データ情報を読み込み中...');
       if (isAdminMode) {
         // 管理者モードの場合は全体のデータ数を取得
         await loadTotalData();
@@ -138,11 +147,12 @@ const DataMigration: React.FC = () => {
         // 通常モードの場合は現在のユーザーのデータ数を取得
         const localEntries = localStorage.getItem('journalEntries');
         if (localEntries) {
-          try {
-            const entries = JSON.parse(localEntries);
-            setLocalDataCount(Array.isArray(entries) ? entries.length : 0);
-          } catch (error) {
-            console.error('ローカルデータの解析エラー:', error);
+          const entries = JSON.parse(localEntries);
+          if (Array.isArray(entries)) {
+            setLocalDataCount(entries.length);
+            console.log('ローカルデータ数:', entries.length);
+          } else {
+            console.error('journalEntriesが配列ではありません:', entries);
             setLocalDataCount(0);
           }
         }
@@ -151,12 +161,15 @@ const DataMigration: React.FC = () => {
         if (isConnected && currentUser) {
           supabase.from('diary_entries')
             .select('id', { count: 'exact' })
-            .eq('user_id', currentUser.id)
-            .limit(1)
+            .eq('user_id', currentUser.id) 
             .then(({ count, error }) => {
-              console.log('Supabase日記データ数取得結果:', { count, error });
-              console.log('Supabase日記データ数:', count || 0);
-              setSupabaseDataCount(count || 0);
+              if (error) {
+                console.error('Supabase日記データ数取得エラー:', error);
+                setSupabaseDataCount(0);
+              } else {
+                console.log('Supabase日記データ数:', count || 0);
+                setSupabaseDataCount(count || 0);
+              }
             })
             .catch((error) => {
               console.error('Supabase日記データ数取得エラー:', error);

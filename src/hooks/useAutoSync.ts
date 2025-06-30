@@ -52,7 +52,7 @@ export const useAutoSync = (): AutoSyncState => {
   // ユーザー情報の初期化
   const initializeUser = useCallback(async () => {
     if (!supabase) {
-      console.log('ローカルモードで動作中: Supabase接続なし');
+      console.log('ローカルモードで動作中: Supabase接続なし、同期は無効');
       // ローカルモードでも、ユーザー名が設定されていれば現在のユーザーとして扱う
       const lineUsername = localStorage.getItem('line-username');
       if (lineUsername) {
@@ -67,27 +67,31 @@ export const useAutoSync = (): AutoSyncState => {
       // ユーザー情報がない場合はローカルストレージから取得
       const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
       
-      if (!lineUsername) {
-        console.log('ユーザー名が設定されていません。ローカルストレージを確認してください。');
-        return;
+      if (!lineUsername || lineUsername.trim() === '') {
+        console.error('ユーザーがログインしていないか、ユーザー名がありません');
+        setError('ユーザー名が設定されていません');
+        return null;
       }
       
       // Supabaseでユーザーを作成または取得
       const supabaseUser = await userService.createOrGetUser(lineUsername);
       if (supabaseUser) {
         setCurrentUser(supabaseUser);
-        console.log('ユーザー初期化完了:', supabaseUser.line_username);
+        console.log('ユーザー初期化完了:', supabaseUser.line_username, 'ID:', supabaseUser.id);
+        return supabaseUser;
       }
+      return null;
     } catch (error) {
       console.error('ユーザー初期化エラー:', error);
       setError('ユーザー初期化に失敗しました');
+      return null;
     }
   }, []);
   
   // データ同期処理
   const syncData = useCallback(async (): Promise<boolean> => {
     if (!supabase) {
-      console.log('ローカルモードで動作中: Supabase接続なし、同期をスキップ');
+      console.log('ローカルモードで動作中: Supabase接続なし、同期をスキップします');
       return false;
     }
     
@@ -105,8 +109,8 @@ export const useAutoSync = (): AutoSyncState => {
       // ユーザー情報がない場合はローカルストレージから取得
       const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
       
-      if (!lineUsername) {
-        console.log('ユーザー名が設定されていません。同期をスキップします。');
+      if (!lineUsername || lineUsername.trim() === '') {
+        console.error('ユーザーがログインしていないか、ユーザー名がありません');
         setError('ユーザー名が設定されていません');
         return false;
       }
@@ -117,13 +121,14 @@ export const useAutoSync = (): AutoSyncState => {
       // ユーザーIDがない場合は初期化
       if (!userId) {
         const supabaseUser = await userService.createOrGetUser(lineUsername);
-        if (!supabaseUser || !supabaseUser.id) {
+        if (!supabaseUser) {
           console.error('ユーザーの作成に失敗しました');
           setError('ユーザーの作成に失敗しました');
           return false;
         }
         
         userId = supabaseUser.id;
+        console.log('新しいユーザーを作成しました:', lineUsername, 'ID:', userId);
         setCurrentUser(supabaseUser);
       }
       
@@ -148,12 +153,13 @@ export const useAutoSync = (): AutoSyncState => {
       // 空の配列の場合は同期をスキップ
       if (!entries || entries.length === 0) {
         console.log('同期する日記データがありません（空の配列）');
-        setLastSyncTime(new Date().toISOString());
-        localStorage.setItem('last_sync_time', new Date().toISOString());
+        const now = new Date().toISOString();
+        setLastSyncTime(now);
+        localStorage.setItem('last_sync_time', now);
         return true;
       }
       
-      console.log('同期する日記データ:', entries.length, '件');
+      console.log('同期する日記データ:', entries.length, '件', 'ユーザーID:', userId);
       
       // 日記データを同期
       const { success, error } = await diaryService.syncDiaries(userId, entries);
@@ -166,8 +172,8 @@ export const useAutoSync = (): AutoSyncState => {
       const now = new Date().toISOString();
       setLastSyncTime(now);
       localStorage.setItem('last_sync_time', now);
-
-      console.log('データ同期完了:', entries.length, '件', '時刻:', now);
+      
+      console.log('データ同期完了:', entries.length, '件', 'ユーザーID:', userId, '時刻:', now);
       return true;
     } catch (err) {
       console.error('データ同期エラー:', err);

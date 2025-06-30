@@ -3,7 +3,7 @@ import { Heart, BookOpen, Search, BarChart2, HelpCircle, MessageCircle, Settings
 import { useMaintenanceStatus } from './hooks/useMaintenanceStatus';
 import { useSupabase } from './hooks/useSupabase';
 import { useAutoSync } from './hooks/useAutoSync';
-import { isAuthenticated, getCurrentUser, getAuthSession } from './lib/deviceAuth';
+import { getCurrentUser } from './lib/deviceAuth';
 
 // コンポーネントのインポート
 import MaintenanceMode from './components/MaintenanceMode';
@@ -75,7 +75,14 @@ function App() {
   // 自動同期の状態を確認
   useEffect(() => {
     if (isConnected && autoSync.currentUser && autoSync.isAutoSyncEnabled) {
-      console.log('自動同期が有効です。5分ごとにデータが同期されます。');
+      console.log('自動同期が有効です。5分ごとにデータが同期されます。ユーザー:', autoSync.currentUser.line_username);
+      
+      // アプリ起動時に手動で同期を実行
+      setTimeout(() => {
+        autoSync.triggerManualSync().catch(error => {
+          console.error('初期同期エラー:', error);
+        });
+      }, 2000);
     }
   }, [isConnected, autoSync.currentUser, autoSync.isAutoSyncEnabled]);
 

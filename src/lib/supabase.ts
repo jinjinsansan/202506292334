@@ -2,20 +2,31 @@ import { createClient } from '@supabase/supabase-js';
 
 // Supabase設定
 // 環境変数から取得するか、直接指定する
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://afojjlfuwglzukzinpzx.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmb2pqbGZ1d2dsenVremlucHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MDc4MzEsImV4cCI6MjA2NjE4MzgzMX0.ovSwuxvBL5gHtW4XdDkipz9QxWL_njAkr7VQgy1uVRY';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://afojjlfuwglzukzinpzx.supabase.co'; 
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmb2pqbGZ1d2dsenVremlucHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MDc4MzEsImV4cCI6MjA2NjE4MzgzMX0.ovSwuxvBL5gHtW4XdDkipz9QxWL_njAkr7VQgy1uVRY'; 
 const isLocalMode = import.meta.env.VITE_LOCAL_MODE === 'true';
 
 // Supabaseクライアントの作成（ローカルモードでない場合のみ）
-export const supabase = !isLocalMode && supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+// 常に接続を試みる（ローカルモードでも接続情報があれば接続）
+export const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+      }
+    })
+  : null; 
 
 // ユーザーサービス
 export const userService = {
   // ユーザーの作成または取得
   async createOrGetUser(lineUsername: string) {
     if (!supabase) return null;
+    
+    if (!lineUsername || lineUsername.trim() === '') {
+      console.error('ユーザー名が空です');
+      return null;
+    }
 
     try {
       // 既存ユーザーの検索
@@ -26,7 +37,7 @@ export const userService = {
         .single();
       
       if (searchError && searchError.code !== 'PGRST116') {
-        console.error('ユーザー検索エラー:', searchError);
+        console.error('ユーザー検索エラー:', searchError, 'ユーザー名:', lineUsername);
         return null;
       }
       
@@ -38,7 +49,7 @@ export const userService = {
       // 新規ユーザーの作成
       const { data: newUser, error: createError } = await supabase
         .from('users') 
-        .insert([{ line_username: lineUsername }])
+        .insert([{ line_username: lineUsername.trim() }])
         .select()
         .single();
       
@@ -57,6 +68,11 @@ export const userService = {
   // ユーザーIDの取得
   async getUserId(lineUsername: string) {
     if (!supabase) return null;
+    
+    if (!lineUsername || lineUsername.trim() === '') {
+      console.error('ユーザー名が空です');
+      return null;
+    }
 
     try {
       const { data, error } = await supabase
@@ -84,25 +100,40 @@ export const diaryService = {
   async syncDiaries(userId: string, diaries: any[]) {
     if (!supabase) return { success: false, error: 'Supabase接続なし' };
 
+    if (!userId) {
+      return { success: false, error: 'ユーザーIDが指定されていません' };
+    }
+
+    if (!diaries || !Array.isArray(diaries) || diaries.length === 0) {
+      return { success: true, message: '同期するデータがありません' };
+    }
+
     try {
       // 日記データの整形
-      const formattedDiaries = diaries.map(diary => ({
-        id: diary.id,
-        user_id: userId,
-        date: diary.date,
-        emotion: diary.emotion,
-        event: diary.event,
-        realization: diary.realization,
-        self_esteem_score: diary.selfEsteemScore || 0,
-        worthlessness_score: diary.worthlessnessScore || 0,
-        counselor_memo: diary.counselor_memo || null,
-        is_visible_to_user: diary.is_visible_to_user || false,
-        counselor_name: diary.counselor_name || null,
-        assigned_counselor: diary.assigned_counselor || null,
-        urgency_level: diary.urgency_level || null
-      }));
+      const formattedDiaries = diaries
+        .filter(diary => diary && diary.id && diary.date && diary.emotion) // 無効なデータをフィルタリング
+        .map(diary => ({
+          id: diary.id,
+          user_id: userId,
+          date: diary.date,
+          emotion: diary.emotion,
+          event: diary.event || '',
+          realization: diary.realization || '',
+          self_esteem_score: diary.selfEsteemScore || 0,
+          worthlessness_score: diary.worthlessnessScore || 0,
+          counselor_memo: diary.counselor_memo || null,
+          is_visible_to_user: diary.is_visible_to_user || false,
+          counselor_name: diary.counselor_name || null,
+          assigned_counselor: diary.assigned_counselor || null,
+          urgency_level: diary.urgency_level || null,
+          created_at: diary.created_at || new Date().toISOString()
+        }));
       
-      console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件');
+      console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
+      
+      if (formattedDiaries.length === 0) {
+        return { success: true, message: '有効な同期データがありません' };
+      }
       
       // 一括挿入（競合時は更新）
       const { data, error } = await supabase
@@ -114,7 +145,7 @@ export const diaryService = {
         });
       
       if (error) {
-        console.error('日記同期エラー:', error);
+        console.error('日記同期エラー:', error, 'データ件数:', formattedDiaries.length);
         return { success: false, error: error.message };
       }
       

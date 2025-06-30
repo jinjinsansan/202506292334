@@ -57,7 +57,7 @@ const AdminPanel: React.FC = () => {
 
   const loadEntries = async () => {
     setLoading(true);
-    try {
+    console.log('管理画面: 日記データを読み込み開始');
       console.log('管理画面: 日記データを読み込み中...');
       // ローカルストレージからデータを取得
       const savedEntries = localStorage.getItem('journalEntries');
@@ -77,6 +77,7 @@ const AdminPanel: React.FC = () => {
       // Supabaseからデータを取得（接続されている場合）
       let supabaseEntries = [];
       if (supabase) {
+        console.log('Supabaseからデータを取得中...');
         try {
           const { data, error } = await supabase
             .from('diary_entries')
@@ -89,8 +90,12 @@ const AdminPanel: React.FC = () => {
           if (error) {
             console.error('Supabaseデータ取得エラー:', error);
           } else if (data) {
-            supabaseEntries = data;
-            console.log('Supabaseから取得したエントリー:', data.length);
+            if (Array.isArray(data)) {
+              supabaseEntries = data;
+              console.log('Supabaseから取得したエントリー:', data.length);
+            } else {
+              console.error('Supabaseから取得したデータが配列ではありません:', data);
+            }
           }
         } catch (supabaseError) {
           console.error('Supabase接続エラー:', supabaseError);
@@ -99,7 +104,7 @@ const AdminPanel: React.FC = () => {
       
       // データを結合（重複を避けるため、IDをキーとして使用）
       const entriesMap = new Map();
-      console.log('データ結合処理を開始...');
+      console.log('データ結合処理を開始... ローカル:', localEntries.length, 'Supabase:', supabaseEntries.length);
       
       // ローカルデータを追加
       localEntries.forEach((entry: any) => {
@@ -154,9 +159,20 @@ const AdminPanel: React.FC = () => {
       
       // Mapから配列に変換
       const combinedEntries = Array.from(entriesMap.values());
+      console.log('結合後のエントリー数:', combinedEntries.length);
       
       // 日付順でソート（新しい順）- 無効な日付を考慮
-      combinedEntries.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      combinedEntries.sort((a: any, b: any) => {
+        const dateA = new Date(b.date);
+        const dateB = new Date(a.date);
+        
+        // 無効な日付の場合は比較しない
+        if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+          return 0;
+        }
+        
+        return dateA.getTime() - dateB.getTime();
+      });
       
       setEntries(combinedEntries);
       setFilteredEntries(combinedEntries);
