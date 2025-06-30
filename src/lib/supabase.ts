@@ -2,13 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 
 // Supabase設定
 // 環境変数から取得するか、直接指定する
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''; 
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''; 
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://afojjlfuwglzukzinpzx.supabase.co'; 
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmb2pqbGZ1d2dsenVremlucHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MDc4MzEsImV4cCI6MjA2NjE4MzgzMX0.ovSwuxvBL5gHtW4XdDkipz9QxWL_njAkr7VQgy1uVRY'; 
 const isLocalMode = import.meta.env.VITE_LOCAL_MODE === 'true';
 
 // Supabaseクライアントの作成（ローカルモードでない場合のみ）
 // 常に接続を試みる（ローカルモードでも接続情報があれば接続）
-export const supabase = supabaseUrl && supabaseAnonKey && !isLocalMode
+export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
@@ -16,21 +16,6 @@ export const supabase = supabaseUrl && supabaseAnonKey && !isLocalMode
       }
     })
   : null; 
-
-// グローバルにsupabaseを公開（コンポーネントからアクセスできるように）
-if (typeof window !== 'undefined') {
-  window.supabase = supabase;
-}
-
-// グローバルにsupabaseを公開（コンポーネントからアクセスできるように）
-if (typeof window !== 'undefined') {
-  window.supabase = supabase;
-}
-
-// グローバルにsupabaseを公開（コンポーネントからアクセスできるように）
-if (typeof window !== 'undefined') {
-  window.supabase = supabase;
-}
 
 // グローバルにsupabaseを公開（コンポーネントからアクセスできるように）
 if (typeof window !== 'undefined') {
@@ -120,21 +105,6 @@ export const diaryService = {
   async syncDiaries(userId: string, diaries: any[]) {
     if (!supabase) return { success: false, error: 'Supabase接続なし' };
     
-    // ローカルモードの場合は同期をスキップ
-    if (isLocalMode) {
-      return { success: true, message: 'ローカルモードのため同期をスキップしました' };
-    }
-    
-    // ローカルモードの場合は同期をスキップ
-    if (isLocalMode) {
-      return { success: true, message: 'ローカルモードのため同期をスキップしました' };
-    }
-
-    // ローカルモードの場合は同期をスキップ
-    if (isLocalMode) {
-      return { success: true, message: 'ローカルモードのため同期をスキップしました' };
-    }
-
     // ローカルモードの場合は同期をスキップ
     if (isLocalMode) {
       return { success: true, message: 'ローカルモードのため同期をスキップしました' };
@@ -261,90 +231,6 @@ export const diaryService = {
       return { success: true, data };
     } catch (err) {
       console.error('日記同期サービスエラー:', err);
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      return { success: false, error: errorMessage };
-    }
-  },
-  
-  // 日記の削除
-  async deleteDiary(id: string) {
-    if (!supabase) return { success: false, error: 'Supabase接続なし' };
-
-    // ローカルモードの場合は削除をスキップ
-    if (isLocalMode) {
-      return { success: true, message: 'ローカルモードのため削除をスキップしました' };
-    }
-
-    try {
-      const { error } = await supabase
-        .from('diary_entries')
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
-        console.error('日記削除エラー:', error);
-        return { success: false, error: error.message };
-      }
-      
-      return { success: true };
-    } catch (err) {
-      console.error('日記削除サービスエラー:', err);
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      return { success: false, error: errorMessage };
-    }
-  },
-  
-  // 日記の削除
-  async deleteDiary(id: string) {
-    if (!supabase) return { success: false, error: 'Supabase接続なし' };
-
-    // ローカルモードの場合は削除をスキップ
-    if (isLocalMode) {
-      return { success: true, message: 'ローカルモードのため削除をスキップしました' };
-    }
-
-    try {
-      const { error } = await supabase
-        .from('diary_entries')
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
-        console.error('日記削除エラー:', error);
-        return { success: false, error: error.message };
-      }
-      
-      return { success: true };
-    } catch (err) {
-      console.error('日記削除サービスエラー:', err);
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      return { success: false, error: errorMessage };
-    }
-  },
-  
-  // 日記の削除
-  async deleteDiary(id: string) {
-    if (!supabase) return { success: false, error: 'Supabase接続なし' };
-
-    // ローカルモードの場合は削除をスキップ
-    if (isLocalMode) {
-      return { success: true, message: 'ローカルモードのため削除をスキップしました' };
-    }
-
-    try {
-      const { error } = await supabase
-        .from('diary_entries')
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
-        console.error('日記削除エラー:', error);
-        return { success: false, error: error.message };
-      }
-      
-      return { success: true };
-    } catch (err) {
-      console.error('日記削除サービスエラー:', err);
       const errorMessage = err instanceof Error ? err.message : String(err);
       return { success: false, error: errorMessage };
     }
