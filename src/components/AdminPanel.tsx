@@ -211,7 +211,15 @@ const AdminPanel: React.FC = () => {
       // Supabaseの更新（接続されている場合）
       if (supabase && selectedEntry.id) {
         try {
-          const { error } = await supabase
+          console.log('Supabaseにメモを保存します:', {
+            counselor_memo: memoText,
+            is_visible_to_user: isVisibleToUser,
+            urgency_level: urgencyLevel || null,
+            assigned_counselor: assignedCounselor || null,
+            counselor_name: isVisibleToUser ? currentCounselor : null
+          });
+          
+          const { data, error } = await supabase
             .from('diary_entries')
             .update({
               counselor_memo: memoText,
@@ -224,9 +232,13 @@ const AdminPanel: React.FC = () => {
           
           if (error) {
             console.error('Supabaseメモ更新エラー:', error);
+            throw new Error(`Supabaseメモ更新エラー: ${error.message}`);
+          } else {
+            console.log('Supabaseメモ更新成功:', data);
           }
         } catch (supabaseError) {
           console.error('Supabase接続エラー:', supabaseError);
+          throw supabaseError;
         }
       }
       
@@ -267,7 +279,7 @@ const AdminPanel: React.FC = () => {
       setShowEntryDetails(false);
     } catch (error) {
       console.error('メモ保存エラー:', error);
-      alert('メモの保存に失敗しました。もう一度お試しください。');
+      alert(`メモの保存に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}\nもう一度お試しください。`);
     } finally {
       setSavingMemo(false);
     }

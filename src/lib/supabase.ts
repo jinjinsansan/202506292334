@@ -187,11 +187,15 @@ export const diaryService = {
           
           // オプションフィールドを追加
           const optionalFields = {
-            counselor_memo: diary.counselor_memo || diary.counselorMemo,
-            is_visible_to_user: diary.is_visible_to_user || diary.isVisibleToUser,
-            counselor_name: diary.counselor_name || diary.counselorName,
-            assigned_counselor: diary.assigned_counselor || diary.assignedCounselor,
-            urgency_level: diary.urgency_level || diary.urgencyLevel
+            counselor_memo: diary.counselor_memo || diary.counselorMemo || null,
+            is_visible_to_user: diary.is_visible_to_user !== undefined ? diary.is_visible_to_user : 
+                               (diary.isVisibleToUser !== undefined ? diary.isVisibleToUser : false),
+        // 同期前にデータをログに出力（デバッグ用）
+        console.log('同期するデータの例:', formattedDiaries[0]);
+        
+            counselor_name: diary.counselor_name || diary.counselorName || null,
+            assigned_counselor: diary.assigned_counselor || diary.assignedCounselor || null,
+            urgency_level: diary.urgency_level || diary.urgencyLevel || null
           };
           
           // 値が存在するフィールドのみを追加
