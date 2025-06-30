@@ -59,6 +59,13 @@ function App() {
     }
   }, [autoSync]);
 
+  // グローバルに公開（コンポーネントからアクセスできるように）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.autoSync = autoSync;
+    }
+  }, [autoSync]);
+
   // 初期化
   useEffect(() => {
     // プライバシーポリシー同意状態の確認
