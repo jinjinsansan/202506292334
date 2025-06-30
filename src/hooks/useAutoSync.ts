@@ -24,6 +24,9 @@ export const useAutoSync = (): AutoSyncState => {
   // 重複チェック用のマップ
   const [processedEntryMap, setProcessedEntryMap] = useState<Map<string, boolean>>(new Map());
   
+  // 重複チェック用のマップ
+  const [processedEntryMap, setProcessedEntryMap] = useState<Map<string, boolean>>(new Map());
+  
   // 自動同期設定の読み込み
   useEffect(() => {
     const autoSyncSetting = localStorage.getItem('auto_sync_enabled');
@@ -77,6 +80,9 @@ export const useAutoSync = (): AutoSyncState => {
     }
     
     try {
+      // 重複チェック用のマップをリセット（手動同期の場合）
+      setProcessedEntryMap(new Map());
+      
       // 現在のユーザーを取得
       const user = getCurrentUser();
       // ユーザー情報がない場合はローカルストレージから取得
@@ -212,7 +218,29 @@ export const useAutoSync = (): AutoSyncState => {
      // 重複チェック用のマップを作成
      const entryMap = new Map<string, boolean>();
      
+     // 重複チェック用のマップを作成
+     const entryMap = new Map<string, boolean>();
+     
      // 未処理のエントリーのみをフィルタリング
+     const newEntries = entries.filter((entry: any) => {
+       // 重複チェック用のキーを作成（日付+感情+内容の先頭50文字）
+       const key = `${entry.date}_${entry.emotion}_${entry.event.substring(0, 50)}`;
+       
+       // 既に同じキーが存在する場合は重複とみなす
+       if (processedEntryMap.has(key) || entryMap.has(key)) {
+         console.log('重複エントリーをスキップ:', key);
+         return false;
+       }
+       
+       // 処理済みIDに含まれている場合もスキップ
+       if (currentProcessedIds.has(entry.id)) {
+         return false;
+       }
+       
+       // 重複チェック用のマップに追加
+       entryMap.set(key, true);
+       return true;
+     });
      const newEntries = entries.filter((entry: any) => {
        // 重複チェック用のキーを作成（日付+感情+内容の先頭50文字）
        const key = `${entry.date}_${entry.emotion}_${entry.event.substring(0, 50)}`;
@@ -241,7 +269,7 @@ export const useAutoSync = (): AutoSyncState => {
        return true;
      }
      
-     console.log('同期する日記データ:', newEntries.length, '件（全', entries.length, '件中）', 'ユーザーID:', userId);
+     console.log('同期する日記データ:', newEntries.length, '件（全', entries.length, '件中、重複除外後）', 'ユーザーID:', userId);
 
       // 各エントリーをSupabase形式に変換
      const formattedEntries = newEntries
@@ -372,8 +400,13 @@ export const useAutoSync = (): AutoSyncState => {
        // 重複チェック用のマップにも追加
        const key = `${entry.date}_${entry.emotion}_${entry.event.substring(0, 50)}`;
        processedEntryMap.set(key, true);
+       
+       // 重複チェック用のマップにも追加
+       const key = `${entry.date}_${entry.emotion}_${entry.event.substring(0, 50)}`;
+       processedEntryMap.set(key, true);
      });
      setProcessedEntryIds(currentProcessedIds);
+     setProcessedEntryMap(new Map([...processedEntryMap, ...entryMap]));
      setProcessedEntryMap(new Map([...processedEntryMap, ...entryMap]));
      
       // 同期時間を更新

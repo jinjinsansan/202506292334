@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, Trash2, Eye, Edit3, AlertTriangle, CheckCircle, Clock, MessageCircle, Users } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import AdvancedSearchFilter from './AdvancedSearchFilter';
 import CounselorManagement from './CounselorManagement';
 import CounselorChat from './CounselorChat';
@@ -31,6 +32,70 @@ const AdminPanel: React.FC = () => {
   const loadEntries = async () => {
     setLoading(true);
     try {
+      // Supabaseから直接日記データを取得
+      if (supabase) {
+        try {
+          const { data: diaryData, error } = await supabase
+            .from('diary_entries')
+            .select(`
+              *,
+              users (
+                line_username
+              )
+            `)
+            .order('created_at', { ascending: false });
+          
+          if (error) {
+            console.error('Supabaseからの日記データ取得エラー:', error);
+          } else if (diaryData && diaryData.length > 0) {
+            console.log('Supabaseから日記データを取得しました:', diaryData.length, '件');
+            
+            // データをフォーマット
+            const formattedEntries = diaryData.map(item => {
+              // 重複チェック用のキーを作成
+              const key = `${item.date}_${item.emotion}_${item.event?.substring(0, 50)}`;
+              
+              return {
+                id: item.id,
+                date: item.date,
+                emotion: item.emotion,
+                event: item.event || '',
+                realization: item.realization || '',
+                selfEsteemScore: item.self_esteem_score || 0,
+                worthlessnessScore: item.worthlessness_score || 0,
+                created_at: item.created_at,
+                user: item.users,
+                counselorMemo: item.counselor_memo || '',
+                isVisibleToUser: item.is_visible_to_user || false,
+                counselorName: item.counselor_name || '',
+                assignedCounselor: item.assigned_counselor || '',
+                urgencyLevel: item.urgency_level || '',
+                _key: key // 重複チェック用のキー
+              };
+            });
+            
+            // 重複を除外
+            const uniqueMap = new Map();
+            const uniqueEntries = [];
+            
+            for (const entry of formattedEntries) {
+              if (!uniqueMap.has(entry._key)) {
+                uniqueMap.set(entry._key, entry);
+                uniqueEntries.push(entry);
+              }
+            }
+            
+            console.log(`重複を除外: ${formattedEntries.length} → ${uniqueEntries.length}`);
+            
+            setEntries(uniqueEntries);
+            setFilteredEntries(uniqueEntries);
+            return;
+          }
+        } catch (supabaseError) {
+          console.error('Supabase接続エラー:', supabaseError);
+        }
+      }
+      
       // Supabaseから直接日記データを取得
       if (supabase) {
         try {
