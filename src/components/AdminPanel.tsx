@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Calendar, Search, MessageCircle, Settings, Users, AlertTriangle, Edit3, Trash2, Save, X, CheckCircle, Eye, EyeOff, User, Clock, Filter, Shield, Database, RefreshCw, Download, Loader } from 'lucide-react';
+import { Calendar, Search, MessageCircle, Settings, Users, AlertTriangle, Edit3, Trash2, Save, X, CheckCircle, Eye, EyeOff, User, Clock, Filter, Shield, Database, RefreshCw, Download, CheckSquare, Square, AlertCircle } from 'lucide-react';
 import AdvancedSearchFilter from './AdvancedSearchFilter';
 import CounselorManagement from './CounselorManagement';
 import CounselorChat from './CounselorChat';
@@ -46,6 +46,11 @@ const AdminPanel: React.FC = () => {
   const [savingMemo, setSavingMemo] = useState(false);
   const [activeTab, setActiveTab] = useState('search');
   const [deleting, setDeleting] = useState(false);
+
+  // 一括削除用の状態
+  const [selectedEntries, setSelectedEntries] = useState<string[]>([]);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   useEffect(() => {
     // カウンセラー名を取得
@@ -334,6 +339,98 @@ const AdminPanel: React.FC = () => {
     }
   };
 
+  // 日記の選択状態を切り替える
+  const toggleEntrySelection = (entryId: string) => {
+    setSelectedEntries(prev => 
+      prev.includes(entryId)
+        ? prev.filter(id => id !== entryId)
+        : [...prev, entryId]
+    );
+  };
+
+  // すべての日記の選択状態を切り替える
+  const toggleAllEntries = () => {
+    if (selectedEntries.length === entries.length) {
+      setSelectedEntries([]);
+    } else {
+      setSelectedEntries(entries.map(entry => entry.id));
+    }
+  };
+
+  // 選択した日記をまとめて削除
+  const handleBulkDelete = async () => {
+    if (selectedEntries.length === 0) {
+      alert('削除する日記が選択されていません。');
+      return;
+    }
+
+    setShowBulkDeleteConfirm(true);
+  };
+
+  // 一括削除の確認
+  const confirmBulkDelete = async () => {
+    setBulkDeleting(true);
+    
+    try {
+      // 1. ローカルストレージからの削除
+      const savedEntries = localStorage.getItem('journalEntries');
+      if (savedEntries) {
+        const entriesArray = JSON.parse(savedEntries);
+        const updatedEntries = entriesArray.filter((entry: any) => !selectedEntries.includes(entry.id));
+        localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+      }
+      
+      // 2. Supabaseからの削除
+      // 方法1: autoSyncを使用（優先）
+      if (window.autoSync) {
+        for (const entryId of selectedEntries) {
+          try {
+            await window.autoSync.syncDeleteDiary(entryId);
+            console.log('autoSyncを使用してSupabaseから削除しました:', entryId);
+          } catch (syncError) {
+            console.error(`ID: ${entryId} の削除中にエラー:`, syncError);
+            // エラーをログに残すが、処理は続行する
+          }
+        }
+      } 
+      // 方法2: 直接supabaseを使用（フォールバック）
+      else if (supabase) {
+        for (const entryId of selectedEntries) {
+          try {
+            const { error } = await supabase
+              .from('diary_entries')
+              .delete()
+              .eq('id', entryId);
+            
+            if (error) {
+              console.error(`ID: ${entryId} の削除中にエラー:`, error);
+              // エラーをログに残すが、処理は続行する
+            }
+          } catch (supabaseError) {
+            console.error(`ID: ${entryId} の削除中にSupabase接続エラー:`, supabaseError);
+            // エラーをログに残すが、処理は続行する
+          }
+        }
+      }
+      
+      // 3. UI表示の更新
+      setEntries(prevEntries => prevEntries.filter(entry => !selectedEntries.includes(entry.id)));
+      setFilteredEntries(prevEntries => prevEntries.filter(entry => !selectedEntries.includes(entry.id)));
+      
+      // 4. 選択状態をリセット
+      setSelectedEntries([]);
+      
+      alert(`${selectedEntries.length}件の日記を削除しました！`);
+    } catch (error) {
+      console.error('一括削除エラー:', error);
+      const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+      alert(`削除中にエラーが発生しました: ${errorMessage}\nもう一度お試しください。`);
+    } finally {
+      setBulkDeleting(false);
+      setShowBulkDeleteConfirm(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ja-JP', {
@@ -599,10 +696,38 @@ const AdminPanel: React.FC = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div>
+                      {/* 一括操作ツールバー */}
+                      <div className="flex flex-wrap justify-between items-center mb-4 bg-gray-50 p-3 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={toggleAllEntries}
+                            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
+                            title={selectedEntries.length === entries.length ? "すべて選択解除" : "すべて選択"}
+                          >
+                            {selectedEntries.length === entries.length ? (
+                              <CheckSquare className="w-5 h-5 text-blue-600" />
+                            ) : (
+                              <Square className="w-5 h-5" />
+                            )}
+                            <span className="text-sm font-jp-medium">すべて{selectedEntries.length === entries.length ? "選択解除" : "選択"}</span>
+                          </button>
+                        </div>
+                        
+                        {selectedEntries.length > 0 && (
+                          <button
+                            onClick={handleBulkDelete}
+                            className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm font-jp-medium transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>{selectedEntries.length}件削除</span>
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-y-4">
                       {entries.map((entry) => (
-                        <div key={entry.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                          <div className="flex justify-between items-start mb-3">
+                        <div key={entry.id} className={`bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors ${selectedEntries.includes(entry.id) ? 'border-2 border-blue-500' : 'border border-gray-200'}`}>
+                          <div className="flex flex-wrap justify-between items-start mb-3">
                             <div className="flex items-center space-x-3 flex-wrap">
                               <span className={`px-3 py-1 rounded-full text-sm font-jp-medium ${
                                 entry.emotion === '恐怖' ? 'bg-purple-100 text-purple-800 border border-purple-200' :
@@ -708,6 +833,17 @@ const AdminPanel: React.FC = () => {
                               )}
                             </div>
                             <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => toggleEntrySelection(entry.id)}
+                                className="text-gray-600 hover:text-blue-600 p-1"
+                                title={selectedEntries.includes(entry.id) ? "選択解除" : "選択"}
+                              >
+                                {selectedEntries.includes(entry.id) ? (
+                                  <CheckSquare className="w-4 h-4 text-blue-600" />
+                                ) : (
+                                  <Square className="w-4 h-4" />
+                                )}
+                              </button>
                               {entry.assigned_counselor && (
                                 <span className="text-gray-600 font-jp-medium">
                                   担当: {entry.assigned_counselor}
@@ -721,6 +857,55 @@ const AdminPanel: React.FC = () => {
                         </div>
                       ))}
                     </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </TabsContent>
+          
+          {/* 一括削除確認モーダル */}
+          {showBulkDeleteConfirm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                <div className="flex items-start space-x-3 mb-6">
+                  <AlertCircle className="w-6 h-6 text-red-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <h3 className="text-xl font-jp-bold text-gray-900 mb-2">一括削除の確認</h3>
+                    <p className="text-gray-700 font-jp-normal">
+                      選択した{selectedEntries.length}件の日記を削除します。この操作は元に戻せません。
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-4">
+                  <button
+                    onClick={confirmBulkDelete}
+                    disabled={bulkDeleting}
+                    className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2"
+                  >
+                    {bulkDeleting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>削除中...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4" />
+                        <span>削除する</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setShowBulkDeleteConfirm(false)}
+                    disabled={bulkDeleting}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-jp-medium transition-colors"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </div>
+            </div>
                   )}
                 </div>
               </div>
