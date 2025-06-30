@@ -329,8 +329,6 @@ const AdminPanel: React.FC = () => {
       // エラーメッセージをより具体的に
       const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
       alert(`削除中にエラーが発生しました: ${errorMessage}\nもう一度お試しください。`);
-      const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
-      alert(`削除中にエラーが発生しました: ${errorMessage}\nもう一度お試しください。`);
     } finally {
       setDeleting(false);
     }
