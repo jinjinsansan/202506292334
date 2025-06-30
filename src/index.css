@@ -42,7 +42,7 @@
   
   /* グラフ用スタイル */
   .graph-line {
-    stroke-width: 0.5;
+    stroke-width: 0.5 !important;
     stroke-linecap: round !important;
     stroke-linejoin: round !important;
     vector-effect: non-scaling-stroke;
@@ -51,6 +51,7 @@
   /* SVGグラフ用スタイル */
   .graph-svg [stroke] {
     vector-effect: non-scaling-stroke !important; 
+    stroke-width: 0.5 !important;
   }
   .graph-svg circle {
     vector-effect: non-scaling-stroke !important;

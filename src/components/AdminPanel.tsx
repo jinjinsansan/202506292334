@@ -124,6 +124,7 @@ const AdminPanel: React.FC = () => {
     setSelectedEntry(entry);
     setEditMode(false);
     // 編集モードをリセットして詳細表示モードに
+    // 編集モードをリセットして詳細表示モードに
     setEditFormData({
       counselorMemo: entry.counselorMemo || entry.counselor_memo || '',
       isVisibleToUser: entry.isVisibleToUser || entry.is_visible_to_user || false,
