@@ -21,6 +21,9 @@ export const useAutoSync = (): AutoSyncState => {
   const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [processedEntryIds, setProcessedEntryIds] = useState<Set<string>>(new Set());
   
+  // 重複チェック用のマップ
+  const [processedEntryMap, setProcessedEntryMap] = useState<Map<string, boolean>>(new Map());
+  
   // 自動同期設定の読み込み
   useEffect(() => {
     const autoSyncSetting = localStorage.getItem('auto_sync_enabled');
@@ -116,6 +119,9 @@ export const useAutoSync = (): AutoSyncState => {
     setError(null);
     
     try {
+      // 重複チェック用のマップをリセット（手動同期の場合）
+      setProcessedEntryMap(new Map());
+      
       // 現在のユーザーを取得
       const user = getCurrentUser();
       // ユーザー情報がない場合はローカルストレージから取得
@@ -203,8 +209,29 @@ export const useAutoSync = (): AutoSyncState => {
      // 既に処理済みのエントリーIDを取得
      const currentProcessedIds = new Set(processedEntryIds);
      
+     // 重複チェック用のマップを作成
+     const entryMap = new Map<string, boolean>();
+     
      // 未処理のエントリーのみをフィルタリング
-     const newEntries = entries.filter((entry: any) => !currentProcessedIds.has(entry.id));
+     const newEntries = entries.filter((entry: any) => {
+       // 重複チェック用のキーを作成（日付+感情+内容の先頭50文字）
+       const key = `${entry.date}_${entry.emotion}_${entry.event.substring(0, 50)}`;
+       
+       // 既に同じキーが存在する場合は重複とみなす
+       if (processedEntryMap.has(key) || entryMap.has(key)) {
+         console.log('重複エントリーをスキップ:', key);
+         return false;
+       }
+       
+       // 処理済みIDに含まれている場合もスキップ
+       if (currentProcessedIds.has(entry.id)) {
+         return false;
+       }
+       
+       // 重複チェック用のマップに追加
+       entryMap.set(key, true);
+       return true;
+     });
      
      if (newEntries.length === 0) {
        console.log('新しい同期対象のデータがありません。すべてのエントリーは既に同期されています。');
@@ -341,8 +368,13 @@ export const useAutoSync = (): AutoSyncState => {
      // 同期に成功したエントリーIDを記録
      newEntries.forEach((entry: any) => {
        currentProcessedIds.add(entry.id);
+       
+       // 重複チェック用のマップにも追加
+       const key = `${entry.date}_${entry.emotion}_${entry.event.substring(0, 50)}`;
+       processedEntryMap.set(key, true);
      });
      setProcessedEntryIds(currentProcessedIds);
+     setProcessedEntryMap(new Map([...processedEntryMap, ...entryMap]));
      
       // 同期時間を更新
       const now = new Date().toISOString();
