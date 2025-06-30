@@ -701,7 +701,7 @@ const DiaryPage: React.FC = () => {
 
         <div className="bg-gray-50 rounded-lg p-6 mb-4">
           <p className="text-gray-600 font-jp-normal text-sm mb-4">
-            嫌な気持ちになった出来事を書いてみましょう
+            今日の出来事を書いてみましょう
           </p>
           <div className="relative overflow-hidden">
             {/* 罫線背景 */}
