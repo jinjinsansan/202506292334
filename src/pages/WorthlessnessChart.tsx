@@ -66,9 +66,14 @@ const WorthlessnessChart: React.FC = () => {
         console.log('全エントリー数:', entries?.length || 0);
         
         // 無価値感の日記のみをフィルタリング
-        const worthlessnessEntries = entries?.filter((entry: any) => 
-          entry && entry.emotion === '無価値感' && 
-          entry.selfEsteemScore !== undefined && 
+        const worthlessnessEntries = entries?.filter((entry: any) =>
+          entry && 
+          (entry.emotion === '無価値感' || 
+           entry.emotion === '嬉しい' || 
+           entry.emotion === '感謝' || 
+           entry.emotion === '達成感' || 
+           entry.emotion === '幸せ') && 
+          entry.selfEsteemScore !== undefined &&
           entry.worthlessnessScore !== undefined
         ) || [];
         
@@ -165,7 +170,7 @@ const WorthlessnessChart: React.FC = () => {
     const username = localStorage.getItem('line-username') || 'ユーザー';
     const latestData = displayedData[displayedData.length - 1];
     
-    let shareText = `${username}の無価値感推移 📊\n\n`;
+    let shareText = `${username}の感情スコア推移 📊\n\n`;
     shareText += `🔵 自己肯定感: ${latestData?.selfEsteemScore || 0}\n`;
     shareText += `🔴 無価値感: ${latestData?.worthlessnessScore || 0}\n\n`;
     
@@ -204,7 +209,7 @@ const WorthlessnessChart: React.FC = () => {
     const username = localStorage.getItem('line-username') || 'ユーザー';
     const latestData = displayedData[displayedData.length - 1];
     
-    let shareText = `${username}の無価値感推移 📊\n\n`;
+    let shareText = `${username}の感情スコア推移 📊\n\n`;
     shareText += `🔵 自己肯定感: ${latestData?.selfEsteemScore || 0}\n`;
     shareText += `🔴 無価値感: ${latestData?.worthlessnessScore || 0}\n\n`;
     
@@ -227,7 +232,13 @@ const WorthlessnessChart: React.FC = () => {
   // 期間でエントリーをフィルタリングする関数
   const filterEntriesByPeriod = (entries: any[], selectedPeriod: RangeKey) => {
     if (!entries || entries.length === 0) return [];
-    if (selectedPeriod === 'all') return entries;
+    if (selectedPeriod === 'all') return entries.filter(entry => 
+      entry.emotion === '無価値感' || 
+      entry.emotion === '嬉しい' || 
+      entry.emotion === '感謝' || 
+      entry.emotion === '達成感' || 
+      entry.emotion === '幸せ'
+    );
     
     // データが持つ最新日を基準にする
     const latestDate = entries.reduce((max, entry) => {
@@ -243,8 +254,23 @@ const WorthlessnessChart: React.FC = () => {
     }
     
     return entries.filter((entry: any) => {
-      const entryDate = new Date(entry.date);
-      return entryDate >= startDate && entryDate <= latestDate;
+      // 感情フィルタリング
+      const isValidEmotion = 
+        entry.emotion === '無価値感' || 
+        entry.emotion === '嬉しい' || 
+        entry.emotion === '感謝' || 
+        entry.emotion === '達成感' || 
+        entry.emotion === '幸せ';
+      
+      if (!isValidEmotion) return false;
+      
+      // 日付フィルタリング
+      if (selectedPeriod !== 'all') {
+        const entryDate = new Date(entry.date);
+        return entryDate >= startDate && entryDate <= latestDate;
+      }
+      
+      return true;
     });
   };
 
@@ -255,7 +281,7 @@ const WorthlessnessChart: React.FC = () => {
     // データが持つ最新日を基準にする
     const latestDate = dayjs(
       chartData.reduce((max, d) => (d.date > max ? d.date : max), chartData[0].date)
-    ).endOf('day');
+    );
     
     const from = period === 'week'
       ? latestDate.subtract(6, 'day').startOf('day')   // 直近7日間
@@ -299,7 +325,7 @@ const WorthlessnessChart: React.FC = () => {
     <div className="w-full max-w-4xl mx-auto space-y-6 px-2">
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-jp-bold text-gray-900">無価値感推移</h1>
+          <h1 className="text-2xl font-jp-bold text-gray-900">感情スコア推移</h1>
           <div className="flex space-x-2">
             <button
               onClick={handleShare}
@@ -393,11 +419,11 @@ const WorthlessnessChart: React.FC = () => {
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm font-jp-medium text-gray-700">自己肯定感</span>
+                      <span className="text-sm font-jp-medium text-gray-700">自己肯定感スコア</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <span className="text-sm font-jp-medium text-gray-700">無価値感</span>
+                      <span className="text-sm font-jp-medium text-gray-700">無価値感スコア</span>
                     </div>
                   </div>
                   <div className="text-xs text-gray-500">
@@ -497,10 +523,13 @@ const WorthlessnessChart: React.FC = () => {
             {/* 最新スコア */}
             {displayedData.length > 0 ? (
               <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-jp-bold text-gray-900 text-lg">最新スコア</h3>
-                  <div className="text-sm font-medium text-gray-700">
-                    {formatDate(displayedData[displayedData.length - 1].date)}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                  <h3 className="font-jp-bold text-gray-900 text-lg mb-2 sm:mb-0">最新スコア</h3>
+                  <div className="text-sm font-medium text-gray-700 flex items-center">
+                    <span className="mr-2">{formatDate(displayedData[displayedData.length - 1].date)}</span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                      {displayedData[displayedData.length - 1].emotion}
+                    </span>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -554,10 +583,11 @@ const WorthlessnessChart: React.FC = () => {
             ) : (
               <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
                 <div className="flex items-start space-x-3">
-                  <div className="text-yellow-500 text-xl">⚠️</div>
+                  <div className="text-yellow-500 text-xl flex-shrink-0">⚠️</div>
                   <div>
                     <p className="text-yellow-800 font-jp-medium">
-                      無価値感を選んだ日記がありません。無価値感を選んだ日記を書くとグラフが表示されます。
+                      スコア対象の感情（無価値感、嬉しい、感謝、達成感、幸せ）を選んだ日記がありません。
+                      これらの感情を選んだ日記を書くとグラフが表示されます。
                     </p>
                   </div>
                 </div>
@@ -567,9 +597,9 @@ const WorthlessnessChart: React.FC = () => {
             {/* 感情の出現頻度 */}
             {emotionCounts.length > 0 && (
               <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-jp-bold text-gray-900 text-lg">感情の出現頻度</h3>
-                  <div className="text-sm font-medium text-gray-700">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                  <h3 className="font-jp-bold text-gray-900 text-lg mb-2 sm:mb-0">感情の出現頻度</h3>
+                  <div className="text-sm font-medium text-gray-700 flex-shrink-0">
                     {period === 'week' ? '過去7日間' : period === 'month' ? '過去30日間' : '全期間'}
                   </div>
                 </div>
@@ -590,7 +620,7 @@ const WorthlessnessChart: React.FC = () => {
             {!initialScore && period === 'all' && (
               <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200 mt-4">
                 <div className="flex items-start space-x-3">
-                  <div className="text-yellow-500 text-xl">⚠️</div>
+                  <div className="text-yellow-500 text-xl flex-shrink-0">⚠️</div>
                   <div>
                     <p className="text-yellow-800 font-jp-medium">
                       初期スコアが設定されていません。最初にやることページで自己肯定感計測を行ってください。
