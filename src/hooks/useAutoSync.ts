@@ -273,7 +273,7 @@ export const useAutoSync = (): AutoSyncState => {
       const now = new Date().toISOString();
       setLastSyncTime(now);
       localStorage.setItem('last_sync_time', now);
-      
+
       console.log('データ同期完了:', entries.length, '件', 'ユーザーID:', userId, '時刻:', now);
       return true;
     } catch (err) {
@@ -284,6 +284,45 @@ export const useAutoSync = (): AutoSyncState => {
       setIsSyncing(false);
     }
   }, [isSyncing, currentUser]);
+  
+  // 日記削除時の同期処理
+  const syncDeleteDiary = useCallback(async (diaryId: string): Promise<boolean> => {
+    if (!supabase) {
+      console.log('ローカルモードで動作中: Supabase接続なし、削除同期をスキップします');
+      return false;
+    }
+    
+    if (isSyncing) {
+      console.log('既に同期中です、削除同期をスキップします');
+      return false;
+    }
+    
+    setIsSyncing(true);
+    setError(null);
+    
+    try {
+      // Supabaseから日記を削除
+      const { success, error } = await diaryService.deleteDiary(diaryId);
+      
+      if (!success) {
+        throw new Error(error || '日記の削除に失敗しました');
+      }
+      
+      // 同期時間を更新
+      const now = new Date().toISOString();
+      setLastSyncTime(now);
+      localStorage.setItem('last_sync_time', now);
+      
+      console.log('日記削除同期完了:', diaryId, '時刻:', now);
+      return true;
+    } catch (err) {
+      console.error('日記削除同期エラー:', err);
+      setError(err instanceof Error ? err.message : '不明なエラー');
+      return false;
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [isSyncing]);
   
   // 手動同期のトリガー
   const triggerManualSync = useCallback(async (): Promise<boolean> => {
@@ -296,6 +335,7 @@ export const useAutoSync = (): AutoSyncState => {
     lastSyncTime,
     error,
     currentUser,
-    triggerManualSync
+    triggerManualSync,
+    syncDeleteDiary
   };
 };

@@ -184,7 +184,7 @@ const AdminPanel: React.FC = () => {
     setSavingMemo(true);
     
     try {
-      // ローカルストレージの更新
+      // 1. ローカルストレージからの削除
       const savedEntries = localStorage.getItem('journalEntries');
       if (savedEntries) {
         const entries = JSON.parse(savedEntries);
@@ -278,7 +278,7 @@ const AdminPanel: React.FC = () => {
     setDeleting(true);
     
     try {
-      // ローカルストレージの更新
+      // 1. ローカルストレージからの削除
       const savedEntries = localStorage.getItem('journalEntries');
       if (savedEntries) {
         const entries = JSON.parse(savedEntries);
@@ -286,8 +286,19 @@ const AdminPanel: React.FC = () => {
         localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
       }
       
-      // Supabaseの更新（接続されている場合）
-      if (supabase) {
+      // 2. Supabaseからの削除
+      // 方法1: autoSyncを使用（優先）
+      if (window.autoSync) {
+        try {
+          await window.autoSync.syncDeleteDiary(entryId);
+          console.log('autoSyncを使用してSupabaseから削除しました:', entryId);
+        } catch (syncError) {
+          console.error('autoSync削除エラー:', syncError);
+          // エラーをログに残すが、処理は続行する
+        }
+      } 
+      // 方法2: 直接supabaseを使用（フォールバック）
+      else if (supabase) {
         try {
           const { error } = await supabase
             .from('diary_entries')
@@ -296,22 +307,30 @@ const AdminPanel: React.FC = () => {
           
           if (error) {
             console.error('Supabase削除エラー:', error);
-            throw new Error('Supabaseからの削除に失敗しました');
+            // エラーをログに残すが、処理は続行する
+            console.warn('Supabaseからの削除に失敗しましたが、ローカルデータは削除されました');
+            console.warn('Supabaseからの削除に失敗しましたが、ローカルデータは削除されました');
           }
         } catch (supabaseError) {
           console.error('Supabase接続エラー:', supabaseError);
-          throw new Error('Supabaseとの接続に失敗しました');
+          // エラーをログに残すが、処理は続行する
+          console.warn('Supabase接続エラーが発生しましたが、ローカルデータは削除されました');
+          console.warn('Supabase接続エラーが発生しましたが、ローカルデータは削除されました');
         }
       }
       
-      // エントリーリストの更新
+      // 3. UI表示の更新
       setEntries(prevEntries => prevEntries.filter(entry => entry.id !== entryId));
       setFilteredEntries(prevEntries => prevEntries.filter(entry => entry.id !== entryId));
       
       alert('日記を削除しました！');
     } catch (error) {
       console.error('削除エラー:', error);
-      alert('削除に失敗しました。もう一度お試しください。');
+      // エラーメッセージをより具体的に
+      const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+      alert(`削除中にエラーが発生しました: ${errorMessage}\nもう一度お試しください。`);
+      const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+      alert(`削除中にエラーが発生しました: ${errorMessage}\nもう一度お試しください。`);
     } finally {
       setDeleting(false);
     }

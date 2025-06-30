@@ -172,12 +172,45 @@ const DiarySearchPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('この日記を削除しますか？')) {
-      setSyncing(true);
-      
       try {
+        // ローカルストレージからの削除
+        // ローカルストレージからの削除
         const updatedEntries = entries.filter(entry => entry.id !== id);
         setEntries(updatedEntries);
         localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+        
+        // Supabaseからの削除（autoSyncが利用可能な場合）
+        if (window.autoSync) {
+          try {
+            await window.autoSync.syncDeleteDiary(id);
+            console.log('Supabaseからも削除しました:', id);
+          } catch (syncError) {
+            console.error('Supabase同期削除エラー:', syncError);
+            // 同期エラーがあっても、ローカルの削除は完了しているので
+            // ユーザーにはエラーを表示せず、ログだけ残す
+          }
+        }
+        
+        // Supabaseからの削除（接続されている場合のみ）
+        const supabase = window.supabase;
+        if (supabase) {
+          try {
+            const { error } = await supabase
+              .from('diary_entries')
+              .delete()
+              .eq('id', id);
+            
+            if (error) {
+              console.error('Supabase削除エラー:', error);
+              // Supabaseでのエラーがあっても、ローカルの削除は完了しているので
+              // ユーザーにはエラーを表示せず、ログだけ残す
+            } else {
+              console.log('Supabaseからも削除しました:', id);
+            }
+          } catch (supabaseError) {
+            console.error('Supabase接続エラー:', supabaseError);
+          }
+        }
         
         // 直近の日記も更新
         const sortedEntries = [...updatedEntries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

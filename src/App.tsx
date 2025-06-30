@@ -5,6 +5,7 @@ import { useSupabase } from './hooks/useSupabase';
 import { useAutoSync } from './hooks/useAutoSync';
 import { getCurrentUser } from './lib/deviceAuth';
 
+
 // コンポーネントのインポート
 import MaintenanceMode from './components/MaintenanceMode';
 import PrivacyConsent from './components/PrivacyConsent';
@@ -48,8 +49,15 @@ function App() {
   // ローカルモードの確認
   const isLocalMode = import.meta.env.VITE_LOCAL_MODE === 'true';
   
-  // 自動同期フックを初期化
+  // 自動同期フックを初期化（グローバルに公開）
   const autoSync = useAutoSync();
+  
+  // グローバルに公開（コンポーネントからアクセスできるように）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.autoSync = autoSync;
+    }
+  }, [autoSync]);
 
   // 初期化
   useEffect(() => {
