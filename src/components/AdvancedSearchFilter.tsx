@@ -678,7 +678,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                       {onDeleteEntry && (
                         <button
                           onClick={() => onDeleteEntry(entry.id)}
-                          className="text-red-600 hover:text-red-700 p-1"
+                          className="text-red-600 hover:text-red-700 p-1 cursor-pointer"
                           title="削除"
                         >
                           <Trash2 className="w-4 h-4" />

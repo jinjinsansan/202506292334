@@ -711,21 +711,21 @@ const DiarySearchPage: React.FC = () => {
                     <div className="flex space-x-2">
                       <button 
                         onClick={() => handleEdit(entry)}
-                        className="text-blue-600 hover:text-blue-700 p-1"
+                        className="text-blue-600 hover:text-blue-700 p-1 cursor-pointer"
                         title="編集"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleEdit(entry)}
-                        className="text-green-600 hover:text-green-700 p-1"
+                        className="text-green-600 hover:text-green-700 p-1 cursor-pointer"
                         title="編集"
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleDelete(entry.id)}
-                        className="text-red-600 hover:text-red-700 p-1"
+                        className="text-red-600 hover:text-red-700 p-1 cursor-pointer"
                         title="削除"
                       >
                         <Trash2 className="w-4 h-4" />

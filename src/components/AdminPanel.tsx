@@ -123,6 +123,7 @@ const AdminPanel: React.FC = () => {
   const handleViewEntry = (entry: any) => {
     setSelectedEntry(entry);
     setEditMode(false);
+    // 詳細表示モードに切り替え（モーダル表示）
     // 編集モードをリセットして詳細表示モードに
     // 編集モードをリセットして詳細表示モードに
     setEditFormData({
@@ -494,21 +495,21 @@ const AdminPanel: React.FC = () => {
                 <button
                   onClick={() => handleDeleteEntry(selectedEntry.id)}
                   className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-jp-medium transition-colors"
-                >
+                      className="text-blue-600 hover:text-blue-700 p-1 cursor-pointer"
                   <Trash2 className="w-4 h-4" />
                   <span>削除</span>
                 </button>
                 {editMode && (
                   <div className="flex space-x-3">
                     <button
-                      onClick={() => setEditMode(false)}
+                      className="text-green-600 hover:text-green-700 p-1 cursor-pointer"
                       className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-jp-medium transition-colors"
                     >
                       キャンセル
                     </button>
                     <button
                       onClick={handleSaveEdit}
-                      className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-jp-medium transition-colors"
+                      className="text-red-600 hover:text-red-700 p-1 cursor-pointer"
                     >
                       <CheckCircle className="w-4 h-4" />
                       <span>保存</span>
