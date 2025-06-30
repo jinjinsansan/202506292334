@@ -139,7 +139,7 @@ export const diaryService = {
       const formattedDiaries = diaries
         .filter(diary => diary && diary.id && diary.date && diary.emotion) // 無効なデータをフィルタリング
         .map(diary => {
-          // UUIDの形式を検証し、無効な場合は新しいUUIDを生成
+          // UUIDの形式を検証し、無効な場合は新しいUUIDを生成（より堅牢な方法）
           let diaryId = diary.id;
           if (!uuidRegex.test(diaryId)) {
             try {
@@ -147,9 +147,9 @@ export const diaryService = {
               if (typeof crypto !== 'undefined' && crypto.randomUUID) {
                 diaryId = crypto.randomUUID();
               } else {
-                // 代替の方法でUUIDを生成
+                // RFC4122準拠のUUIDを生成する代替方法
                 diaryId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                  const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                  const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
                   return v.toString(16);
                 });
               }
@@ -164,19 +164,34 @@ export const diaryService = {
           return {
           id: diaryId,
           user_id: userId,
-          date: diary.date,
-          emotion: diary.emotion,
-          event: diary.event || '',
-          realization: diary.realization || '',
+          date: diary.date || new Date().toISOString().split('T')[0],
+          emotion: diary.emotion || '無価値感',
+          event: diary.event || 'イベントなし',
+          realization: diary.realization || '気づきなし',
           self_esteem_score: typeof diary.selfEsteemScore === 'number' ? diary.selfEsteemScore : 
                             (typeof diary.selfEsteemScore === 'string' ? parseInt(diary.selfEsteemScore) : 0),
           worthlessness_score: typeof diary.worthlessnessScore === 'number' ? diary.worthlessnessScore : 
                               (typeof diary.worthlessnessScore === 'string' ? parseInt(diary.worthlessnessScore) : 0),
-          counselor_memo: diary.counselor_memo || diary.counselorMemo || null,
-          is_visible_to_user: diary.is_visible_to_user || diary.isVisibleToUser || false,
-          counselor_name: diary.counselor_name || diary.counselorName || null,
           created_at: diary.created_at || new Date().toISOString()
-        };
+          };
+          
+          // オプションフィールドを追加
+          const optionalFields = {
+            counselor_memo: diary.counselor_memo || diary.counselorMemo,
+            is_visible_to_user: diary.is_visible_to_user || diary.isVisibleToUser,
+            counselor_name: diary.counselor_name || diary.counselorName,
+            assigned_counselor: diary.assigned_counselor || diary.assignedCounselor,
+            urgency_level: diary.urgency_level || diary.urgencyLevel
+          };
+          
+          // 値が存在するフィールドのみを追加
+          for (const [key, value] of Object.entries(optionalFields)) {
+            if (value !== undefined && value !== null) {
+              diaryId[key] = value;
+            }
+          }
+          
+          return diaryId;
         });
       
       console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);

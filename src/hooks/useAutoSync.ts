@@ -204,7 +204,7 @@ export const useAutoSync = (): AutoSyncState => {
       const formattedEntries = entries
         .filter((entry: any) => entry && entry.id && entry.date && entry.emotion) // 無効なデータをフィルタリング
         .map((entry: any) => {          
-          // UUIDの形式を検証し、無効な場合は新しいUUIDを生成（ブラウザ環境に応じて処理）
+          // UUIDの形式を検証し、無効な場合は新しいUUIDを生成
           let entryId = entry.id;
           if (!uuidRegex.test(entryId)) {
             try {
@@ -243,29 +243,20 @@ export const useAutoSync = (): AutoSyncState => {
             created_at: entry.created_at || new Date().toISOString()
           };
           
-          // assigned_counselorフィールドが存在する場合のみ追加
-          if (entry.assigned_counselor || entry.assignedCounselor) {
-            formattedEntry.assigned_counselor = entry.assigned_counselor || entry.assignedCounselor;
-          }
+          // オプションフィールドを追加
+          const optionalFields = {
+            assigned_counselor: entry.assigned_counselor || entry.assignedCounselor,
+            urgency_level: entry.urgency_level || entry.urgencyLevel,
+            is_visible_to_user: entry.is_visible_to_user || entry.isVisibleToUser,
+            counselor_name: entry.counselor_name || entry.counselorName,
+            counselor_memo: entry.counselor_memo || entry.counselorMemo
+          };
           
-          // urgency_levelフィールドが存在する場合のみ追加
-          if (entry.urgency_level || entry.urgencyLevel) {
-            formattedEntry.urgency_level = entry.urgency_level || entry.urgencyLevel;
-          }
-          
-          // is_visible_to_userフィールドが存在する場合のみ追加
-          if (entry.is_visible_to_user !== undefined || entry.isVisibleToUser !== undefined) {
-            formattedEntry.is_visible_to_user = entry.is_visible_to_user || entry.isVisibleToUser || false;
-          }
-          
-          // counselor_nameフィールドが存在する場合のみ追加
-          if (entry.counselor_name || entry.counselorName) {
-            formattedEntry.counselor_name = entry.counselor_name || entry.counselorName;
-          }
-          
-          // counselor_memoフィールドが存在する場合のみ追加
-          if (entry.counselor_memo || entry.counselorMemo) {
-            formattedEntry.counselor_memo = entry.counselor_memo || entry.counselorMemo;
+          // 値が存在するフィールドのみを追加
+          for (const [key, value] of Object.entries(optionalFields)) {
+            if (value !== undefined && value !== null) {
+              formattedEntry[key] = value;
+            }
           }
           
           return formattedEntry;
