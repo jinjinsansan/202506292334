@@ -608,15 +608,6 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                       </span>
                     )}
                     </span>
-                    {entry.syncStatus && (
-                      <span className={`px-2 py-1 rounded-full text-xs font-jp-medium ${
-                        entry.syncStatus === 'supabase' 
-                          ? 'bg-green-100 text-green-800 border border-green-200' 
-                          : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-                      }`}>
-                        {entry.syncStatus === 'supabase' ? 'Supabase' : 'ローカル'}
-                      </span>
-                    )}
                     {entry.urgency_level && (
                       <span className={`px-2 py-1 rounded-full text-xs font-jp-medium ${
                         entry.urgency_level === 'high' ? 'bg-red-100 text-red-800' :
@@ -629,6 +620,15 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                     )}
                   </div>
                   <div className="flex items-center space-x-2">
+                    {entry.syncStatus && (
+                      <span className={`px-2 py-1 rounded-full text-xs font-jp-medium ${
+                        entry.syncStatus === 'supabase' 
+                          ? 'bg-green-100 text-green-800 border border-green-200' 
+                          : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                      }`}>
+                        {entry.syncStatus === 'supabase' ? 'Supabase' : 'ローカル'}
+                      </span>
+                    )}
                     {entry.user?.line_username && (
                       <span className="text-xs text-gray-500 font-jp-normal flex items-center">
                         <User className="w-3 h-3 mr-1" />

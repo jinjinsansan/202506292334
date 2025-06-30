@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, Trash2, Eye, Edit3, AlertTriangle, CheckCircle, Clock, MessageCircle, Users } from 'lucide-react';
+import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, Trash2, Eye, Edit3, AlertTriangle, CheckCircle, Clock, MessageCircle, Users, BookOpen, BarChart2, Settings, Save, FileText, Layers } from 'lucide-react';
 import CounselorManagement from './CounselorManagement';
 import AdvancedSearchFilter from './AdvancedSearchFilter';
 import CounselorChat from './CounselorChat';
@@ -277,6 +277,15 @@ const AdminPanel: React.FC = () => {
                   <div className="flex items-center space-x-2 mb-1">
                     <Calendar className="w-4 h-4 text-gray-500" />
                     <span className="text-gray-700 font-jp-medium">
+                      {entry.syncStatus && (
+                        <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                          entry.syncStatus === 'supabase' 
+                            ? 'bg-green-100 text-green-800 border border-green-200' 
+                            : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                        }`}>
+                          {entry.syncStatus === 'supabase' ? 'Supabase同期済み' : 'ローカルデータ'}
+                        </span>
+                      )}
                       {formatDate(selectedEntry.date)}
                     </span>
                   </div>
@@ -513,9 +522,12 @@ const AdminPanel: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-jp-bold text-gray-900">カウンセラー管理画面</h1>
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-100 rounded-xl shadow-lg p-6 border border-blue-200">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 mb-6">
+          <h1 className="text-2xl font-jp-bold text-gray-900 flex items-center">
+            <Shield className="w-7 h-7 text-blue-600 mr-3" />
+            カウンセラー管理画面
+          </h1>
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-600 font-jp-normal">
               ログイン中: {localStorage.getItem('current_counselor')}
@@ -530,41 +542,127 @@ const AdminPanel: React.FC = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="search">
-          <TabsList className="w-full mb-6">
-            <TabsTrigger value="search" onClick={() => setActiveTab('search')} className="flex-1">
-              <Search className="w-4 h-4 mr-2" />
-              日記検索
+        <Tabs defaultValue="search" className="w-full">
+          <TabsList className="w-full mb-6 overflow-x-auto flex-nowrap">
+            <TabsTrigger value="diary" onClick={() => setActiveTab('diary')} className="flex items-center">
+              <BookOpen className="w-4 h-4 mr-2" />
+              日記
             </TabsTrigger>
-            <TabsTrigger value="counselors" onClick={() => setActiveTab('counselors')} className="flex-1">
+            <TabsTrigger value="search" onClick={() => setActiveTab('search')} className="flex items-center">
+              <Search className="w-4 h-4 mr-2" />
+              詳細検索
+            </TabsTrigger>
+            <TabsTrigger value="calendar" onClick={() => setActiveTab('calendar')} className="flex items-center">
+              <Calendar className="w-4 h-4 mr-2" />
+              カレンダー
+            </TabsTrigger>
+            <TabsTrigger value="stats" onClick={() => setActiveTab('stats')} className="flex items-center">
+              <BarChart2 className="w-4 h-4 mr-2" />
+              統計
+            </TabsTrigger>
+            <TabsTrigger value="counselors" onClick={() => setActiveTab('counselors')} className="flex items-center">
               <Users className="w-4 h-4 mr-2" />
               カウンセラー
             </TabsTrigger>
-            <TabsTrigger value="chat" onClick={() => setActiveTab('chat')} className="flex-1">
+            <TabsTrigger value="chat" onClick={() => setActiveTab('chat')} className="flex items-center">
               <MessageCircle className="w-4 h-4 mr-2" />
               チャット
             </TabsTrigger>
-            <TabsTrigger value="device-auth" onClick={() => setActiveTab('device-auth')} className="flex-1">
+            <TabsTrigger value="backup" onClick={() => setActiveTab('backup')} className="flex items-center">
+              <Save className="w-4 h-4 mr-2" />
+              バックアップ
+            </TabsTrigger>
+            <TabsTrigger value="device-auth" onClick={() => setActiveTab('device-auth')} className="flex items-center">
               <Shield className="w-4 h-4 mr-2" />
               デバイス認証
             </TabsTrigger>
-            <TabsTrigger value="security" onClick={() => setActiveTab('security')} className="flex-1">
+            <TabsTrigger value="security" onClick={() => setActiveTab('security')} className="flex items-center">
               <Shield className="w-4 h-4 mr-2" />
               セキュリティ
             </TabsTrigger>
-            <TabsTrigger value="data-cleanup" onClick={() => setActiveTab('data-cleanup')} className="flex-1">
+            <TabsTrigger value="settings" onClick={() => setActiveTab('settings')} className="flex items-center">
+              <Settings className="w-4 h-4 mr-2" />
+              設定
+            </TabsTrigger>
+            <TabsTrigger value="data-cleanup" onClick={() => setActiveTab('data-cleanup')} className="flex items-center">
               <Database className="w-4 h-4 mr-2" />
               データ管理
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="diary" className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
+                <BookOpen className="w-5 h-5 text-blue-600 mr-2" />
+                日記一覧
+              </h2>
+              <AdvancedSearchFilter 
+                entries={entries} 
+                onFilteredResults={handleFilteredResults} 
+                onViewEntry={handleViewEntry}
+                onDeleteEntry={handleDeleteEntry}
+              />
+            </div>
+          </TabsContent>
+
           <TabsContent value="search" className="space-y-6">
-            <AdvancedSearchFilter 
-              entries={entries} 
-              onFilteredResults={handleFilteredResults} 
-              onViewEntry={handleViewEntry}
-              onDeleteEntry={handleDeleteEntry}
-            />
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
+                <Search className="w-5 h-5 text-blue-600 mr-2" />
+                詳細検索
+              </h2>
+              <AdvancedSearchFilter 
+                entries={entries} 
+                onFilteredResults={handleFilteredResults} 
+                onViewEntry={handleViewEntry}
+                onDeleteEntry={handleDeleteEntry}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="calendar" className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
+                <Calendar className="w-5 h-5 text-blue-600 mr-2" />
+                カレンダー検索
+              </h2>
+              <div className="text-center py-8">
+                <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-jp-medium text-gray-500 mb-2">
+                  カレンダー検索機能
+                </h3>
+                <p className="text-gray-400 font-jp-normal">
+                  日付ベースで日記を検索できます
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="stats" className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
+                <BarChart2 className="w-5 h-5 text-blue-600 mr-2" />
+                統計情報
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <h3 className="font-jp-bold text-gray-900 mb-2">総日記数</h3>
+                  <p className="text-3xl font-jp-bold text-blue-600">{entries.length}</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <h3 className="font-jp-bold text-gray-900 mb-2">無価値感の日記</h3>
+                  <p className="text-3xl font-jp-bold text-green-600">
+                    {entries.filter(entry => entry.emotion === '無価値感').length}
+                  </p>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                  <h3 className="font-jp-bold text-gray-900 mb-2">カウンセラーコメント</h3>
+                  <p className="text-3xl font-jp-bold text-purple-600">
+                    {entries.filter(entry => entry.counselorMemo || entry.counselor_memo).length}
+                  </p>
+                </div>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="counselors">
@@ -596,12 +694,48 @@ const AdminPanel: React.FC = () => {
             <CounselorChat />
           </TabsContent>
 
+          <TabsContent value="backup" className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
+                <Save className="w-5 h-5 text-blue-600 mr-2" />
+                バックアップ管理
+              </h2>
+              <div className="text-center py-8">
+                <Save className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-jp-medium text-gray-500 mb-2">
+                  バックアップ機能
+                </h3>
+                <p className="text-gray-400 font-jp-normal">
+                  データのバックアップと復元を管理します
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+
           <TabsContent value="device-auth">
             <DeviceAuthManagement />
           </TabsContent>
 
           <TabsContent value="security">
             <SecurityDashboard />
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
+                <Settings className="w-5 h-5 text-blue-600 mr-2" />
+                設定
+              </h2>
+              <div className="text-center py-8">
+                <Settings className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-jp-medium text-gray-500 mb-2">
+                  システム設定
+                </h3>
+                <p className="text-gray-400 font-jp-normal">
+                  アプリケーションの設定を管理します
+                </p>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="data-cleanup">
