@@ -389,7 +389,7 @@ const DataMigration: React.FC = () => {
                     自動同期機能は5分ごとにデータをクラウドに保存します。端末を変更する際にもデータが引き継がれます。
                   </p>
                 </div>
-            </div>
+              </div>
             
             <button
               onClick={handleManualSync} 
@@ -434,7 +434,7 @@ const DataMigration: React.FC = () => {
                     <li>端末変更時にデータが引き継がれます</li>
                     <li>ブラウザのキャッシュクリアでデータが失われません</li>
                     <li>カウンセラーがあなたの日記を確認できます</li>
-                  </ul>
+                 </ul>
                 </div>
               </div>
             </div>
