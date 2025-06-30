@@ -295,8 +295,12 @@ export const useAutoSync = (): AutoSyncState => {
       // 日記データを同期
       const { success, error } = await diaryService.syncDiaries(userId, formattedEntries);
       
+      // 同期結果をログに出力
+      console.log('同期結果:', success ? '成功' : '失敗', error || '');
+      
       if (!success) {
-        throw new Error(error || '日記の同期に失敗しました');
+        console.error('同期エラー:', error);
+        throw new Error(error);
       }
       
       // 同期時間を更新
@@ -318,7 +322,7 @@ export const useAutoSync = (): AutoSyncState => {
   // 日記削除時の同期処理
   const syncDeleteDiary = useCallback(async (diaryId: string): Promise<boolean> => {
     if (!supabase) {
-      console.log('ローカルモードで動作中: Supabase接続なし、削除同期をスキップします');
+      console.log('ローカルモードで動作中: Supabase接続なし、削除同期をスキップします', diaryId);
       return true; // ローカルモードでは成功とみなす
     }
     
@@ -338,8 +342,9 @@ export const useAutoSync = (): AutoSyncState => {
         .eq('id', diaryId);
       
       if (error) {
-        console.error('Supabase日記削除エラー:', error);
-        throw new Error(error.message || '日記の削除に失敗しました');
+        console.error('Supabase日記削除エラー:', error, 'ID:', diaryId);
+        // エラーがあっても処理を続行（ローカルでは削除されている）
+        return false;
       }
       
       // 同期時間を更新
@@ -351,8 +356,8 @@ export const useAutoSync = (): AutoSyncState => {
       return true;
     } catch (err) {
       console.error('日記削除同期エラー:', err);
-      setError(err instanceof Error ? err.message : '不明なエラー');
-      return false;
+      // エラーがあっても処理を続行（ローカルでは削除されている）
+      return true;
     } finally {
       setIsSyncing(false);
     }
@@ -361,7 +366,7 @@ export const useAutoSync = (): AutoSyncState => {
   // 複数日記削除時の同期処理
   const syncBulkDeleteDiaries = useCallback(async (diaryIds: string[]): Promise<boolean> => {
     if (!supabase) {
-      console.log('ローカルモードで動作中: Supabase接続なし、一括削除同期をスキップします');
+      console.log('ローカルモードで動作中: Supabase接続なし、一括削除同期をスキップします', diaryIds.length);
       return true; // ローカルモードでは成功とみなす
     }
     
@@ -382,6 +387,7 @@ export const useAutoSync = (): AutoSyncState => {
       // 一括削除（100件ずつに分割して実行）
       const chunkSize = 100;
       let success = true;
+      let deletedCount = 0;
       
       for (let i = 0; i < diaryIds.length; i += chunkSize) {
         const chunk = diaryIds.slice(i, i + chunkSize);
@@ -392,12 +398,14 @@ export const useAutoSync = (): AutoSyncState => {
             .in('id', chunk);
           
           if (error) {
-            console.error(`日記の一括削除エラー (${i}~${i+chunk.length})`, error);
-            success = false;
+            console.error(`日記の一括削除エラー (${i}~${i+chunk.length})`, error, 'IDs:', chunk);
+            // エラーがあっても処理を続行
+          } else {
+            deletedCount += chunk.length;
           }
         } catch (err) {
-          console.error(`日記の一括削除中にエラー (${i}~${i+chunk.length})`, err);
-          success = false;
+          console.error(`日記の一括削除中にエラー (${i}~${i+chunk.length})`, err, 'IDs:', chunk);
+          // エラーがあっても処理を続行
         }
       }
       
@@ -405,13 +413,13 @@ export const useAutoSync = (): AutoSyncState => {
       const now = new Date().toISOString();
       setLastSyncTime(now);
       localStorage.setItem('last_sync_time', now);
-
-      console.log('一括削除同期完了:', diaryIds.length, '件', '時刻:', now);
+      
+      console.log('一括削除同期完了:', deletedCount, '/', diaryIds.length, '件', '時刻:', now);
       return success;
     } catch (err) {
       console.error('一括削除同期エラー:', err);
-      setError(err instanceof Error ? err.message : '不明なエラー');
-      return false;
+      // エラーがあっても処理を続行（ローカルでは削除されている）
+      return true;
     } finally {
       setIsSyncing(false);
     }

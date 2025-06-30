@@ -148,7 +148,7 @@ export const diaryService = {
       // 日記データの整形
       const formattedDiaries = diaries
         .filter(diary => diary && diary.id && diary.date && diary.emotion) // 無効なデータをフィルタリング
-        .map(diary => {
+        .map((diary, i) => {
           // UUIDの形式を検証し、無効な場合は新しいUUIDを生成（より堅牢な方法）
           let diaryId = diary.id;
           if (!uuidRegex.test(diaryId)) {
@@ -176,28 +176,41 @@ export const diaryService = {
           user_id: userId,
           date: diary.date || new Date().toISOString().split('T')[0],
           emotion: diary.emotion || '無価値感',
-          event: diary.event || 'イベントなし',
-          realization: diary.realization || '気づきなし',
-          self_esteem_score: typeof entry.selfEsteemScore === 'number' ? entry.selfEsteemScore : 
-                            (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 
-                             (typeof entry.self_esteem_score === 'number' ? entry.self_esteem_score : 
-                              (typeof entry.self_esteem_score === 'string' ? parseInt(entry.self_esteem_score) : 50))),
-          worthlessness_score: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
-                              (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 
-                               (typeof entry.worthlessness_score === 'number' ? entry.worthlessness_score : 
-                                (typeof entry.worthlessness_score === 'string' ? parseInt(entry.worthlessness_score) : 50))),
-          created_at: diary.created_at || new Date().toISOString()
+            id: diaryId,
+            user_id: userId,
+            date: diary.date || new Date().toISOString().split('T')[0],
+            emotion: diary.emotion || '無価値感',
+            event: diary.event || 'イベントなし',
+            realization: diary.realization || '気づきなし',
+            self_esteem_score: typeof diary.selfEsteemScore === 'number' ? diary.selfEsteemScore : 
+                              (typeof diary.selfEsteemScore === 'string' ? parseInt(diary.selfEsteemScore) : 
+                               (typeof diary.self_esteem_score === 'number' ? diary.self_esteem_score : 
+                                (typeof diary.self_esteem_score === 'string' ? parseInt(diary.self_esteem_score) : 50))),
+            worthlessness_score: typeof diary.worthlessnessScore === 'number' ? diary.worthlessnessScore : 
+                                (typeof diary.worthlessnessScore === 'string' ? parseInt(diary.worthlessnessScore) : 
+                                 (typeof diary.worthlessness_score === 'number' ? diary.worthlessness_score : 
+                                  (typeof diary.worthlessness_score === 'string' ? parseInt(diary.worthlessness_score) : 50))),
+            created_at: diary.created_at || new Date().toISOString()
           };
           
           // オプションフィールドを追加
           const optionalFields = {
-            counselor_memo: entry.counselor_memo || entry.counselorMemo || null,
-            is_visible_to_user: entry.is_visible_to_user !== undefined ? entry.is_visible_to_user : 
-                               (entry.isVisibleToUser !== undefined ? entry.isVisibleToUser : false),
-            counselor_name: entry.counselor_name || entry.counselorName || null,
-            assigned_counselor: entry.assigned_counselor || entry.assignedCounselor || null,
+            counselor_memo: diary.counselor_memo || diary.counselorMemo || null,
+            is_visible_to_user: diary.is_visible_to_user !== undefined ? diary.is_visible_to_user : 
+                               (diary.isVisibleToUser !== undefined ? diary.isVisibleToUser : false),
+            counselor_name: diary.counselor_name || diary.counselorName || null,
+            assigned_counselor: diary.assigned_counselor || diary.assignedCounselor || null,
+            urgency_level: diary.urgency_level || diary.urgencyLevel || null
             urgency_level: entry.urgency_level || entry.urgencyLevel || null
           };
+          
+          // 同期前に最初のデータをログに出力（デバッグ用）
+          if (i === 0) {
+            console.log('同期するデータの例:', JSON.stringify({
+              ...formattedEntry,
+              ...optionalFields
+            }, null, 2).substring(0, 500) + '...');
+          }
           
           // 同期前に最初のデータをログに出力（デバッグ用）
           if (i === 0 && diary) {
@@ -224,6 +237,11 @@ export const diaryService = {
           console.log('同期するデータの最初の例:', JSON.stringify(formattedDiaries[0], null, 2).substring(0, 500) + '...');
       }
       
+      // 同期前にデータをログに出力（デバッグ用）
+      if (formattedDiaries.length > 0) {
+          console.log('同期するデータの最初の例:', JSON.stringify(formattedDiaries[0], null, 2).substring(0, 500) + '...');
+      }
+      
       if (formattedDiaries.length === 0) {
         return { success: true, message: '有効な同期データがありません' };
       }
@@ -231,14 +249,11 @@ export const diaryService = {
       // 一括挿入（競合時は更新）
       const { data, error } = await supabase
         .from('diary_entries')
-        .upsert(
-          formattedDiaries, 
-          {
-            onConflict: 'id',
-            ignoreDuplicates: false,
-            returning: 'minimal'
-          }
-        );
+        .upsert(formattedDiaries, {
+          onConflict: 'id',
+          ignoreDuplicates: false,
+          returning: 'minimal'
+        });
         
       if (error) {
         console.error('日記同期エラー:', error, 'データ件数:', formattedDiaries.length);
@@ -247,10 +262,19 @@ export const diaryService = {
       
       console.log('日記同期成功:', formattedDiaries.length, '件');
       return { success: true, data };
-    } catch (err) {
-      console.error('日記同期サービスエラー:', err);
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      return { success: false, error: errorMessage };
+    } catch (error) {
+      console.error('日記同期サービスエラー:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // エラーメッセージを詳細に
+      let detailedError = errorMessage;
+      if (errorMessage.includes('invalid input syntax for type uuid')) {
+        detailedError = 'UUID形式が無効です。データベース管理者に連絡してください。';
+      } else if (errorMessage.includes('violates foreign key constraint')) {
+        detailedError = '外部キー制約違反: ユーザーIDが存在しません。';
+      }
+      
+      return { success: false, error: detailedError };
     }
   },
   
