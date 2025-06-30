@@ -235,6 +235,9 @@ const AdminPanel: React.FC = () => {
             throw new Error(`Supabaseメモ更新エラー: ${error.message}`);
           } else {
             console.log('Supabaseメモ更新成功:', data);
+            throw new Error(`Supabaseメモ更新エラー: ${error.message}`);
+          } else {
+            console.log('Supabaseメモ更新成功:', data);
           }
         } catch (supabaseError) {
           console.error('Supabase接続エラー:', supabaseError);
@@ -325,7 +328,15 @@ const AdminPanel: React.FC = () => {
       // 方法2: 直接supabaseを使用（フォールバック）
       else if (supabase && entryId) {
         try {
-          const { error } = await supabase
+          console.log('Supabaseにメモを保存します:', {
+            counselor_memo: memoText,
+            is_visible_to_user: isVisibleToUser,
+            urgency_level: urgencyLevel || null,
+            assigned_counselor: assignedCounselor || null,
+            counselor_name: isVisibleToUser ? currentCounselor : null
+          });
+          
+          const { data, error } = await supabase
             .from('diary_entries')
             .delete()
             .eq('id', entryId);
@@ -335,6 +346,7 @@ const AdminPanel: React.FC = () => {
           }
         } catch (supabaseError) {
           console.error('Supabase接続エラー:', supabaseError);
+          throw supabaseError;
         }
       }
       
