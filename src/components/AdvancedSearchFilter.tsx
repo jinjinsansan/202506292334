@@ -172,13 +172,36 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
         setFilteredEntries([]);
         onFilteredResults([]);
       }
+      if (data && data.length > 0) {
+        // Supabaseのデータをローカル形式に変換
+        const formattedData = data.map(entry => ({
+          id: entry.id,
+          date: entry.date,
+          emotion: entry.emotion,
+          event: entry.event,
+          realization: entry.realization,
+          selfEsteemScore: entry.self_esteem_score || 0,
+          worthlessnessScore: entry.worthlessness_score || 0,
+          counselor_memo: entry.counselor_memo,
+          is_visible_to_user: entry.is_visible_to_user,
+          counselor_name: entry.counselor_name,
+          assigned_counselor: entry.assigned_counselor,
+          urgency_level: entry.urgency_level,
+          user: entry.users
+        }));
+        setFilteredEntries(formattedData);
+        onFilteredResults(formattedData);
+      } else {
+        setFilteredEntries([]);
+        onFilteredResults([]);
+      }
       
     } catch (error) {
       console.error('検索エラー:', error);
       setFilteredEntries([]);
       onFilteredResults([]);
-    } finally {
-      setLoading(false);
+      setFilteredEntries([]);
+      onFilteredResults([]);
     } finally {
       setLoading(false);
     }
@@ -368,6 +391,10 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    // 無効な日付の場合は元の文字列を返す
+    if (isNaN(date.getTime())) {
+      return dateString || '日付なし';
+    }
     // 無効な日付の場合は元の文字列を返す
     if (isNaN(date.getTime())) {
       return dateString || '日付なし';
@@ -752,6 +779,10 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                       </span>
                     )}
                     {entry.date && (
+                      <span className="text-gray-500 text-sm font-jp-normal">
+                        {formatDate(entry.date)}
+                      </span>
+                    )}
                       <span className="text-gray-500 text-sm font-jp-normal">
                         {formatDate(entry.date)}
                       </span>
