@@ -5,6 +5,8 @@ import { useSupabase } from './hooks/useSupabase';
 import { useAutoSync } from './hooks/useAutoSync';
 import { getCurrentUser } from './lib/deviceAuth';
 
+// 型定義のためのインポート
+import './vite-env';
 
 
 // コンポーネントのインポート
@@ -53,6 +55,13 @@ function App() {
   // 自動同期フックを初期化
   const autoSync = useAutoSync();
   
+  // グローバルに公開（コンポーネントからアクセスできるように）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.autoSync = autoSync;
+    }
+  }, [autoSync]);
+
   // グローバルに公開（コンポーネントからアクセスできるように）
   useEffect(() => {
     if (typeof window !== 'undefined') {
