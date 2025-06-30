@@ -59,7 +59,6 @@ const NextSteps: React.FC = () => {
                         <span className="text-gray-700 font-jp-normal">{emotion.name}（ポジティブ）</span>
                       </div>
                     ))}
-                    </div>
                   </div>
                 </div>
             </div>
