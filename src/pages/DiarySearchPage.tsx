@@ -680,9 +680,11 @@ const DiarySearchPage: React.FC = () => {
                       <span className={`px-3 py-1 rounded-full text-sm font-jp-medium border ${getEmotionColor(entry.emotion)}`}>
                         {entry.emotion}
                       </span>
-                      <span className={`px-3 py-1 rounded-full text-sm font-jp-medium border ${getEmotionColor(entry.emotion)}`}>
-                        {entry.emotion}
-                      </span>
+                      {entry.date && (
+                        <span className="text-gray-500 text-xs sm:text-sm font-jp-normal">
+                          {formatDate(entry.date)}
+                        </span>
+                      )}
                     </div>
                     <div className="flex space-x-2">
                       <button 
