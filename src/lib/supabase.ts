@@ -126,8 +126,6 @@ export const diaryService = {
           counselor_memo: diary.counselor_memo || diary.counselorMemo || null,
           is_visible_to_user: diary.is_visible_to_user || diary.isVisibleToUser || false,
           counselor_name: diary.counselor_name || diary.counselorName || null,
-          assigned_counselor: diary.assigned_counselor || diary.assignedCounselor || null,
-          urgency_level: diary.urgency_level || diary.urgencyLevel || null,
           created_at: diary.created_at || new Date().toISOString()
         }));
       

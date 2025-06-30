@@ -27,8 +27,6 @@ export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
     counselor_memo: diaryEntry.counselor_memo || diaryEntry.counselorMemo || null,
     is_visible_to_user: diaryEntry.is_visible_to_user || diaryEntry.isVisibleToUser || false,
     counselor_name: diaryEntry.counselor_name || diaryEntry.counselorName || null,
-    assigned_counselor: diaryEntry.assigned_counselor || diaryEntry.assignedCounselor || null,
-    urgency_level: diaryEntry.urgency_level || diaryEntry.urgencyLevel || null,
     created_at: diaryEntry.created_at || new Date().toISOString()
   };
 }

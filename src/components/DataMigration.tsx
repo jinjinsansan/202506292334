@@ -121,7 +121,27 @@ const DataMigration: React.FC = () => {
       setMigrationProgress(70);
       
       // 日記データをSupabase形式に変換
-      const formattedEntries = entries.map((entry: any) => formatDiaryForSupabase(entry, userId));
+      const formattedEntries = entries
+        .filter((entry: any) => entry && entry.id && entry.date && entry.emotion) // 無効なデータをフィルタリング
+        .map((entry: any) => {
+          // 必須フィールドのみを含める
+          return {
+            id: entry.id,
+            user_id: userId,
+            date: entry.date,
+            emotion: entry.emotion,
+            event: entry.event || '',
+            realization: entry.realization || '',
+            self_esteem_score: typeof entry.selfEsteemScore === 'number' ? entry.selfEsteemScore : 
+                             (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 0),
+            worthlessness_score: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
+                               (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 0),
+            counselor_memo: entry.counselor_memo || entry.counselorMemo || null,
+            is_visible_to_user: entry.is_visible_to_user || entry.isVisibleToUser || false,
+            counselor_name: entry.counselor_name || entry.counselorName || null,
+            created_at: entry.created_at || new Date().toISOString()
+          };
+        });
       
       // 日記データを同期
       const { success, error } = await diaryService.syncDiaries(userId, formattedEntries);

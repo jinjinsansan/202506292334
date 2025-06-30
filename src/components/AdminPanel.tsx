@@ -27,6 +27,7 @@ interface JournalEntry {
   assigned_counselor?: string;
   urgency_level?: 'high' | 'medium' | 'low';
   counselor_memo?: string;
+  source?: string;
   is_visible_to_user?: boolean;
   counselor_name?: string;
 }
