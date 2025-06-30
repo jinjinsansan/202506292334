@@ -43,11 +43,12 @@ const DataMigration: React.FC = () => {
   const handleManualSync = async () => {
     if (!isConnected) {
       if (window.confirm('Supabaseに接続されていません。再接続を試みますか？')) {
-        retryConnection();
-        // 再接続は非同期なので、すぐに確認しても意味がない
-        // 代わりに、ユーザーに再試行を促す
-        alert('再接続を試みました。しばらくしてから再度お試しください。');
-        return;
+        await retryConnection();
+        // 再接続後に接続状態を確認
+        if (!isConnected) {
+          alert('Supabaseへの接続に失敗しました。ネットワーク接続を確認してください。');
+          return;
+        }
       }
       return;
     }
@@ -60,8 +61,8 @@ const DataMigration: React.FC = () => {
       // 現在のユーザーを取得
       const user = getCurrentUser();
       
-      // ユーザー情報がない場合はローカルストレージから取得
-      const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
+      // ユーザー名を取得（ローカルストレージから）
+      const lineUsername = localStorage.getItem('line-username');
       
       if (!lineUsername) {
         throw new Error('ユーザー名が設定されていません');
@@ -70,12 +71,19 @@ const DataMigration: React.FC = () => {
       setMigrationStatus('ユーザー情報を確認中...');
       setMigrationProgress(20);
       
-      // ユーザーIDを取得
-      let userId = currentUser?.id;
+      // ユーザーIDを取得または作成
+      let userId;
       
-      // ユーザーIDがない場合は初期化
-      if (!userId && lineUsername) {
+      if (currentUser && currentUser.id) {
+        userId = currentUser.id;
+        console.log('既存のユーザーIDを使用:', userId);
+      } else {
+        // ユーザーIDがない場合は初期化
         setMigrationStatus(`ユーザー「${lineUsername}」を作成中...`);
+        try {
+          const supabaseUser = await userService.createOrGetUser(lineUsername);
+          if (!supabaseUser || !supabaseUser.id) {
+            throw new Error('ユーザーの作成に失敗しました');
           }
           
           userId = supabaseUser.id;
@@ -122,7 +130,6 @@ const DataMigration: React.FC = () => {
       try {
         entries = JSON.parse(savedEntries);
         if (!Array.isArray(entries)) {
-                        style={{ userSelect: 'none' }}
           throw new Error('journalEntriesが配列ではありません');
         }
       } catch (error) {
