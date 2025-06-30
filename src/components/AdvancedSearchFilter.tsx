@@ -563,8 +563,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                   onClick={handleSearch}
                   className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs font-jp-medium transition-colors flex items-center space-x-1"
                 >
-                  <span>検索</span>
-                </button>
+                  <Search className="w-3 h-3" />
                 </button>
               </>
             )}
@@ -572,35 +571,28 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
         </div>
 
         {filteredEntries.length === 0 ? (
-          <div className="text-center py-8">
-            <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <div className="text-center py-12">
+            <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 font-jp-normal">検索条件に一致する日記が見つかりませんでした。</p>
           </div>
         ) : (
           <div className="space-y-4">
             {filteredEntries.map((entry) => (
-            <div 
-                key={entry.id} 
-                className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${
-                entry.emotion === '恐怖' ? 'bg-purple-50 border-purple-200' :
-                entry.emotion === '悲しみ' ? 'bg-blue-50 border-blue-200' :
-                entry.emotion === '怒り' ? 'bg-red-50 border-red-200' :
-                entry.emotion === '悔しい' ? 'bg-green-50 border-green-200' :
-                entry.emotion === '無価値感' ? 'bg-gray-50 border-gray-200' :
-                entry.emotion === '罪悪感' ? 'bg-orange-50 border-orange-200' :
-                entry.emotion === '寂しさ' ? 'bg-indigo-50 border-indigo-200' :
-                entry.emotion === '恥ずかしさ' ? 'bg-pink-50 border-pink-200' :
-                entry.emotion === '嬉しい' ? 'bg-yellow-50 border-yellow-200' :
-                entry.emotion === '感謝' ? 'bg-teal-50 border-teal-200' :
-                entry.emotion === '達成感' ? 'bg-lime-50 border-lime-200' :
-                entry.emotion === '幸せ' ? 'bg-amber-50 border-amber-200' :
-                entry.emotion === '嬉しい' ? 'bg-yellow-50 border-yellow-200' :
-                entry.emotion === '感謝' ? 'bg-teal-50 border-teal-200' :
-                entry.emotion === '達成感' ? 'bg-lime-50 border-lime-200' :
-                entry.emotion === '幸せ' ? 'bg-amber-50 border-amber-200' :
-                'bg-gray-50 border-gray-200'
-                }`}
-              >
+              <div key={entry.id} className={`border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow ${
+                entry.emotion === '恐怖' ? 'bg-purple-50' :
+                entry.emotion === '悲しみ' ? 'bg-blue-50' :
+                entry.emotion === '怒り' ? 'bg-red-50' :
+                entry.emotion === '悔しい' ? 'bg-green-50' :
+                entry.emotion === '無価値感' ? 'bg-gray-50' :
+                entry.emotion === '罪悪感' ? 'bg-orange-50' :
+                entry.emotion === '寂しさ' ? 'bg-indigo-50' :
+                entry.emotion === '恥ずかしさ' ? 'bg-pink-50' :
+                entry.emotion === '嬉しい' ? 'bg-yellow-50' :
+                entry.emotion === '感謝' ? 'bg-teal-50' :
+                entry.emotion === '達成感' ? 'bg-lime-50' :
+                entry.emotion === '幸せ' ? 'bg-amber-50' :
+                'bg-white'
+              }`}>
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center space-x-3">
                     <span className="text-sm font-jp-medium text-gray-900">{entry.date}</span>
