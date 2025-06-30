@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Heart, BookOpen, Search, BarChart2, HelpCircle, MessageCircle, Settings, Home, User, Menu, X, FileText, ArrowRight, Shield, BarChart, Database, LogOut, ExternalLink } from 'lucide-react';
 import { useMaintenanceStatus } from './hooks/useMaintenanceStatus';
 import { useSupabase } from './hooks/useSupabase';
+import { useAutoSync } from './hooks/useAutoSync';
 import { getCurrentUser } from './lib/deviceAuth';
 
 // コンポーネントのインポート
@@ -50,7 +51,7 @@ function App() {
   // 自動同期フックを初期化
   const autoSync = useAutoSync();
   
-  // グローバルに公開（コンポーネントからアクセスできるように）
+  // グローバルに公開（他のコンポーネントからアクセスできるように）
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.autoSync = autoSync;
