@@ -7,7 +7,7 @@ import CounselorChat from './CounselorChat';
 import ConsentHistoryManagement from './ConsentHistoryManagement';
 import DeviceAuthManagement from './DeviceAuthManagement';
 import SecurityDashboard from './SecurityDashboard';
-import { supabase, diaryService } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import DataCleanup from './DataCleanup';
 
 const AdminPanel: React.FC = () => {
@@ -31,15 +31,26 @@ const AdminPanel: React.FC = () => {
   const loadEntries = async () => {
     setLoading(true);
     try {
-      // Supabaseから日記データを取得（管理者モード）
+      // Supabaseから直接日記データを取得（管理者モード）
       if (supabase) {
         try {
-          const diaryEntries = await diaryService.getAllDiaries();
-          if (diaryEntries && diaryEntries.length > 0) {
-            console.log('Supabaseから日記データを取得しました:', diaryEntries.length, '件');
+          const { data: diaryData, error } = await supabase
+            .from('diary_entries')
+            .select(`
+              *,
+              users (
+                line_username
+              )
+            `)
+            .order('created_at', { ascending: false });
+          
+          if (error) {
+            console.error('Supabaseからの日記データ取得エラー:', error);
+          } else if (diaryData && diaryData.length > 0) {
+            console.log('Supabaseから日記データを取得しました:', diaryData.length, '件');
             
             // データをフォーマット
-            const formattedEntries = diaryEntries.map(item => ({
+            const formattedEntries = diaryData.map(item => ({
               id: item.id,
               date: item.date,
               emotion: item.emotion,
@@ -48,7 +59,7 @@ const AdminPanel: React.FC = () => {
               selfEsteemScore: item.self_esteem_score,
               worthlessnessScore: item.worthlessness_score,
               created_at: item.created_at,
-              user: item.user,
+              user: item.users,
               counselorMemo: item.counselor_memo,
               isVisibleToUser: item.is_visible_to_user,
               counselorName: item.counselor_name,

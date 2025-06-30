@@ -135,14 +135,8 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
       
       // ユーザー検索
       if (filters.userSearch.trim()) {
-        // ユーザー名で検索する場合は、usersテーブルのline_usernameを使用
-        if (filters.userSearch.includes('@')) {
-          // メールアドレスの場合はそのまま検索
-          query = query.ilike('users.line_username', `%${filters.userSearch.trim()}%`);
-        } else {
-          // 通常のユーザー名検索
-          query = query.ilike('users.line_username', `%${filters.userSearch.trim()}%`);
-        }
+        // ユーザー名で検索
+        query = query.ilike('users.line_username', `%${filters.userSearch.trim()}%`);
       }
       
       const { data, error } = await query
