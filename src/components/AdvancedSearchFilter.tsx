@@ -121,18 +121,12 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
   const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
   const [searchLoading, setSearchLoading] = useState(false);
 
-  // 日記ページと同じ感情リスト
+  // ネガティブな感情リスト
   const negativeEmotions = [
     '恐怖', '悲しみ', '怒り', '悔しい', '無価値感', '罪悪感', '寂しさ', '恥ずかしさ'
   ];
   
-  const positiveEmotions = [
-    '嬉しい', '感謝', '達成感', '幸せ'
-  ];
-  
-  // 全ての感情を結合
-  const emotions = [...negativeEmotions, ...positiveEmotions];
-  
+  // ポジティブな感情リスト
   const positiveEmotions = [
     '嬉しい', '感謝', '達成感', '幸せ'
   ];
