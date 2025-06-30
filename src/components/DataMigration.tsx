@@ -376,7 +376,7 @@ const DataMigration: React.FC = () => {
           <div className="bg-blue-50 rounded-lg p-6 border border-blue-200 mb-6">
             <div className="mb-4">
               <div className="flex items-start space-x-3 mb-4">
-                <RefreshCw className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
+                <RefreshCw className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" /> 
                 <div>
                   <h3 className="font-jp-bold text-gray-900 mb-2">自動同期設定</h3>
                   <p className="text-gray-700 font-jp-normal mb-4">
@@ -386,7 +386,7 @@ const DataMigration: React.FC = () => {
               </div>
               
               <button
-                onClick={handleManualSync}
+                onClick={handleManualSync} 
                 disabled={migrating || !isConnected}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
               >
