@@ -412,7 +412,7 @@ const WorthlessnessChart: React.FC = () => {
                 {/* グラフ本体 */}
                 <div className="relative w-full h-64 overflow-hidden">
                   <svg
-                    viewBox="0 0 100 100"
+                    viewBox="0 0 100 100" 
                     preserveAspectRatio="none" 
                     className="absolute inset-0 w-full h-full graph-svg"
                     shapeRendering="auto"
@@ -465,7 +465,6 @@ const WorthlessnessChart: React.FC = () => {
                           cx={x}
                           cy={toY(Number(d[k as keyof ScoreEntry] as number))}
                           r="1"
-                          fill={idx ? '#ef4444' : '#3b82f6'} 
                           stroke="none"
                           vectorEffect="non-scaling-stroke"
                         >
