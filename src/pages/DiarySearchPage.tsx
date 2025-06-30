@@ -677,16 +677,12 @@ const DiarySearchPage: React.FC = () => {
                 <div key={entry.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap">
-                      {entry.date && (
-                        <span className="text-gray-500 text-xs sm:text-sm font-jp-normal">
-                          {formatDate(entry.date)}
-                        </span>
-                      )}
-                      {entry.date && (
-                        <span className="text-gray-500 text-xs sm:text-sm font-jp-normal">
-                          {formatDate(entry.date)}
-                        </span>
-                      )}
+                      <span className={`px-3 py-1 rounded-full text-sm font-jp-medium border ${getEmotionColor(entry.emotion)}`}>
+                        {entry.emotion}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-jp-medium border ${getEmotionColor(entry.emotion)}`}>
+                        {entry.emotion}
+                      </span>
                     </div>
                     <div className="flex space-x-2">
                       <button 
