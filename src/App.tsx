@@ -49,17 +49,9 @@ function App() {
   // ローカルモードの確認
   const isLocalMode = import.meta.env.VITE_LOCAL_MODE === 'true';
   
-  // 自動同期フックを初期化（グローバルに公開）
+  // 自動同期フックを初期化
   const autoSync = useAutoSync();
   
-  // グローバルに公開（コンポーネントからアクセスできるように）
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.autoSync = autoSync;
-    }
-  }, [autoSync]);
-  
-  // グローバルに公開は上記のuseEffectで実装済み
   // グローバルに公開（コンポーネントからアクセスできるように）
   useEffect(() => {
     if (typeof window !== 'undefined') {
