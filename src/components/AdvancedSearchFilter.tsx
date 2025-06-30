@@ -45,6 +45,49 @@ interface AdvancedSearchFilterProps {
   onDeleteEntry?: (entryId: string) => void;
 }
 
+interface SearchFilters {
+  keyword: string;
+  emotion: string;
+  urgency: string;
+  counselor: string;
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  userSearch: string;
+  hasNotes: boolean | null;
+  scoreRange: {
+    selfEsteemMin: number;
+    selfEsteemMax: number;
+    worthlessnessMin: number;
+    worthlessnessMax: number;
+  };
+}
+
+interface JournalEntry {
+  id: string;
+  date: string;
+  emotion: string;
+  event: string;
+  realization: string;
+  self_esteem_score?: number;
+  worthlessness_score?: number;
+  created_at: string;
+  user?: {
+    line_username: string;
+  };
+  assigned_counselor?: string;
+  urgency_level?: 'high' | 'medium' | 'low';
+  counselor_memo?: string;
+}
+
+interface AdvancedSearchFilterProps {
+  entries: JournalEntry[];
+  onFilteredResults: (filtered: JournalEntry[]) => void;
+  onViewEntry: (entry: JournalEntry) => void; 
+  onDeleteEntry?: (entryId: string) => void;
+}
+
 const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
   entries,
   onFilteredResults,
@@ -78,10 +121,17 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
   const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
   const [searchLoading, setSearchLoading] = useState(false);
 
-  const emotions = [
-    '恐怖', '悲しみ', '怒り', '悔しい', '無価値感', '罪悪感', '寂しさ', '恥ずかしさ',
-    '不安', '焦り', '絶望', '混乱', '嫉妬', '憎しみ', '後悔', '失望'
+  // 日記ページと同じ感情リスト
+  const negativeEmotions = [
+    '恐怖', '悲しみ', '怒り', '悔しい', '無価値感', '罪悪感', '寂しさ', '恥ずかしさ'
   ];
+  
+  const positiveEmotions = [
+    '嬉しい', '感謝', '達成感', '幸せ'
+  ];
+  
+  // 全ての感情を結合
+  const emotions = [...negativeEmotions, ...positiveEmotions];
 
   const urgencyLevels = [
     { value: 'high', label: '高', color: 'text-red-600' },
