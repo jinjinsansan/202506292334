@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Calendar, LineChart, Share2, Download, Filter, RefreshCw, TrendingUp } from 'lucide-react';
-import dayjs from 'dayjs';
-import isBetween from 'dayjs/plugin/isBetween';
+import dayjs from 'dayjs'; 
+import isBetween from 'dayjs/plugin/isBetween'; 
 dayjs.extend(isBetween);
 
 /* 型例：日記データ */
@@ -58,11 +58,19 @@ const WorthlessnessChart: React.FC = () => {
       
       if (savedEntries) {
         const entries = JSON.parse(savedEntries);
+        if (!Array.isArray(entries)) {
+          console.error('journalEntriesが配列ではありません:', entries);
+          return;
+        }
         
         console.log('全エントリー数:', entries?.length || 0);
         
         // 無価値感の日記のみをフィルタリング
-        const worthlessnessEntries = entries?.filter((entry: any) => entry.emotion === '無価値感') || [];
+        const worthlessnessEntries = entries?.filter((entry: any) => 
+          entry && entry.emotion === '無価値感' && 
+          entry.selfEsteemScore !== undefined && 
+          entry.worthlessnessScore !== undefined
+        ) || [];
         
         // 日記データをフォーマット
         let formattedData = worthlessnessEntries.map((entry: any) => ({
@@ -74,7 +82,15 @@ const WorthlessnessChart: React.FC = () => {
         }));
         
         // 日付順にソート
-        formattedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        formattedData.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          // 無効な日付の場合は比較しない
+          if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+            return 0;
+          }
+          return dateA.getTime() - dateB.getTime();
+        });
         
         // 初期スコアを追加（全期間表示の場合）
         if (initialScore && period === 'all' && formattedData.length > 0) {
@@ -133,6 +149,10 @@ const WorthlessnessChart: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    // 無効な日付の場合は元の文字列を返す
+    if (isNaN(date.getTime())) {
+      return dateString || '日付なし';
+    }
     return `${date.getMonth() + 1}/${date.getDate()}`;
   };
 

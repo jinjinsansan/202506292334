@@ -58,12 +58,20 @@ const AdminPanel: React.FC = () => {
   const loadEntries = async () => {
     setLoading(true);
     try {
+      console.log('管理画面: 日記データを読み込み中...');
       // ローカルストレージからデータを取得
       const savedEntries = localStorage.getItem('journalEntries');
       let localEntries = [];
       
       if (savedEntries) {
-        localEntries = JSON.parse(savedEntries);
+        try {
+          const parsed = JSON.parse(savedEntries);
+          localEntries = Array.isArray(parsed) ? parsed : [];
+          console.log('ローカルストレージから取得したエントリー:', localEntries.length);
+        } catch (error) {
+          console.error('ローカルデータの解析エラー:', error);
+          localEntries = [];
+        }
       }
       
       // Supabaseからデータを取得（接続されている場合）
@@ -91,9 +99,26 @@ const AdminPanel: React.FC = () => {
       
       // データを結合（重複を避けるため、IDをキーとして使用）
       const entriesMap = new Map();
+      console.log('データ結合処理を開始...');
       
       // ローカルデータを追加
       localEntries.forEach((entry: any) => {
+        if (!entry || !entry.id) {
+          console.warn('無効なエントリーをスキップ:', entry);
+          return;
+        }
+        
+        // ユーザー情報がない場合は追加
+        if (!entry.user) {
+          const lineUsername = localStorage.getItem('line-username') || 'Unknown User';
+          entry.user = { line_username: lineUsername };
+        }
+        
+        // 作成日時がない場合は追加
+        if (!entry.created_at) {
+          entry.created_at = new Date().toISOString();
+        }
+        
         entriesMap.set(entry.id, {
           ...entry,
           source: 'local'
@@ -102,6 +127,11 @@ const AdminPanel: React.FC = () => {
       
       // Supabaseデータを追加（同じIDの場合は上書き）
       supabaseEntries.forEach((entry: any) => {
+        if (!entry || !entry.id) {
+          console.warn('無効なSupabaseエントリーをスキップ:', entry);
+          return;
+        }
+        
         const formattedEntry = {
           id: entry.id,
           date: entry.date,
@@ -125,7 +155,7 @@ const AdminPanel: React.FC = () => {
       // Mapから配列に変換
       const combinedEntries = Array.from(entriesMap.values());
       
-      // 日付順でソート（新しい順）
+      // 日付順でソート（新しい順）- 無効な日付を考慮
       combinedEntries.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
       
       setEntries(combinedEntries);
@@ -289,6 +319,10 @@ const AdminPanel: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    // 無効な日付の場合は元の文字列を返す
+    if (isNaN(date.getTime())) {
+      return dateString || '日付なし';
+    }
     return date.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'short',
@@ -563,12 +597,16 @@ const AdminPanel: React.FC = () => {
                               }`}>
                                 {entry.emotion}
                               </span>
-                              <span className="text-gray-900 font-jp-medium">
-                                {entry.user?.line_username || 'Unknown User'}
-                              </span>
-                              <span className="text-gray-500 text-sm">
-                                {formatDate(entry.date)}
-                              </span>
+                              {entry.user && (
+                                <span className="text-gray-900 font-jp-medium">
+                                  {entry.user.line_username || 'Unknown User'}
+                                </span>
+                              )}
+                              {entry.date && (
+                                <span className="text-gray-500 text-sm">
+                                  {formatDate(entry.date)}
+                                </span>
+                              )}
                             </div>
                             <div className="flex items-center space-x-2">
                               {entry.urgency_level && (
@@ -605,13 +643,13 @@ const AdminPanel: React.FC = () => {
                             <div>
                               <h4 className="font-jp-semibold text-gray-700 mb-1 text-sm">出来事</h4>
                               <p className="text-gray-600 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap">
-                                {entry.event}
+                                {entry.event || '(内容なし)'}
                               </p>
                             </div>
                             <div>
                               <h4 className="font-jp-semibold text-gray-700 mb-1 text-sm">気づき</h4>
                               <p className="text-gray-600 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap">
-                                {entry.realization}
+                                {entry.realization || '(内容なし)'}
                               </p>
                             </div>
                           </div>
@@ -641,7 +679,7 @@ const AdminPanel: React.FC = () => {
                           <div className="flex justify-between items-center text-sm">
                             <div className="flex items-center space-x-2 text-gray-500">
                               <Clock className="w-4 h-4" />
-                              <span>{new Date(entry.created_at).toLocaleString('ja-JP')}</span>
+                              <span>{entry.created_at ? new Date(entry.created_at).toLocaleString('ja-JP') : '日時不明'}</span>
                             </div>
                             <div className="flex items-center space-x-2">
                               {entry.assigned_counselor && (

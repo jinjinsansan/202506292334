@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Plus, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
 import { getCurrentUser } from '../lib/deviceAuth';
+import dayjs from 'dayjs';
 
 // 日本時間を取得する関数
 const getJapaneseDate = (): Date => {
@@ -301,14 +302,29 @@ const DiaryPage: React.FC = () => {
       
       // ローカルストレージに保存
       const existingEntries = localStorage.getItem('journalEntries');
-      const entries = existingEntries ? JSON.parse(existingEntries) : [];
+      let entries = [];
+      try {
+        entries = existingEntries ? JSON.parse(existingEntries) : [];
+        if (!Array.isArray(entries)) {
+          console.error('journalEntriesが配列ではありません:', entries);
+          entries = [];
+        }
+      } catch (error) {
+        console.error('journalEntriesの解析エラー:', error);
+      }
+      
+      // 現在のユーザー名を取得
+      const user = getCurrentUser();
+      const username = user?.lineUsername || localStorage.getItem('line-username') || 'Unknown User';
       
       const newEntry = {
         id: Date.now().toString(),
         date: finalFormData.date,
         emotion: finalFormData.emotion,
         event: finalFormData.event,
-        realization: finalFormData.realization
+        realization: finalFormData.realization,
+        user: { line_username: username },
+        created_at: new Date().toISOString()
       };
       
       // 無価値感を選んだ場合はスコアを追加

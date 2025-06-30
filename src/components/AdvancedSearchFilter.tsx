@@ -342,6 +342,10 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    // 無効な日付の場合は元の文字列を返す
+    if (isNaN(date.getTime())) {
+      return dateString || '日付なし';
+    }
     return date.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'short',
@@ -716,12 +720,16 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                     <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-jp-medium border ${getEmotionColor(entry.emotion)}`}>
                       {entry.emotion}
                     </span>
-                    <span className="text-gray-900 font-jp-medium">
-                      {entry.user?.line_username || 'Unknown User'}
-                    </span>
-                    <span className="text-gray-500 text-sm font-jp-normal">
-                      {formatDate(entry.date)}
-                    </span>
+                    {entry.user && (
+                      <span className="text-gray-900 font-jp-medium">
+                        {entry.user.line_username || 'Unknown User'}
+                      </span>
+                    )}
+                    {entry.date && (
+                      <span className="text-gray-500 text-sm font-jp-normal">
+                        {formatDate(entry.date)}
+                      </span>
+                    )}
                     {entry.urgency_level && (
                       <span className={`text-sm font-jp-medium ${getUrgencyColor(entry.urgency_level)}`}>
                         緊急度: {urgencyLevels.find(l => l.value === entry.urgency_level)?.label}
