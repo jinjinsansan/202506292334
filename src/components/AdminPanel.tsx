@@ -48,6 +48,21 @@ const AdminPanel: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* ... (rest of JSX) */}
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleViewEntry(entry)}
+                          className="text-blue-600 hover:text-blue-700 p-1"
+                          title="詳細"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button 
+                         onClick={() => handleViewEntry(entry)}
+                          className="text-green-600 hover:text-green-700 p-1"
+                          title="編集"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
       {renderEntryModal()}
     </div>
   );
