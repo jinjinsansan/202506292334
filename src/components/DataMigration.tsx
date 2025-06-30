@@ -6,8 +6,8 @@ import { getCurrentUser } from '../lib/deviceAuth';
 import { formatDiaryForSupabase } from '../lib/utils';
 
 const DataMigration: React.FC = () => {
-  const [localDataCount, setLocalDataCount] = useState(0);
-  const [supabaseDataCount, setSupabaseDataCount] = useState(0);
+  const [localDataCount, setLocalDataCount] = useState<number>(0);
+  const [supabaseDataCount, setSupabaseDataCount] = useState<number>(0);
   const [migrating, setMigrating] = useState(false);
   const [migrationStatus, setMigrationStatus] = useState<string>('');
   const [migrationProgress, setMigrationProgress] = useState(0);
