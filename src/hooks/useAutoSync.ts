@@ -62,7 +62,6 @@ export const useAutoSync = (): AutoSyncState => {
       if (!user || !user.lineUsername) {
         console.error('ユーザーがログインしていないか、ユーザー名がありません');
         setError('ユーザー情報が不足しています');
-        return false;
         return;
       }
       
@@ -111,7 +110,6 @@ export const useAutoSync = (): AutoSyncState => {
           console.error('ユーザーの作成に失敗しました');
           setError('ユーザーの作成に失敗しました');
           return false;
-          return false;
         }
         
         userId = supabaseUser.id;
@@ -122,16 +120,6 @@ export const useAutoSync = (): AutoSyncState => {
       const savedEntries = localStorage.getItem('journalEntries');
       if (!savedEntries) {
         console.log('同期する日記データがありません');
-        setLastSyncTime(new Date().toISOString());
-        localStorage.setItem('last_sync_time', new Date().toISOString());
-        return true;
-      }
-      
-      let entries = JSON.parse(savedEntries);
-      
-      // 空の配列の場合は同期をスキップ
-      if (!entries || entries.length === 0) {
-        console.log('同期する日記データがありません（空の配列）');
         setLastSyncTime(new Date().toISOString());
         localStorage.setItem('last_sync_time', new Date().toISOString());
         return true;

@@ -86,44 +86,23 @@ export const diaryService = {
 
     try {
       // 日記データの整形
-      const formattedDiaries = diaries.map(diary => {
-        // キャメルケースからスネークケースへの変換
-        return {
-          id: diary.id,
-          user_id: userId,
-          date: diary.date,
-          emotion: diary.emotion,
-          event: diary.event,
-          realization: diary.realization,
-          self_esteem_score: diary.selfEsteemScore || 0,
-          worthlessness_score: diary.worthlessnessScore || 0,
-          counselor_memo: diary.counselor_memo || null,
-          is_visible_to_user: diary.is_visible_to_user || false,
-          counselor_name: diary.counselor_name || null,
-          assigned_counselor: diary.assigned_counselor || null,
-          urgency_level: diary.urgency_level || null
-        };
-      });
+      const formattedDiaries = diaries.map(diary => ({
+        id: diary.id,
+        user_id: userId,
+        date: diary.date,
+        emotion: diary.emotion,
+        event: diary.event,
+        realization: diary.realization,
+        self_esteem_score: diary.selfEsteemScore || 0,
+        worthlessness_score: diary.worthlessnessScore || 0,
+        counselor_memo: diary.counselor_memo || null,
+        is_visible_to_user: diary.is_visible_to_user || false,
+        counselor_name: diary.counselor_name || null,
+        assigned_counselor: diary.assigned_counselor || null,
+        urgency_level: diary.urgency_level || null
+      }));
       
       console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件');
-        return {
-          id: diaryId,
-          user_id: userId,
-          date: diary.date,
-          emotion: diary.emotion,
-          event: diary.event,
-          realization: diary.realization,
-          self_esteem_score: diary.selfEsteemScore || 0,
-          worthlessness_score: diary.worthlessnessScore || 0,
-          counselor_memo: diary.counselor_memo || null,
-          is_visible_to_user: diary.is_visible_to_user || false,
-          counselor_name: diary.counselor_name || null,
-          assigned_counselor: diary.assigned_counselor || null,
-          urgency_level: diary.urgency_level || null
-        };
-      });
-      
-      console.log('同期する日記データ:', formattedDiaries);
       
       // 一括挿入（競合時は更新）
       const { data, error } = await supabase
@@ -131,7 +110,6 @@ export const diaryService = {
         .upsert(formattedDiaries, {
           onConflict: 'id',
           ignoreDuplicates: false,
-          returning: 'minimal'
           returning: 'minimal'
         });
       

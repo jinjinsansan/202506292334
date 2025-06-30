@@ -39,92 +39,6 @@ const DataMigration: React.FC = () => {
     }
   }, []);
 
-  // 手動同期ボタンのハンドラー
-  const handleManualSync = async () => {
-    if (!isConnected) {
-      alert('Supabaseに接続されていません。接続を確認してください。');
-      return;
-    }
-    
-    setMigrating(true);
-    setMigrationStatus('同期を開始しています...');
-    setMigrationProgress(10);
-    
-    try {
-      // 現在のユーザーを取得
-      const user = getCurrentUser();
-      if (!user || !user.lineUsername) {
-        throw new Error('ユーザーがログインしていないか、ユーザー名がありません');
-      }
-      
-      setMigrationStatus('ユーザー情報を確認中...');
-      setMigrationProgress(20);
-      
-      // ユーザーIDを取得
-      let userId = currentUser?.id;
-      
-      // ユーザーIDがない場合は初期化
-      if (!userId) {
-        setMigrationStatus('ユーザーを作成中...');
-        const supabaseUser = await userService.createOrGetUser(user.lineUsername);
-        if (!supabaseUser || !supabaseUser.id) {
-          throw new Error('ユーザーの作成に失敗しました');
-        }
-        
-        userId = supabaseUser.id;
-        setMigrationProgress(40);
-      }
-      
-      // ローカルストレージから日記データを取得
-      setMigrationStatus('ローカルデータを読み込み中...');
-      setMigrationProgress(50);
-      const savedEntries = localStorage.getItem('journalEntries');
-      if (!savedEntries) {
-        setMigrationStatus('同期するデータがありません');
-        setMigrationProgress(100);
-        setTimeout(() => {
-          setMigrationStatus(null);
-          setMigrationProgress(0);
-        }, 3000);
-        return;
-      }
-      
-      const entries = JSON.parse(savedEntries);
-      console.log('同期する日記データ:', entries.length, '件');
-      
-      setMigrationStatus(`${entries.length}件のデータを同期中...`);
-      setMigrationProgress(70);
-      
-      // 日記データを同期
-      const { success, error } = await diaryService.syncDiaries(userId, entries);
-      
-      if (!success) {
-        throw new Error(error || '日記の同期に失敗しました');
-      }
-      
-      // 同期時間を更新
-      const now = new Date().toISOString();
-      localStorage.setItem('last_sync_time', now);
-      
-      setMigrationStatus('同期が完了しました！');
-      setMigrationProgress(100);
-      
-      // データ数を再読み込み
-      loadDataInfo();
-      
-      setTimeout(() => {
-        setMigrationStatus(null);
-        setMigrationProgress(0);
-      }, 3000);
-      
-    } catch (error) {
-      console.error('手動同期エラー:', error);
-      setMigrationStatus(`同期エラー: ${error instanceof Error ? error.message : '不明なエラー'}`);
-      setMigrationProgress(0);
-    } finally {
-      setMigrating(false);
-    }
-  };
 
   // 手動同期ボタンのハンドラー
   const handleManualSync = async () => {
@@ -222,13 +136,6 @@ const DataMigration: React.FC = () => {
         // 通常モードの場合は現在のユーザーのデータ数を取得
         const localEntries = localStorage.getItem('journalEntries');
         if (localEntries) {
-          let entries;
-          try {
-            entries = JSON.parse(localEntries);
-          } catch (error) {
-            console.error('ローカルデータの解析エラー:', error);
-            entries = [];
-          }
             const entries = JSON.parse(localEntries);
             setLocalDataCount(Array.isArray(entries) ? entries.length : 0);
           } catch (error) {
@@ -386,8 +293,6 @@ const DataMigration: React.FC = () => {
                     再接続
                   </button>
                 )}
-                <div className="text-xs text-gray-500 mt-1">URL: {supabaseUrl ? supabaseUrl.substring(0, 20) + '...' : '未設定'}</div>
-              </div>
                 </span>
                 {!isConnected && (
                   <button
