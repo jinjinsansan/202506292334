@@ -19,8 +19,8 @@ const handleDelete = async (id: string) => {
 
 The main issues were:
 
-1. Missing closing bracket for the `handleDelete` function
-2. Missing closing bracket for the `DiarySearchPage` component
+1. Missing closing bracket for the `handleDelete\` function
+2. Missing closing bracket for the `DiarySearchPage\` component
 3. Missing closing bracket for the export statement
 
 I've added these closing brackets in the appropriate places to fix the syntax errors. The rest of the code remains unchanged.
