@@ -211,8 +211,7 @@ const AdminPanel: React.FC = () => {
       // Supabaseの更新（接続されている場合）
       if (supabase && selectedEntry.id) {
         try {
-          console.log('Supabaseにカウンセラーメモを保存します:', {
-            id: selectedEntry.id,
+          console.log('Supabaseにメモを保存します:', {
             counselor_memo: memoText,
             is_visible_to_user: isVisibleToUser,
             urgency_level: urgencyLevel || null,
@@ -220,7 +219,7 @@ const AdminPanel: React.FC = () => {
             counselor_name: isVisibleToUser ? currentCounselor : null
           });
           
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from('diary_entries')
             .update({
               counselor_memo: memoText,
@@ -235,11 +234,22 @@ const AdminPanel: React.FC = () => {
             console.error('Supabaseメモ更新エラー:', error);
             throw new Error(`Supabaseメモ更新エラー: ${error.message}`);
           } else {
-            console.log('Supabaseメモ更新成功:', data);
+            console.log('Supabaseメモ更新成功');
+            
+            // 自動同期を実行して変更を確実に反映
+            if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
+              try {
+                console.log('自動同期を実行します...');
+                await window.autoSync.triggerManualSync();
+                console.log('自動同期が完了しました');
+              } catch (syncError) {
+                console.warn('自動同期中にエラーが発生しました:', syncError);
+              }
+            }
           }
         } catch (supabaseError) {
           console.error('Supabase接続エラー:', supabaseError);
-          throw new Error(`Supabase接続エラー: ${supabaseError}`);
+          throw supabaseError;
         }
       }
       

@@ -187,11 +187,12 @@ export const diaryService = {
           
           // オプションフィールドを追加
           const optionalFields = {
-            counselor_memo: diary.counselor_memo || diary.counselorMemo,
             counselor_memo: diary.counselor_memo || diary.counselorMemo || null,
             is_visible_to_user: diary.is_visible_to_user !== undefined ? diary.is_visible_to_user : 
                                (diary.isVisibleToUser !== undefined ? diary.isVisibleToUser : false),
             counselor_name: diary.counselor_name || diary.counselorName || null,
+            assigned_counselor: diary.assigned_counselor || diary.assignedCounselor || null,
+            urgency_level: diary.urgency_level || diary.urgencyLevel || null
             assigned_counselor: diary.assigned_counselor || diary.assignedCounselor || null,
             urgency_level: diary.urgency_level || diary.urgencyLevel || null
           };
@@ -201,11 +202,14 @@ export const diaryService = {
             console.log('同期するデータの例:', formattedEntry);
           }
           
+          // 同期前にデータをログに出力（デバッグ用）
+          if (i === 0) {
+            console.log('同期するデータの例:', formattedEntry);
+          }
+          
           // 値が存在するフィールドのみを追加
           for (const [key, value] of Object.entries(optionalFields)) {
             formattedEntry[key] = value;
-          }
-          
           return formattedEntry;
         });
         
@@ -215,6 +219,11 @@ export const diaryService = {
         }
       
       console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
+      
+      // 同期前にデータをログに出力（デバッグ用）
+      if (formattedDiaries.length > 0) {
+        console.log('同期するデータの最初の例:', JSON.stringify(formattedDiaries[0], null, 2));
+      }
       
       // 同期前にデータをログに出力（デバッグ用）
       if (formattedDiaries.length > 0) {
@@ -236,7 +245,7 @@ export const diaryService = {
             returning: 'minimal'
           }
         );
-      
+          return formattedEntry;
       if (error) {
         console.error('日記同期エラー:', error, 'データ件数:', formattedDiaries.length);
         return { success: false, error: error.message };
@@ -445,6 +454,11 @@ export const syncService = {
           onConflict: 'id',
           ignoreDuplicates: true
         });
+        
+        // 同期前にデータをログに出力（デバッグ用）
+        if (formattedDiaries.length > 0) {
+          console.log('同期するデータの例:', formattedDiaries[0]);
+        }
       
       if (error) {
         console.error('同意履歴同期エラー:', error);
