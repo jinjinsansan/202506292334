@@ -137,8 +137,6 @@ const DataMigration: React.FC = () => {
             worthlessness_score: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
                                (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 0),
             counselor_memo: entry.counselor_memo || entry.counselorMemo || null,
-            is_visible_to_user: entry.is_visible_to_user || entry.isVisibleToUser || false,
-            counselor_name: entry.counselor_name || entry.counselorName || null,
             created_at: entry.created_at || new Date().toISOString()
           };
         });
