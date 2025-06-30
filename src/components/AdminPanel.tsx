@@ -7,6 +7,7 @@ import CounselorChat from './CounselorChat';
 import ConsentHistoryManagement from './ConsentHistoryManagement';
 import DeviceAuthManagement from './DeviceAuthManagement';
 import SecurityDashboard from './SecurityDashboard';
+import { supabase, diaryService } from '../lib/supabase';
 import DataCleanup from './DataCleanup';
 
 const AdminPanel: React.FC = () => {
