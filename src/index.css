@@ -64,6 +64,46 @@
     overflow-x: auto;
     width: 100%;
     margin-bottom: 1rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tabs-list {
+    display: inline-flex;
+    min-width: max-content;
+    width: 100%;
+    background-color: #f3f4f6;
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+  }
+  
+  /* タブトリガーのスタイル改善 */
+  [data-state="active"][class*="TabsTrigger"] {
+    background-color: white;
+    color: #1f2937;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  [class*="TabsTrigger"] {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  [class*="TabsTrigger"]:hover:not([data-state="active"]) {
+    background-color: rgba(243, 244, 246, 0.8);
+  }
+  
+  /* タブコンポーネントのスタイル修正 */
+  .tabs-list-wrapper {
+    overflow-x: auto;
+    width: 100%;
+    margin-bottom: 1rem;
   }
   
   .tabs-list {

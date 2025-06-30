@@ -443,28 +443,28 @@ const AdminPanel: React.FC = () => {
         </div>
 
         <Tabs defaultValue="search">
-          <TabsList>
-            <TabsTrigger value="search" onClick={() => setActiveTab('search')}>
+          <TabsList className="w-full mb-6">
+            <TabsTrigger value="search" onClick={() => setActiveTab('search')} className="flex-1">
               <Search className="w-4 h-4 mr-2" />
               日記検索
             </TabsTrigger>
-            <TabsTrigger value="counselors" onClick={() => setActiveTab('counselors')}>
+            <TabsTrigger value="counselors" onClick={() => setActiveTab('counselors')} className="flex-1">
               <Users className="w-4 h-4 mr-2" />
               カウンセラー
             </TabsTrigger>
-            <TabsTrigger value="chat" onClick={() => setActiveTab('chat')}>
+            <TabsTrigger value="chat" onClick={() => setActiveTab('chat')} className="flex-1">
               <MessageCircle className="w-4 h-4 mr-2" />
               チャット
             </TabsTrigger>
-            <TabsTrigger value="device-auth" onClick={() => setActiveTab('device-auth')}>
+            <TabsTrigger value="device-auth" onClick={() => setActiveTab('device-auth')} className="flex-1">
               <Shield className="w-4 h-4 mr-2" />
               デバイス認証
             </TabsTrigger>
-            <TabsTrigger value="security" onClick={() => setActiveTab('security')}>
+            <TabsTrigger value="security" onClick={() => setActiveTab('security')} className="flex-1">
               <Shield className="w-4 h-4 mr-2" />
               セキュリティ
             </TabsTrigger>
-            <TabsTrigger value="data-cleanup" onClick={() => setActiveTab('data-cleanup')}>
+            <TabsTrigger value="data-cleanup" onClick={() => setActiveTab('data-cleanup')} className="flex-1">
               <Database className="w-4 h-4 mr-2" />
               データ管理
             </TabsTrigger>
@@ -482,12 +482,12 @@ const AdminPanel: React.FC = () => {
           <TabsContent value="counselors">
             <div className="space-y-6">
               <Tabs defaultValue="counselor-management">
-                <TabsList>
-                  <TabsTrigger value="counselor-management">
+                <TabsList className="w-full mb-4">
+                  <TabsTrigger value="counselor-management" className="flex-1">
                     <Users className="w-4 h-4 mr-2" />
                     カウンセラー管理
                   </TabsTrigger>
-                  <TabsTrigger value="consent-history">
+                  <TabsTrigger value="consent-history" className="flex-1">
                     <Clock className="w-4 h-4 mr-2" />
                     同意履歴
                   </TabsTrigger>
