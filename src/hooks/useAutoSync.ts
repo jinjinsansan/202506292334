@@ -20,6 +20,7 @@ export const useAutoSync = (): AutoSyncState => {
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(localStorage.getItem('last_sync_time'));
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [processedEntryIds, setProcessedEntryIds] = useState<Set<string>>(new Set());
   
   // 自動同期設定の読み込み
   useEffect(() => {
@@ -200,10 +201,24 @@ export const useAutoSync = (): AutoSyncState => {
         return true;
       }
       
-      console.log('同期する日記データ:', entries.length, '件', 'ユーザーID:', userId);
+     // 既に処理済みのエントリーIDを取得
+     const currentProcessedIds = new Set(processedEntryIds);
+     
+     // 未処理のエントリーのみをフィルタリング
+     const newEntries = entries.filter((entry: any) => !currentProcessedIds.has(entry.id));
+     
+     if (newEntries.length === 0) {
+       console.log('新しい同期対象のデータがありません。すべてのエントリーは既に同期されています。');
+       const now = new Date().toISOString();
+       setLastSyncTime(now);
+       localStorage.setItem('last_sync_time', now);
+       return true;
+     }
+     
+     console.log('同期する日記データ:', newEntries.length, '件（全', entries.length, '件中）', 'ユーザーID:', userId);
 
       // 各エントリーをSupabase形式に変換
-      const formattedEntries = entries
+     const formattedEntries = newEntries
         .filter((entry: any) => entry && entry.id && entry.date && entry.emotion) // 無効なデータをフィルタリング
         .map((entry: any) => {          
           // UUIDの形式を検証し、無効な場合は新しいUUIDを生成
@@ -324,12 +339,18 @@ export const useAutoSync = (): AutoSyncState => {
         throw new Error(error);
       }
       
+     // 同期に成功したエントリーIDを記録
+     newEntries.forEach((entry: any) => {
+       currentProcessedIds.add(entry.id);
+     });
+     setProcessedEntryIds(currentProcessedIds);
+     
       // 同期時間を更新
       const now = new Date().toISOString();
       setLastSyncTime(now);
       localStorage.setItem('last_sync_time', now);
       
-      console.log('データ同期完了:', entries.length, '件', 'ユーザーID:', userId, '時刻:', now);
+     console.log('データ同期完了:', newEntries.length, '件', 'ユーザーID:', userId, '時刻:', now);
       return true;
     } catch (err) {
       console.error('データ同期エラー:', err);
@@ -368,6 +389,13 @@ export const useAutoSync = (): AutoSyncState => {
         return false;
       }
       
+     // 処理済みIDリストから削除
+     setProcessedEntryIds(prev => {
+       const newSet = new Set(prev);
+       newSet.delete(diaryId);
+       return newSet;
+     });
+     
       // 同期時間を更新
       const now = new Date().toISOString();
       setLastSyncTime(now);
@@ -430,6 +458,13 @@ export const useAutoSync = (): AutoSyncState => {
         }
       }
       
+     // 処理済みIDリストから削除
+     setProcessedEntryIds(prev => {
+       const newSet = new Set(prev);
+       diaryIds.forEach(id => newSet.delete(id));
+       return newSet;
+     });
+     
       // 同期時間を更新
       const now = new Date().toISOString();
       setLastSyncTime(now);
@@ -448,6 +483,8 @@ export const useAutoSync = (): AutoSyncState => {
   
   // 手動同期のトリガー
   const triggerManualSync = useCallback(async (): Promise<boolean> => {
+   // 手動同期の場合は処理済みIDをリセットして全データを同期
+   setProcessedEntryIds(new Set());
     return await syncData();
   }, [syncData]);
   
