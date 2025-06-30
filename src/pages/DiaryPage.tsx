@@ -319,19 +319,24 @@ const DiaryPage: React.FC = () => {
       
       const newEntry = {
         id: Date.now().toString(),
-        date: finalFormData.date,
+        date: finalFormData.date || new Date().toISOString().split('T')[0],
         emotion: finalFormData.emotion,
         event: finalFormData.event,
         realization: finalFormData.realization,
         user: { line_username: username },
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        urgency_level: null,
+        assigned_counselor: null,
+        counselor_memo: null,
+        is_visible_to_user: false,
+        counselor_name: null
       };
       
       // 無価値感を選んだ場合はスコアを追加
       if (finalFormData.emotion === '無価値感') {
         // 数値型として保存（NaNを防ぐため0をデフォルト値に）
-        newEntry.selfEsteemScore = Number(finalWorthlessnessScores.todaySelfEsteem) || 0;
-        newEntry.worthlessnessScore = Number(finalWorthlessnessScores.todayWorthlessness) || 0;
+        newEntry.selfEsteemScore = Number(finalWorthlessnessScores.todaySelfEsteem) || 50;
+        newEntry.worthlessnessScore = Number(finalWorthlessnessScores.todayWorthlessness) || 50;
       }
       
       console.log('保存する日記データ:', newEntry);

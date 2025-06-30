@@ -3,6 +3,7 @@ Here's the fixed version with all missing closing brackets added:
 ```typescript
 // At the end of the file, add:
 };
+};
 
 export default AdminPanel;
 ```

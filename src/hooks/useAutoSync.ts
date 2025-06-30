@@ -33,6 +33,15 @@ export const useAutoSync = (): AutoSyncState => {
   // ユーザー情報の初期化
   useEffect(() => {
     initializeUser();
+    
+    // アプリ起動時に自動的に同期を実行（少し遅延させる）
+    setTimeout(() => {
+      if (isAutoSyncEnabled && !isSyncing) {
+        syncData().catch(error => {
+          console.error('初期同期エラー:', error);
+        });
+      }
+    }, 3000);
   }, []);
   
   // 自動同期の設定
@@ -109,11 +118,13 @@ export const useAutoSync = (): AutoSyncState => {
       // ユーザー情報がない場合はローカルストレージから取得
       const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
       
-      if (!lineUsername || lineUsername.trim() === '') {
+      if (!lineUsername) {
         console.error('ユーザーがログインしていないか、ユーザー名がありません');
         setError('ユーザー名が設定されていません');
         return false;
       }
+      
+      console.log('同期を開始します。ユーザー:', lineUsername);
       
       // ユーザーIDを取得
       let userId = currentUser?.id;
@@ -121,14 +132,14 @@ export const useAutoSync = (): AutoSyncState => {
       // ユーザーIDがない場合は初期化
       if (!userId) {
         const supabaseUser = await userService.createOrGetUser(lineUsername);
-        if (!supabaseUser) {
+        if (!supabaseUser || !supabaseUser.id) {
           console.error('ユーザーの作成に失敗しました');
           setError('ユーザーの作成に失敗しました');
           return false;
         }
         
         userId = supabaseUser.id;
-        console.log('新しいユーザーを作成しました:', lineUsername, 'ID:', userId);
+        console.log('新しいユーザーを作成/取得しました:', lineUsername, 'ID:', userId);
         setCurrentUser(supabaseUser);
       }
       
@@ -144,6 +155,10 @@ export const useAutoSync = (): AutoSyncState => {
       let entries;
       try {
         entries = JSON.parse(savedEntries);
+        if (!Array.isArray(entries)) {
+          console.error('journalEntriesが配列ではありません:', entries);
+          entries = [];
+        }
       } catch (parseError) {
         console.error('日記データの解析エラー:', parseError);
         setError('日記データの解析に失敗しました');
@@ -160,9 +175,15 @@ export const useAutoSync = (): AutoSyncState => {
       }
       
       console.log('同期する日記データ:', entries.length, '件', 'ユーザーID:', userId);
+
+      // 各エントリーにuser_idを追加
+      const entriesWithUserId = entries.map((entry: any) => ({
+        ...entry,
+        user_id: userId
+      }));
       
       // 日記データを同期
-      const { success, error } = await diaryService.syncDiaries(userId, entries);
+      const { success, error } = await diaryService.syncDiaries(userId, entriesWithUserId);
       
       if (!success) {
         throw new Error(error || '日記の同期に失敗しました');

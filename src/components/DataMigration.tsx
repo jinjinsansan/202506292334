@@ -42,7 +42,9 @@ const DataMigration: React.FC = () => {
   // 手動同期ボタンのハンドラー
   const handleManualSync = async () => {
     if (!isConnected) {
-      alert('Supabaseに接続されていません。再接続してから試してください。');
+      if (window.confirm('Supabaseに接続されていません。再接続を試みますか？')) {
+        retryConnection();
+      }
       return;
     }
     
@@ -82,8 +84,20 @@ const DataMigration: React.FC = () => {
       // ローカルストレージから日記データを取得
       setMigrationStatus('ローカルデータを読み込み中...');
       setMigrationProgress(50);
-      const savedEntries = localStorage.getItem('journalEntries');
-      if (!savedEntries || savedEntries === '[]') {
+      let savedEntries;
+      try {
+        savedEntries = localStorage.getItem('journalEntries');
+        if (!savedEntries || savedEntries === '[]') {
+          setMigrationStatus('同期するデータがありません');
+          setMigrationProgress(100);
+          setTimeout(() => {
+            setMigrationStatus(null);
+            setMigrationProgress(0);
+          }, 3000);
+          return;
+        }
+      } catch (error) {
+        console.error('ローカルデータ取得エラー:', error);
         setMigrationStatus('同期するデータがありません');
         setMigrationProgress(100);
         setTimeout(() => {
@@ -108,6 +122,7 @@ const DataMigration: React.FC = () => {
       
       // 日記データを同期
       const { success, error } = await diaryService.syncDiaries(userId, entries);
+      console.log('同期結果:', success ? '成功' : '失敗', error || '');
       
       if (!success && error) {
         throw new Error(error || '日記の同期に失敗しました');
@@ -116,12 +131,16 @@ const DataMigration: React.FC = () => {
       // 同期時間を更新
       const now = new Date().toISOString();
       localStorage.setItem('last_sync_time', now);
+      console.log('同期完了時間:', now);
       
       setMigrationStatus(`同期が完了しました！${entries.length}件のデータを同期しました。`);
       setMigrationProgress(100);
       
       // データ数を再読み込み
       loadDataInfo();
+      
+      // 成功メッセージを表示
+      alert(`同期が完了しました！${entries.length}件のデータを同期しました。`);
       
       setTimeout(() => {
         setMigrationStatus(null);
