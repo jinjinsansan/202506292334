@@ -562,7 +562,24 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                 <button
                   onClick={handleSearch}
                   className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs font-jp-medium transition-colors flex items-center space-x-1"
-                >
+            <div 
+              key={index} 
+              className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${
+                entry.emotion === '恐怖' ? 'bg-purple-50 border-purple-200' :
+                entry.emotion === '悲しみ' ? 'bg-blue-50 border-blue-200' :
+                entry.emotion === '怒り' ? 'bg-red-50 border-red-200' :
+                entry.emotion === '悔しい' ? 'bg-green-50 border-green-200' :
+                entry.emotion === '無価値感' ? 'bg-gray-50 border-gray-200' :
+                entry.emotion === '罪悪感' ? 'bg-orange-50 border-orange-200' :
+                entry.emotion === '寂しさ' ? 'bg-indigo-50 border-indigo-200' :
+                entry.emotion === '恥ずかしさ' ? 'bg-pink-50 border-pink-200' :
+                entry.emotion === '嬉しい' ? 'bg-yellow-50 border-yellow-200' :
+                entry.emotion === '感謝' ? 'bg-teal-50 border-teal-200' :
+                entry.emotion === '達成感' ? 'bg-lime-50 border-lime-200' :
+                entry.emotion === '幸せ' ? 'bg-amber-50 border-amber-200' :
+                'bg-gray-50 border-gray-200'
+              }`}
+            >
                   <Search className="w-3 h-3" />
                   <span>検索</span>
                 </button>

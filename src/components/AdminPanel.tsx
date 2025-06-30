@@ -712,7 +712,24 @@ const AdminPanel: React.FC = () => {
                       
                       <div className="space-y-4">
                         {entries.map((entry) => (
-                          <div key={entry.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                          <div 
+                            key={entry.id} 
+                            className={`rounded-lg p-4 hover:bg-opacity-90 transition-colors ${
+                              entry.emotion === '恐怖' ? 'bg-purple-50 border border-purple-100' :
+                              entry.emotion === '悲しみ' ? 'bg-blue-50 border border-blue-100' :
+                              entry.emotion === '怒り' ? 'bg-red-50 border border-red-100' :
+                              entry.emotion === '悔しい' ? 'bg-green-50 border border-green-100' :
+                              entry.emotion === '無価値感' ? 'bg-gray-50 border border-gray-200' :
+                              entry.emotion === '罪悪感' ? 'bg-orange-50 border border-orange-100' :
+                              entry.emotion === '寂しさ' ? 'bg-indigo-50 border border-indigo-100' :
+                              entry.emotion === '恥ずかしさ' ? 'bg-pink-50 border border-pink-100' :
+                              entry.emotion === '嬉しい' ? 'bg-yellow-50 border border-yellow-100' :
+                              entry.emotion === '感謝' ? 'bg-teal-50 border border-teal-100' :
+                              entry.emotion === '達成感' ? 'bg-lime-50 border border-lime-100' :
+                              entry.emotion === '幸せ' ? 'bg-amber-50 border border-amber-100' :
+                              'bg-gray-50 border border-gray-200'
+                            }`}
+                          >
                             <div className="flex justify-between items-start mb-3">
                               <div className="flex items-center space-x-3 flex-wrap">
                                 <div className="flex items-center space-x-2">
@@ -732,6 +749,10 @@ const AdminPanel: React.FC = () => {
                                   entry.emotion === '罪悪感' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
                                   entry.emotion === '寂しさ' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' :
                                   entry.emotion === '恥ずかしさ' ? 'bg-pink-100 text-pink-800 border border-pink-200' :
+                                  entry.emotion === '嬉しい' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                                  entry.emotion === '感謝' ? 'bg-teal-100 text-teal-800 border border-teal-200' :
+                                  entry.emotion === '達成感' ? 'bg-lime-100 text-lime-800 border border-lime-200' :
+                                  entry.emotion === '幸せ' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
                                   'bg-gray-100 text-gray-800 border border-gray-200'
                                 }`}>
                                   {entry.emotion}
