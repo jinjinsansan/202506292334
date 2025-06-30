@@ -186,6 +186,10 @@ export const diaryService = {
                               (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 
                                (typeof entry.worthlessness_score === 'number' ? entry.worthlessness_score : 
                                 (typeof entry.worthlessness_score === 'string' ? parseInt(entry.worthlessness_score) : 50))),
+          worthlessness_score: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
+                              (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 
+                               (typeof entry.worthlessness_score === 'number' ? entry.worthlessness_score : 
+                                (typeof entry.worthlessness_score === 'string' ? parseInt(entry.worthlessness_score) : 50))),
           created_at: diary.created_at || new Date().toISOString()
           };
           
@@ -197,7 +201,16 @@ export const diaryService = {
             counselor_name: entry.counselor_name || entry.counselorName || null,
             assigned_counselor: entry.assigned_counselor || entry.assignedCounselor || null,
             urgency_level: entry.urgency_level || entry.urgencyLevel || null
+            urgency_level: entry.urgency_level || entry.urgencyLevel || null
           };
+          
+          // 同期前に最初のデータをログに出力（デバッグ用）
+          if (i === 0 && diary) {
+            console.log('同期するデータの例:', JSON.stringify({
+              ...formattedEntry,
+              ...optionalFields
+            }, null, 2));
+          }
           
           // 同期前に最初のデータをログに出力（デバッグ用）
           if (i === 0 && diary) {
@@ -218,6 +231,11 @@ export const diaryService = {
         });
         
       console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
+      
+      // 同期前にデータをログに出力（デバッグ用）
+      if (formattedDiaries.length > 0) {
+          console.log('同期するデータの最初の例:', JSON.stringify(formattedDiaries[0], null, 2).substring(0, 500) + '...');
+      }
       
       // 同期前にデータをログに出力（デバッグ用）
       if (formattedDiaries.length > 0) {
