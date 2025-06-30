@@ -74,11 +74,6 @@ const WorthlessnessChart: React.FC = () => {
            entry.emotion === '達成感' || 
            entry.emotion === '幸せ') && 
           entry.selfEsteemScore !== undefined &&
-           entry.emotion === '嬉しい' || 
-           entry.emotion === '感謝' || 
-           entry.emotion === '達成感' || 
-           entry.emotion === '幸せ') && 
-          entry.selfEsteemScore !== undefined &&
           entry.worthlessnessScore !== undefined
         ) || [];
         
@@ -244,12 +239,6 @@ const WorthlessnessChart: React.FC = () => {
       entry.emotion === '達成感' || 
       entry.emotion === '幸せ'
     );
-      entry.emotion === '無価値感' || 
-      entry.emotion === '嬉しい' || 
-      entry.emotion === '感謝' || 
-      entry.emotion === '達成感' || 
-      entry.emotion === '幸せ'
-    );
     
     // データが持つ最新日を基準にする
     const latestDate = entries.reduce((max, entry) => {
@@ -267,21 +256,6 @@ const WorthlessnessChart: React.FC = () => {
     return entries.filter((entry: any) => {
       // 感情フィルタリング
       const isValidEmotion = 
-        entry.emotion === '無価値感' || 
-        entry.emotion === '嬉しい' || 
-        entry.emotion === '感謝' || 
-        entry.emotion === '達成感' || 
-        entry.emotion === '幸せ';
-      
-      if (!isValidEmotion) return false;
-      
-      // 日付フィルタリング
-      if (selectedPeriod !== 'all') {
-        const entryDate = new Date(entry.date);
-        return entryDate >= startDate && entryDate <= latestDate;
-      }
-      
-      return true;
         entry.emotion === '無価値感' || 
         entry.emotion === '嬉しい' || 
         entry.emotion === '感謝' || 
@@ -553,9 +527,6 @@ const WorthlessnessChart: React.FC = () => {
                   <h3 className="font-jp-bold text-gray-900 text-lg mb-2 sm:mb-0">最新スコア</h3>
                   <div className="text-sm font-medium text-gray-700 flex items-center">
                     <span className="mr-2">{formatDate(displayedData[displayedData.length - 1].date)}</span>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                      {displayedData[displayedData.length - 1].emotion}
-                    </span>
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
                       {displayedData[displayedData.length - 1].emotion}
                     </span>

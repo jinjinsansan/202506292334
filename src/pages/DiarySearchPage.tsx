@@ -460,10 +460,6 @@ const DiarySearchPage: React.FC = () => {
               editFormData.emotion === '感謝' || 
               editFormData.emotion === '達成感' || 
               editFormData.emotion === '幸せ') && (
-              editFormData.emotion === '嬉しい' || 
-              editFormData.emotion === '感謝' || 
-              editFormData.emotion === '達成感' || 
-              editFormData.emotion === '幸せ') && (
               <div className="mb-6 bg-red-50 rounded-lg p-4 border border-red-200">
                 <h3 className={`${editFormData.emotion === '無価値感' ? 'text-red-800' : 'text-green-800'} font-jp-bold mb-4`}>
                   {editFormData.emotion === '無価値感' ? '無価値感スコア' : 'スコア設定'}
@@ -771,10 +767,6 @@ const DiarySearchPage: React.FC = () => {
                     entry.emotion === '感謝' || 
                     entry.emotion === '達成感' || 
                     entry.emotion === '幸せ') && (
-                    entry.emotion === '嬉しい' || 
-                    entry.emotion === '感謝' || 
-                    entry.emotion === '達成感' || 
-                    entry.emotion === '幸せ') && (
                     <div className="flex flex-wrap gap-2 sm:gap-6 text-xs bg-white rounded-lg p-2 border border-gray-200">
                       <div className="flex items-center space-x-2">
                         <span className="text-gray-500 font-jp-medium">自己肯定感:</span>
@@ -880,10 +872,6 @@ const DiarySearchPage: React.FC = () => {
 
               {(entry.emotion === '無価値感' || 
                 entry.emotion === '嬉しい' || 
-                entry.emotion === '感謝' || 
-                entry.emotion === '達成感' || 
-                entry.emotion === '幸せ') && (
-                <div className="flex flex-wrap gap-2 sm:gap-6 text-xs bg-white rounded-lg p-2 border border-gray-200">
                 entry.emotion === '感謝' || 
                 entry.emotion === '達成感' || 
                 entry.emotion === '幸せ') && (
