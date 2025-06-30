@@ -201,16 +201,7 @@ export const diaryService = {
             counselor_name: entry.counselor_name || entry.counselorName || null,
             assigned_counselor: entry.assigned_counselor || entry.assignedCounselor || null,
             urgency_level: entry.urgency_level || entry.urgencyLevel || null
-            urgency_level: entry.urgency_level || entry.urgencyLevel || null
           };
-          
-          // 同期前に最初のデータをログに出力（デバッグ用）
-          if (i === 0 && diary) {
-            console.log('同期するデータの例:', JSON.stringify({
-              ...formattedEntry,
-              ...optionalFields
-            }, null, 2));
-          }
           
           // 同期前に最初のデータをログに出力（デバッグ用）
           if (i === 0 && diary) {
