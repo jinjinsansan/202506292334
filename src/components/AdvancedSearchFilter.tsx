@@ -7,6 +7,7 @@ Here's the fixed version with all missing closing brackets added:
                   )}
                 </div>
               </div>
+              </div>
             ))}
           </div>
         )}
