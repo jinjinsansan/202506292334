@@ -1,501 +1,531 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase, userService, diaryService } from '../lib/supabase';
-import { getCurrentUser } from '../lib/deviceAuth';
-import { formatDiaryForSupabase } from '../lib/utils';
+import React, { useState, useEffect } from 'react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
+import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, Trash2, Eye, Edit3, AlertTriangle, CheckCircle, Clock, MessageCircle, Users } from 'lucide-react';
+import AdvancedSearchFilter from './AdvancedSearchFilter';
+import CounselorManagement from './CounselorManagement';
+import CounselorChat from './CounselorChat';
+import ConsentHistoryManagement from './ConsentHistoryManagement';
+import DeviceAuthManagement from './DeviceAuthManagement';
+import SecurityDashboard from './SecurityDashboard';
+import DataCleanup from './DataCleanup';
 
-interface AutoSyncState {
-  isAutoSyncEnabled: boolean;
-  isSyncing: boolean;
-  lastSyncTime: string | null;
-  error: string | null;
-  currentUser: any | null;
-  triggerManualSync: () => Promise<boolean>;
-  syncDeleteDiary: (diaryId: string) => Promise<boolean>;
-  syncBulkDeleteDiaries: (diaryIds: string[]) => Promise<boolean>;
-}
+const AdminPanel: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('search');
+  const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
+  const [entries, setEntries] = useState<any[]>([]);
+  const [filteredEntries, setFilteredEntries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    counselorMemo: '',
+    isVisibleToUser: false,
+    assignedCounselor: '',
+    urgencyLevel: ''
+  });
 
-export const useAutoSync = (): AutoSyncState => {
-  const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState<boolean>(true);
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
-  const [lastSyncTime, setLastSyncTime] = useState<string | null>(localStorage.getItem('last_sync_time'));
-  const [error, setError] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
-  const [processedEntryIds, setProcessedEntryIds] = useState<Set<string>>(new Set());
-  
-  // 自動同期設定の読み込み
   useEffect(() => {
-    const autoSyncSetting = localStorage.getItem('auto_sync_enabled');
-    setIsAutoSyncEnabled(autoSyncSetting !== 'false'); // デフォルトはtrue
-    
-    // 最後の同期時間を読み込み
-    const savedLastSyncTime = localStorage.getItem('last_sync_time');
-    if (savedLastSyncTime) {
-      setLastSyncTime(savedLastSyncTime);
+    loadEntries();
+  }, []);
+
+  const loadEntries = async () => {
+    setLoading(true);
+    try {
+      // ローカルストレージからデータを取得
+      const savedEntries = localStorage.getItem('journalEntries');
+      if (savedEntries) {
+        const parsedEntries = JSON.parse(savedEntries);
+        setEntries(parsedEntries);
+        setFilteredEntries(parsedEntries);
+      }
+    } catch (error) {
+      console.error('データ読み込みエラー:', error);
+    } finally {
+      setLoading(false);
     }
-  }, []);
-  
-  // ユーザー情報の初期化
-  useEffect(() => {
-    initializeUser();
-    
-    // アプリ起動時に自動的に同期を実行（少し遅延させる）
-    setTimeout(() => {
-      if (isAutoSyncEnabled && !isSyncing) {
-        syncData().catch(error => {
-          console.error('初期同期エラー:', error);
-        });
+  };
+
+  const handleViewEntry = (entry: any) => {
+    setSelectedEntry(entry);
+    setEditMode(false);
+    setEditFormData({
+      counselorMemo: entry.counselorMemo || entry.counselor_memo || '',
+      isVisibleToUser: entry.isVisibleToUser || entry.is_visible_to_user || false,
+      assignedCounselor: entry.assignedCounselor || entry.assigned_counselor || '',
+      urgencyLevel: entry.urgencyLevel || entry.urgency_level || ''
+    });
+  };
+
+  const handleEditEntry = () => {
+    setEditMode(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedEntry) return;
+
+    try {
+      // ローカルストレージのデータを更新
+      const updatedEntries = entries.map(entry => {
+        if (entry.id === selectedEntry.id) {
+          return {
+            ...entry,
+            counselorMemo: editFormData.counselorMemo,
+            isVisibleToUser: editFormData.isVisibleToUser,
+            counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
+            is_visible_to_user: editFormData.isVisibleToUser, // Supabase形式のフィールドも更新
+            assignedCounselor: editFormData.assignedCounselor,
+            assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
+            urgencyLevel: editFormData.urgencyLevel,
+            urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
+            counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
+            counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
+          };
+        }
+        return entry;
+      });
+
+      setEntries(updatedEntries);
+      setFilteredEntries(updatedEntries);
+      localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+
+      // 自動同期機能を使用してSupabaseに同期
+      if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
+        await window.autoSync.triggerManualSync();
       }
-    }, 3000);
-  }, []);
-  
-  // 自動同期の設定
-  useEffect(() => {
-    if (!isAutoSyncEnabled || !supabase) return;
-    
-    // 5分ごとに自動同期を実行
-    const interval = setInterval(() => {
-      if (!isSyncing) {
-        syncData();
-      }
-    }, 5 * 60 * 1000); // 5分 = 300,000ミリ秒
-    
-    return () => clearInterval(interval);
-  }, [isAutoSyncEnabled, isSyncing]);
-  
-  // ユーザー情報の初期化
-  const initializeUser = useCallback(async () => {
-    if (!supabase) {
-      console.log('ローカルモードで動作中: Supabase接続なし、同期は無効');
-      // ローカルモードでも、ユーザー名が設定されていれば現在のユーザーとして扱う
-      const lineUsername = localStorage.getItem('line-username');
-      if (lineUsername) {
-        setCurrentUser({ id: 'local-user', line_username: lineUsername });
-      }
+
+      setSelectedEntry(null);
+      setEditMode(false);
+      alert('変更を保存しました！');
+    } catch (error) {
+      console.error('保存エラー:', error);
+      alert('保存に失敗しました。もう一度お試しください。');
+    }
+  };
+
+  const handleDeleteEntry = async (entryId: string) => {
+    if (!window.confirm('この日記を削除しますか？この操作は元に戻せません。')) {
       return;
     }
-    
+
     try {
-      // 現在のユーザーを取得
-      const user = getCurrentUser();
-      // ユーザー情報がない場合はローカルストレージから取得
-      const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
-      
-      if (!lineUsername || lineUsername.trim() === '') {
-        console.error('ユーザーがログインしていないか、ユーザー名がありません');
-        setError('ユーザー名が設定されていません');
-        return null;
+      // ローカルストレージからの削除
+      const updatedEntries = entries.filter(entry => entry.id !== entryId);
+      setEntries(updatedEntries);
+      setFilteredEntries(updatedEntries);
+      localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+
+      // Supabaseからの削除（自動同期機能を使用）
+      if (window.autoSync && typeof window.autoSync.syncDeleteDiary === 'function') {
+        await window.autoSync.syncDeleteDiary(entryId);
       }
-      
-      // Supabaseでユーザーを作成または取得
-      const supabaseUser = await userService.createOrGetUser(lineUsername);
-      if (supabaseUser) {
-        setCurrentUser(supabaseUser);
-        console.log('ユーザー初期化完了:', supabaseUser.line_username, 'ID:', supabaseUser.id);
-        return supabaseUser;
-      }
-      return null;
+
+      setSelectedEntry(null);
+      alert('日記を削除しました！');
     } catch (error) {
-      console.error('ユーザー初期化エラー:', error);
-      setError('ユーザー初期化に失敗しました');
-      return null;
+      console.error('削除エラー:', error);
+      alert('削除に失敗しました。もう一度お試しください。');
     }
-  }, []);
-  
-  // データ同期処理
-  const syncData = useCallback(async (): Promise<boolean> => {
-    if (!supabase) {
-      console.log('ローカルモードで動作中: Supabase接続なし、同期をスキップします');
-      return false;
-    }
-    
-    if (isSyncing) {
-      console.log('既に同期中です');
-      return false;
-    }
-    
-    setIsSyncing(true);
-    setError(null);
-    
-    try {
-      // 現在のユーザーを取得
-      const user = getCurrentUser();
-      // ユーザー情報がない場合はローカルストレージから取得
-      const lineUsername = user?.lineUsername || localStorage.getItem('line-username') || 'Unknown User';
-      
-      if (!lineUsername || lineUsername === 'Unknown User') {
-        console.warn('ユーザー名が設定されていないか、デフォルト値です');
-      }
-      
-      console.log('同期を開始します。ユーザー:', lineUsername);
-      
-      // ユーザーIDを取得
-      let userId = currentUser?.id;
-      
-      // ユーザーIDがない場合は初期化
-      if (!userId) {
-        const supabaseUser = await userService.createOrGetUser(lineUsername);
-        if (!supabaseUser) {
-          console.error('ユーザーの作成に失敗しました');
-          setError('ユーザーの作成に失敗しました');
-          return false;
-        }
-        
-        userId = supabaseUser.id;
-        console.log('新しいユーザーを作成/取得しました:', lineUsername, 'ID:', userId);
-        setCurrentUser(supabaseUser);
-      }
-      
-      // UUIDの形式を検証
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(userId)) {
-        console.error('無効なユーザーID形式:', userId);
-        
-        // 無効なユーザーIDの場合は、新しいユーザーを作成して再試行
-        try {
-          console.log('無効なユーザーIDを検出。新しいユーザーを作成します...');
-          const newUser = await userService.createOrGetUser(lineUsername);
-          if (!newUser || !newUser.id) {
-            setError('新しいユーザーの作成に失敗しました');
-            return false;
-          }
-          
-          userId = newUser.id;
-          setCurrentUser(newUser);
-          console.log('新しいユーザーを作成しました:', lineUsername, 'ID:', userId);
-        } catch (error) {
-          console.error('ユーザー作成エラー:', error);
-          setError('ユーザー作成に失敗しました');
-          return false;
-        }
-      }
-      
-      // ローカルストレージから日記データを取得
-      const savedEntries = localStorage.getItem('journalEntries');
-      if (!savedEntries) {
-        console.log('同期する日記データがありません');
-        setLastSyncTime(new Date().toISOString());
-        localStorage.setItem('last_sync_time', new Date().toISOString());
-        return true;
-      }
-      
-      let entries;
-      try {
-        entries = JSON.parse(savedEntries);
-        if (!Array.isArray(entries)) {
-          console.error('日記データが配列ではありません:', entries);
-          setError('日記データの形式が正しくありません');
-          return false;
-        }
-      } catch (parseError) {
-        console.error('日記データの解析エラー:', parseError);
-        setError('日記データの解析に失敗しました');
-        return false;
-      }
-      
-      // 空の配列の場合は同期をスキップ
-      if (!entries || entries.length === 0) {
-        console.log('同期する日記データがありません');
-        const now = new Date().toISOString();
-        setLastSyncTime(now);
-        localStorage.setItem('last_sync_time', now);
-        return true;
-      }
-      
-     // 既に処理済みのエントリーIDを取得
-     const currentProcessedIds = new Set(processedEntryIds);
-     
-     // 未処理のエントリーのみをフィルタリング
-     const newEntries = entries.filter((entry: any) => !currentProcessedIds.has(entry.id));
-     
-     if (newEntries.length === 0) {
-       console.log('新しい同期対象のデータがありません。すべてのエントリーは既に同期されています。');
-       const now = new Date().toISOString();
-       setLastSyncTime(now);
-       localStorage.setItem('last_sync_time', now);
-       return true;
-     }
-     
-     console.log('同期する日記データ:', newEntries.length, '件（全', entries.length, '件中）', 'ユーザーID:', userId);
-
-      // 各エントリーをSupabase形式に変換
-     const formattedEntries = newEntries
-        .filter((entry: any) => entry && entry.id && entry.date && entry.emotion) // 無効なデータをフィルタリング
-        .map((entry: any) => {          
-          // UUIDの形式を検証し、無効な場合は新しいUUIDを生成
-          let entryId = entry.id;
-          if (!uuidRegex.test(entryId)) {
-            try {
-              // crypto.randomUUID()が利用可能な場合はそれを使用
-              if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-                entryId = crypto.randomUUID();
-              } else {
-                // 代替の方法でUUIDを生成
-                entryId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                  const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                  return v.toString(16);
-                });
-              }
-              console.log(`無効なID "${entry.id}" を新しいID "${entryId}" に置き換えました`);
-            } catch (error) {
-              console.error('UUID生成エラー:', error);
-              // エラーが発生した場合は元のIDを使用
-              entryId = entry.id;
-            }
-          }
-          
-          // 必須フィールドのみを含める
-          const formattedEntry = {
-            id: entryId,
-            user_id: userId,
-            date: entry.date,
-            emotion: entry.emotion,
-            event: entry.event || '',
-            realization: entry.realization || '',
-            created_at: entry.created_at || new Date().toISOString()
-          };
-          
-          // スコアフィールドの処理
-          if (entry.emotion === '無価値感' || 
-              entry.emotion === '嬉しい' || 
-              entry.emotion === '感謝' || 
-              entry.emotion === '達成感' || 
-              entry.emotion === '幸せ') {
-            
-            // 自己肯定感スコアの処理
-            if (typeof entry.selfEsteemScore === 'number') {
-              formattedEntry.self_esteem_score = entry.selfEsteemScore;
-            } else if (typeof entry.selfEsteemScore === 'string') {
-              formattedEntry.self_esteem_score = parseInt(entry.selfEsteemScore) || 50;
-            } else if (typeof entry.self_esteem_score === 'number') {
-              formattedEntry.self_esteem_score = entry.self_esteem_score;
-            } else if (typeof entry.self_esteem_score === 'string') {
-              formattedEntry.self_esteem_score = parseInt(entry.self_esteem_score) || 50;
-            } else {
-              formattedEntry.self_esteem_score = 50;
-            }
-            
-            // 無価値感スコアの処理
-            if (typeof entry.worthlessnessScore === 'number') {
-              formattedEntry.worthlessness_score = entry.worthlessnessScore;
-            } else if (typeof entry.worthlessnessScore === 'string') {
-              formattedEntry.worthlessness_score = parseInt(entry.worthlessnessScore) || 50;
-            } else if (typeof entry.worthlessness_score === 'number') {
-              formattedEntry.worthlessness_score = entry.worthlessness_score;
-            } else if (typeof entry.worthlessness_score === 'string') {
-              formattedEntry.worthlessness_score = parseInt(entry.worthlessness_score) || 50;
-            } else {
-              formattedEntry.worthlessness_score = 50;
-            }
-          }
-          
-          // カウンセラーメモの処理
-          if (entry.counselor_memo !== undefined) {
-            formattedEntry.counselor_memo = entry.counselor_memo;
-          } else if (entry.counselorMemo !== undefined) {
-            formattedEntry.counselor_memo = entry.counselorMemo;
-          }
-          
-          // 表示設定の処理
-          if (entry.is_visible_to_user !== undefined) {
-            formattedEntry.is_visible_to_user = entry.is_visible_to_user;
-          } else if (entry.isVisibleToUser !== undefined) {
-            formattedEntry.is_visible_to_user = entry.isVisibleToUser;
-          } else {
-            formattedEntry.is_visible_to_user = false;
-          }
-          
-          // カウンセラー名の処理
-          if (entry.counselor_name !== undefined) {
-            formattedEntry.counselor_name = entry.counselor_name;
-          } else if (entry.counselorName !== undefined) {
-            formattedEntry.counselor_name = entry.counselorName;
-          }
-          
-          // 担当カウンセラーの処理
-          if (entry.assigned_counselor !== undefined) {
-            formattedEntry.assigned_counselor = entry.assigned_counselor;
-          } else if (entry.assignedCounselor !== undefined) {
-            formattedEntry.assigned_counselor = entry.assignedCounselor;
-          }
-          
-          // 緊急度の処理
-          if (entry.urgency_level !== undefined) {
-            formattedEntry.urgency_level = entry.urgency_level;
-          } else if (entry.urgencyLevel !== undefined) {
-            formattedEntry.urgency_level = entry.urgencyLevel;
-          }
-          
-          return formattedEntry;
-        });
-      
-      // 日記データを同期
-      const { success, error } = await diaryService.syncDiaries(userId, formattedEntries);
-      
-      // 同期結果をログに出力
-      console.log('同期結果:', success ? '成功' : '失敗', error || '');
-      
-      if (!success) {
-        console.error('同期エラー:', error);
-        throw new Error(error);
-      }
-      
-     // 同期に成功したエントリーIDを記録
-     newEntries.forEach((entry: any) => {
-       currentProcessedIds.add(entry.id);
-     });
-     setProcessedEntryIds(currentProcessedIds);
-     
-      // 同期時間を更新
-      const now = new Date().toISOString();
-      setLastSyncTime(now);
-      localStorage.setItem('last_sync_time', now);
-      
-     console.log('データ同期完了:', newEntries.length, '件', 'ユーザーID:', userId, '時刻:', now);
-      return true;
-    } catch (err) {
-      console.error('データ同期エラー:', err);
-      setError(err instanceof Error ? err.message : '不明なエラー');
-      return false;
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isSyncing, currentUser]);
-  
-  // 日記削除時の同期処理
-  const syncDeleteDiary = useCallback(async (diaryId: string): Promise<boolean> => {
-    if (!supabase) {
-      console.log('ローカルモードで動作中: Supabase接続なし、削除同期をスキップします', diaryId);
-      return true; // ローカルモードでは成功とみなす
-    }
-    
-    if (isSyncing) {
-      console.log('既に同期中です、削除同期をスキップします');
-      return false;
-    }
-    
-    setIsSyncing(true);
-    setError(null);
-    
-    try {
-      // Supabaseから日記を削除
-      const { error } = await supabase
-        .from('diary_entries')
-        .delete()
-        .eq('id', diaryId);
-      
-      if (error) {
-        console.error('Supabase日記削除エラー:', error, 'ID:', diaryId);
-        // エラーがあっても処理を続行（ローカルでは削除されている）
-        return false;
-      }
-      
-     // 処理済みIDリストから削除
-     setProcessedEntryIds(prev => {
-       const newSet = new Set(prev);
-       newSet.delete(diaryId);
-       return newSet;
-     });
-     
-      // 同期時間を更新
-      const now = new Date().toISOString();
-      setLastSyncTime(now);
-      localStorage.setItem('last_sync_time', now);
-
-      console.log('日記削除同期完了:', diaryId, '時刻:', now);
-      return true;
-    } catch (err) {
-      console.error('日記削除同期エラー:', err);
-      // エラーがあっても処理を続行（ローカルでは削除されている）
-      return true;
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isSyncing]);
-  
-  // 複数日記削除時の同期処理
-  const syncBulkDeleteDiaries = useCallback(async (diaryIds: string[]): Promise<boolean> => {
-    if (!supabase) {
-      console.log('ローカルモードで動作中: Supabase接続なし、一括削除同期をスキップします', diaryIds.length);
-      return true; // ローカルモードでは成功とみなす
-    }
-    
-    if (isSyncing) {
-      console.log('既に同期中です、一括削除同期をスキップします');
-      return false;
-    }
-    
-    if (!diaryIds || diaryIds.length === 0) {
-      console.log('削除する日記IDがありません');
-      return false;
-    }
-    
-    setIsSyncing(true);
-    setError(null);
-    
-    try {
-      // 一括削除（100件ずつに分割して実行）
-      const chunkSize = 100;
-      let success = true;
-      let deletedCount = 0;
-      
-      for (let i = 0; i < diaryIds.length; i += chunkSize) {
-        const chunk = diaryIds.slice(i, i + chunkSize);
-        try {
-          const { error } = await supabase
-            .from('diary_entries')
-            .delete()
-            .in('id', chunk);
-          
-          if (error) {
-            console.error(`日記の一括削除エラー (${i}~${i+chunk.length})`, error, 'IDs:', chunk);
-            // エラーがあっても処理を続行
-          } else {
-            deletedCount += chunk.length;
-          }
-        } catch (err) {
-          console.error(`日記の一括削除中にエラー (${i}~${i+chunk.length})`, err, 'IDs:', chunk);
-          // エラーがあっても処理を続行
-        }
-      }
-      
-     // 処理済みIDリストから削除
-     setProcessedEntryIds(prev => {
-       const newSet = new Set(prev);
-       diaryIds.forEach(id => newSet.delete(id));
-       return newSet;
-     });
-     
-      // 同期時間を更新
-      const now = new Date().toISOString();
-      setLastSyncTime(now);
-      localStorage.setItem('last_sync_time', now);
-      
-      console.log('一括削除同期完了:', deletedCount, '/', diaryIds.length, '件', '時刻:', now);
-      return success;
-    } catch (err) {
-      console.error('一括削除同期エラー:', err);
-      // エラーがあっても処理を続行（ローカルでは削除されている）
-      return true;
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isSyncing]);
-  
-  // 手動同期のトリガー
-  const triggerManualSync = useCallback(async (): Promise<boolean> => {
-   // 手動同期の場合は処理済みIDをリセットして全データを同期
-   setProcessedEntryIds(new Set());
-    return await syncData();
-  }, [syncData]);
-  
-  return {
-    isAutoSyncEnabled,
-    isSyncing,
-    lastSyncTime,
-    error,
-    currentUser,
-    triggerManualSync,
-    syncDeleteDiary,
-    syncBulkDeleteDiaries
   };
+
+  const handleFilteredResults = (filtered: any[]) => {
+    setFilteredEntries(filtered);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getEmotionColor = (emotion: string) => {
+    const colorMap: { [key: string]: string } = {
+      '恐怖': 'bg-purple-100 text-purple-800 border-purple-200',
+      '悲しみ': 'bg-blue-100 text-blue-800 border-blue-200',
+      '怒り': 'bg-red-100 text-red-800 border-red-200',
+      '悔しい': 'bg-green-100 text-green-800 border-green-200',
+      '無価値感': 'bg-gray-100 text-gray-800 border-gray-300',
+      '罪悪感': 'bg-orange-100 text-orange-800 border-orange-200',
+      '寂しさ': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+      '恥ずかしさ': 'bg-pink-100 text-pink-800 border-pink-200',
+      '嬉しい': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      '感謝': 'bg-teal-100 text-teal-800 border-teal-200',
+      '達成感': 'bg-lime-100 text-lime-800 border-lime-200',
+      '幸せ': 'bg-amber-100 text-amber-800 border-amber-200'
+    };
+    return colorMap[emotion] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  const getUrgencyLevelColor = (level: string) => {
+    const colorMap: { [key: string]: string } = {
+      'high': 'bg-red-100 text-red-800 border-red-200',
+      'medium': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'low': 'bg-green-100 text-green-800 border-green-200'
+    };
+    return colorMap[level] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  const getUrgencyLevelText = (level: string) => {
+    const textMap: { [key: string]: string } = {
+      'high': '高',
+      'medium': '中',
+      'low': '低'
+    };
+    return textMap[level] || '未設定';
+  };
+
+  // 詳細表示モーダル
+  const renderEntryModal = () => {
+    if (!selectedEntry) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-jp-bold text-gray-900">日記詳細</h2>
+              <button
+                onClick={() => setSelectedEntry(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* 基本情報 */}
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="flex flex-wrap gap-3 mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-gray-500" />
+                    <span className="text-gray-700 font-jp-medium">
+                      {formatDate(selectedEntry.date)}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-jp-medium border ${getEmotionColor(selectedEntry.emotion)}`}>
+                      {selectedEntry.emotion}
+                    </span>
+                  </div>
+                  {selectedEntry.user && (
+                    <div className="flex items-center space-x-2">
+                      <User className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-700 font-jp-medium">
+                        {selectedEntry.user.line_username}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 日記内容 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <h3 className="font-jp-bold text-gray-900 mb-3">出来事</h3>
+                  <p className="text-gray-700 font-jp-normal whitespace-pre-wrap">
+                    {selectedEntry.event}
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <h3 className="font-jp-bold text-gray-900 mb-3">気づき</h3>
+                  <p className="text-gray-700 font-jp-normal whitespace-pre-wrap">
+                    {selectedEntry.realization}
+                  </p>
+                </div>
+              </div>
+
+              {/* スコア情報（無価値感の場合のみ） */}
+              {(selectedEntry.emotion === '無価値感' || 
+                selectedEntry.emotion === '嬉しい' || 
+                selectedEntry.emotion === '感謝' || 
+                selectedEntry.emotion === '達成感' || 
+                selectedEntry.emotion === '幸せ') && (
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <h3 className="font-jp-bold text-gray-900 mb-3">スコア情報</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-lg p-3 border border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 font-jp-medium">自己肯定感スコア</span>
+                        <span className="text-xl font-jp-bold text-blue-600">
+                          {selectedEntry.selfEsteemScore || selectedEntry.self_esteem_score || 0}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 font-jp-medium">無価値感スコア</span>
+                        <span className="text-xl font-jp-bold text-red-600">
+                          {selectedEntry.worthlessnessScore || selectedEntry.worthlessness_score || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* カウンセラーメモ（編集モード） */}
+              {editMode ? (
+                <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                  <h3 className="font-jp-bold text-gray-900 mb-3">カウンセラーメモ</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-jp-medium text-gray-700 mb-2">
+                        メモ内容
+                      </label>
+                      <textarea
+                        value={editFormData.counselorMemo}
+                        onChange={(e) => setEditFormData({...editFormData, counselorMemo: e.target.value})}
+                        className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal resize-none"
+                        placeholder="カウンセラーメモを入力..."
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="isVisibleToUser"
+                        checked={editFormData.isVisibleToUser}
+                        onChange={(e) => setEditFormData({...editFormData, isVisibleToUser: e.target.checked})}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor="isVisibleToUser" className="text-sm font-jp-medium text-gray-700">
+                        ユーザーに表示する
+                      </label>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-jp-medium text-gray-700 mb-2">
+                        担当カウンセラー
+                      </label>
+                      <select
+                        value={editFormData.assignedCounselor}
+                        onChange={(e) => setEditFormData({...editFormData, assignedCounselor: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal"
+                      >
+                        <option value="">未割り当て</option>
+                        <option value="心理カウンセラー仁">心理カウンセラー仁</option>
+                        <option value="心理カウンセラーAOI">心理カウンセラーAOI</option>
+                        <option value="心理カウンセラーあさみ">心理カウンセラーあさみ</option>
+                        <option value="心理カウンセラーSHU">心理カウンセラーSHU</option>
+                        <option value="心理カウンセラーゆーちゃ">心理カウンセラーゆーちゃ</option>
+                        <option value="心理カウンセラーSammy">心理カウンセラーSammy</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-jp-medium text-gray-700 mb-2">
+                        緊急度
+                      </label>
+                      <select
+                        value={editFormData.urgencyLevel}
+                        onChange={(e) => setEditFormData({...editFormData, urgencyLevel: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal"
+                      >
+                        <option value="">未設定</option>
+                        <option value="high">高</option>
+                        <option value="medium">中</option>
+                        <option value="low">低</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* カウンセラーメモ（表示モード） */}
+                  <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-jp-bold text-gray-900">カウンセラーメモ</h3>
+                      <button
+                        onClick={handleEditEntry}
+                        className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm font-jp-medium transition-colors"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                        <span>編集</span>
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="bg-white rounded-lg p-3 border border-gray-200">
+                        <h4 className="text-sm font-jp-medium text-gray-700 mb-2">メモ内容</h4>
+                        <p className="text-gray-700 font-jp-normal whitespace-pre-wrap">
+                          {selectedEntry.counselorMemo || selectedEntry.counselor_memo || '（メモはありません）'}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white rounded-lg p-3 border border-gray-200">
+                          <h4 className="text-sm font-jp-medium text-gray-700 mb-2">ユーザーへの表示</h4>
+                          <div className="flex items-center space-x-2">
+                            {selectedEntry.isVisibleToUser || selectedEntry.is_visible_to_user ? (
+                              <>
+                                <CheckCircle className="w-4 h-4 text-green-600" />
+                                <span className="text-green-600 font-jp-medium">表示する</span>
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="w-4 h-4 text-gray-400" />
+                                <span className="text-gray-500 font-jp-medium">表示しない</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 border border-gray-200">
+                          <h4 className="text-sm font-jp-medium text-gray-700 mb-2">担当カウンセラー</h4>
+                          <p className="text-gray-700 font-jp-normal">
+                            {selectedEntry.assignedCounselor || selectedEntry.assigned_counselor || '未割り当て'}
+                          </p>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 border border-gray-200">
+                          <h4 className="text-sm font-jp-medium text-gray-700 mb-2">緊急度</h4>
+                          {selectedEntry.urgencyLevel || selectedEntry.urgency_level ? (
+                            <span className={`px-2 py-1 rounded-full text-xs font-jp-medium border ${
+                              getUrgencyLevelColor(selectedEntry.urgencyLevel || selectedEntry.urgency_level)
+                            }`}>
+                              {getUrgencyLevelText(selectedEntry.urgencyLevel || selectedEntry.urgency_level)}
+                            </span>
+                          ) : (
+                            <span className="text-gray-500 font-jp-normal">未設定</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* アクションボタン */}
+              <div className="flex justify-between">
+                <button
+                  onClick={() => handleDeleteEntry(selectedEntry.id)}
+                  className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-jp-medium transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>削除</span>
+                </button>
+                {editMode && (
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => setEditMode(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-jp-medium transition-colors"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      onClick={handleSaveEdit}
+                      className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-jp-medium transition-colors"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      <span>保存</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-jp-bold text-gray-900">カウンセラー管理画面</h1>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600 font-jp-normal">
+              ログイン中: {localStorage.getItem('current_counselor')}
+            </span>
+            <button
+              onClick={loadEntries}
+              className="flex items-center space-x-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-sm font-jp-medium transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>更新</span>
+            </button>
+          </div>
+        </div>
+
+        <Tabs defaultValue="search">
+          <TabsList className="mb-6">
+            <TabsTrigger value="search" onClick={() => setActiveTab('search')}>
+              <Search className="w-4 h-4 mr-2" />
+              日記検索
+            </TabsTrigger>
+            <TabsTrigger value="counselors" onClick={() => setActiveTab('counselors')}>
+              <Users className="w-4 h-4 mr-2" />
+              カウンセラー
+            </TabsTrigger>
+            <TabsTrigger value="chat" onClick={() => setActiveTab('chat')}>
+              <MessageCircle className="w-4 h-4 mr-2" />
+              チャット
+            </TabsTrigger>
+            <TabsTrigger value="device-auth" onClick={() => setActiveTab('device-auth')}>
+              <Shield className="w-4 h-4 mr-2" />
+              デバイス認証
+            </TabsTrigger>
+            <TabsTrigger value="security" onClick={() => setActiveTab('security')}>
+              <Shield className="w-4 h-4 mr-2" />
+              セキュリティ
+            </TabsTrigger>
+            <TabsTrigger value="data-cleanup" onClick={() => setActiveTab('data-cleanup')}>
+              <Database className="w-4 h-4 mr-2" />
+              データ管理
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="search" className="space-y-6">
+            <AdvancedSearchFilter 
+              entries={entries} 
+              onFilteredResults={handleFilteredResults} 
+              onViewEntry={handleViewEntry}
+              onDeleteEntry={handleDeleteEntry}
+            />
+          </TabsContent>
+
+          <TabsContent value="counselors">
+            <div className="space-y-6">
+              <Tabs defaultValue="counselor-management">
+                <TabsList className="mb-6">
+                  <TabsTrigger value="counselor-management">
+                    <Users className="w-4 h-4 mr-2" />
+                    カウンセラー管理
+                  </TabsTrigger>
+                  <TabsTrigger value="consent-history">
+                    <Clock className="w-4 h-4 mr-2" />
+                    同意履歴
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="counselor-management">
+                  <CounselorManagement />
+                </TabsContent>
+
+                <TabsContent value="consent-history">
+                  <ConsentHistoryManagement />
+                </TabsContent>
+              </Tabs>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="chat">
+            <CounselorChat />
+          </TabsContent>
+
+          <TabsContent value="device-auth">
+            <DeviceAuthManagement />
+          </TabsContent>
+
+          <TabsContent value="security">
+            <SecurityDashboard />
+          </TabsContent>
+
+          <TabsContent value="data-cleanup">
+            <DataCleanup />
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* 詳細表示モーダル */}
+      {renderEntryModal()}
+    </div>
+  );
 };
+
+export default AdminPanel;

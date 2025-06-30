@@ -91,24 +91,7 @@ const DataCleanup: React.FC = () => {
     <div className="bg-white rounded-xl shadow-lg p-6">
       <div className="flex items-center space-x-3 mb-6">
         <Trash2 className="w-8 h-8 text-red-600" />
-        <h2 className="text-xl font-jp-bold text-gray-900">テストデータの削除</h2>
-      </div>
-
-      <div className="bg-red-50 rounded-lg p-6 border border-red-200 mb-6">
-        <div className="flex items-start space-x-3">
-          <Shield className="w-6 h-6 text-red-600 mt-1 flex-shrink-0" />
-          <div>
-            <h3 className="font-jp-bold text-red-900 mb-3">重要な注意事項</h3>
-            <p className="text-red-800 font-jp-normal mb-4">
-              この機能は、Boltが作成したテストデータを削除します。実際のユーザーが入力したデータは保持されます。
-            </p>
-            <ul className="list-disc list-inside space-y-1 text-red-800 font-jp-normal">
-              <li>削除されるのはテストデータのみです</li>
-              <li>実際のユーザーデータは保持されます</li>
-              <li>この操作は元に戻せません</li>
-            </ul>
-          </div>
-        </div>
+        <h2 className="text-xl font-jp-bold text-gray-900">データ管理</h2>
       </div>
 
       <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200 mb-6">
@@ -131,6 +114,23 @@ const DataCleanup: React.FC = () => {
               )}
               <span>重複データを削除</span>
             </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-red-50 rounded-lg p-6 border border-red-200 mb-6">
+        <div className="flex items-start space-x-3">
+          <Shield className="w-6 h-6 text-red-600 mt-1 flex-shrink-0" />
+          <div>
+            <h3 className="font-jp-bold text-red-900 mb-3">重要な注意事項</h3>
+            <p className="text-red-800 font-jp-normal mb-4">
+              この機能は、Boltが作成したテストデータを削除します。実際のユーザーが入力したデータは保持されます。
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-red-800 font-jp-normal">
+              <li>削除されるのはテストデータのみです</li>
+              <li>実際のユーザーデータは保持されます</li>
+              <li>この操作は元に戻せません</li>
+            </ul>
           </div>
         </div>
       </div>

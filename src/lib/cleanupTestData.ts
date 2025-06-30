@@ -177,6 +177,7 @@ export const removeDuplicateEntries = async (): Promise<{
       // 重複を検出するためのマップ
       const uniqueMap = new Map();
       const uniqueEntries = [];
+      const duplicateIds = [];
       
       // 重複を除外して新しい配列を作成
       for (const entry of entries) {
@@ -188,6 +189,7 @@ export const removeDuplicateEntries = async (): Promise<{
           uniqueEntries.push(entry);
         } else {
           localRemoved++;
+          duplicateIds.push(entry.id);
           console.log(`重複エントリーを検出: ${entry.date}, ${entry.emotion}`);
         }
       }
@@ -195,72 +197,30 @@ export const removeDuplicateEntries = async (): Promise<{
       // 重複を除外したデータを保存
       localStorage.setItem('journalEntries', JSON.stringify(uniqueEntries));
       console.log(`ローカルストレージから${localRemoved}件の重複エントリーを削除しました`);
-    }
-    
-    // Supabaseの重複を削除（接続されている場合のみ）
-    if (supabase) {
-      try {
-        // 現在のユーザーのIDを取得
-        const lineUsername = localStorage.getItem('line-username');
-        if (lineUsername) {
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('id')
-            .eq('line_username', lineUsername)
-            .single();
-          
-          if (userError) {
-            console.error('ユーザー取得エラー:', userError);
-          } else if (userData) {
-            // ユーザーの日記を取得
-            const { data: diaryData, error: diaryError } = await supabase
+      
+      // Supabaseからも重複を削除
+      if (supabase && duplicateIds.length > 0) {
+        try {
+          // 重複IDを100件ずつに分割して削除
+          const chunkSize = 100;
+          for (let i = 0; i < duplicateIds.length; i += chunkSize) {
+            const chunk = duplicateIds.slice(i, i + chunkSize);
+            const { error } = await supabase
               .from('diary_entries')
-              .select('*')
-              .eq('user_id', userData.id);
+              .delete()
+              .in('id', chunk);
             
-            if (diaryError) {
-              console.error('Supabase日記取得エラー:', diaryError);
-            } else if (diaryData) {
-              // 重複を検出するためのマップ
-              const uniqueMap = new Map();
-              const duplicateIds = [];
-              
-              // 重複を検出
-              for (const entry of diaryData) {
-                // 日付、感情、内容の組み合わせで一意性を判断
-                const key = `${entry.date}_${entry.emotion}_${entry.event.substring(0, 50)}`;
-                
-                if (!uniqueMap.has(key)) {
-                  uniqueMap.set(key, entry);
-                } else {
-                  duplicateIds.push(entry.id);
-                  supabaseRemoved++;
-                }
-              }
-              
-              // 重複を削除
-              if (duplicateIds.length > 0) {
-                // 100件ずつに分割して削除
-                const chunkSize = 100;
-                for (let i = 0; i < duplicateIds.length; i += chunkSize) {
-                  const chunk = duplicateIds.slice(i, i + chunkSize);
-                  const { error } = await supabase
-                    .from('diary_entries')
-                    .delete()
-                    .in('id', chunk);
-                  
-                  if (error) {
-                    console.error(`Supabase重複削除エラー (${i}~${i+chunk.length}):`, error);
-                  }
-                }
-                
-                console.log(`Supabaseから${supabaseRemoved}件の重複エントリーを削除しました`);
-              }
+            if (error) {
+              console.error(`Supabase重複削除エラー (${i}~${i+chunk.length}):`, error);
+            } else {
+              supabaseRemoved += chunk.length;
             }
           }
+          
+          console.log(`Supabaseから${supabaseRemoved}件の重複エントリーを削除しました`);
+        } catch (supabaseError) {
+          console.error('Supabase接続エラー:', supabaseError);
         }
-      } catch (supabaseError) {
-        console.error('Supabase接続エラー:', supabaseError);
       }
     }
     
