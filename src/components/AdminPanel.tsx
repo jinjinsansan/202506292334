@@ -30,6 +30,52 @@ const AdminPanel: React.FC = () => {
   const loadEntries = async () => {
     setLoading(true);
     try {
+      // Supabaseから日記データを取得（管理者モード）
+      if (supabase) {
+        try {
+          const { data, error } = await supabase
+            .from('diary_entries')
+            .select(`
+              *,
+              users (
+                line_username
+              )
+            `)
+            .order('created_at', { ascending: false })
+            .limit(100);
+            
+          if (error) {
+            console.error('Supabase日記取得エラー:', error);
+          } else if (data && data.length > 0) {
+            console.log('Supabaseから日記データを取得しました:', data.length, '件');
+            
+            // データをフォーマット
+            const formattedEntries = data.map(item => ({
+              id: item.id,
+              date: item.date,
+              emotion: item.emotion,
+              event: item.event,
+              realization: item.realization,
+              selfEsteemScore: item.self_esteem_score,
+              worthlessnessScore: item.worthlessness_score,
+              created_at: item.created_at,
+              user: item.users,
+              counselorMemo: item.counselor_memo,
+              isVisibleToUser: item.is_visible_to_user,
+              counselorName: item.counselor_name,
+              assignedCounselor: item.assigned_counselor,
+              urgencyLevel: item.urgency_level
+            }));
+            
+            setEntries(formattedEntries);
+            setFilteredEntries(formattedEntries);
+            return;
+          }
+        } catch (supabaseError) {
+          console.error('Supabase接続エラー:', supabaseError);
+        }
+      }
+      
       // ローカルストレージからデータを取得
       const savedEntries = localStorage.getItem('journalEntries');
       if (savedEntries) {
