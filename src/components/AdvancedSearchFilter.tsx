@@ -670,7 +670,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                     <div className="flex items-center space-x-1">
                       <button
                         onClick={() => onViewEntry(entry)}
-                        className="text-blue-600 hover:text-blue-700 p-1 cursor-pointer"
+                       className="text-blue-600 hover:text-blue-700 p-1"
                         title="詳細を見る"
                       >
                         <Eye className="w-4 h-4" />
@@ -678,13 +678,12 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                       {onDeleteEntry && (
                         <button
                           onClick={() => onDeleteEntry(entry.id)}
-                          className="text-red-600 hover:text-red-700 p-1 cursor-pointer"
+                         className="text-red-600 hover:text-red-700 p-1"
                           title="削除"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
-                         onClick={() => onViewEntry(entry)}
                   </div>
                 </div>
               </div>
