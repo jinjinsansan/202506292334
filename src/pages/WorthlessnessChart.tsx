@@ -292,7 +292,12 @@ const WorthlessnessChart: React.FC = () => {
   }, [displayedData]);
 
   // 座標変換関数
-  const toX = (i: number, total: number) => (i / Math.max(1, total - 1)) * 100;
+  const toX = (i: number, total: number) => {
+    // 1つしかデータがない場合は中央に配置
+    if (total <= 1) return 50;
+    // 複数データがある場合は均等に分布（両端に余白を持たせる）
+    return 5 + (i / Math.max(1, total - 1)) * 90;
+  };
   const toY = (val: number) => ((max - val) / span) * 100;
 
   return (
@@ -406,17 +411,17 @@ const WorthlessnessChart: React.FC = () => {
                 </div>
                 
                 {/* グラフ本体 */}
-                <div className="relative w-full h-60 overflow-hidden">
+                <div className="relative w-full h-60">
                   <svg
-                    viewBox="0 0 120 100"
-                    preserveAspectRatio="xMinYMid meet"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
                     className="absolute inset-0 w-full h-full graph-svg"
                   >
                     {/* グリッド */}
                     <g stroke="#e5e7eb" strokeWidth="0.4" vectorEffect="non-scaling-stroke">
                       {[0, 25, 50, 75, 100].map(tick => (
                         <g key={tick}>
-                          <line x1="0" y1={toY(tick)} x2="120" y2={toY(tick)} />
+                          <line x1="0" y1={toY(tick)} x2="100" y2={toY(tick)} />
                           <text
                             x="0"
                             y={toY(tick) - 1.5}
