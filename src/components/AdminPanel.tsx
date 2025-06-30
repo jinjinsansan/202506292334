@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, Trash2, Eye, Edit3, AlertTriangle, CheckCircle, Clock, MessageCircle, Users } from 'lucide-react';
 import CounselorManagement from './CounselorManagement';
+import AdvancedSearchFilter from './AdvancedSearchFilter';
 import CounselorChat from './CounselorChat';
 import ConsentHistoryManagement from './ConsentHistoryManagement';
 import DeviceAuthManagement from './DeviceAuthManagement';
@@ -51,7 +52,7 @@ const AdminPanel: React.FC = () => {
             const formattedEntries = diaryData.map(item => {
               // 重複チェック用のキーを作成
               const key = `${item.date}_${item.emotion}_${item.event?.substring(0, 50)}`;
-              
+
               return {
                 id: item.id,
                 date: item.date,
@@ -67,6 +68,7 @@ const AdminPanel: React.FC = () => {
                 counselorName: item.counselor_name || '',
                 assignedCounselor: item.assigned_counselor || '',
                 urgencyLevel: item.urgency_level || '',
+                syncStatus: 'supabase', // Supabaseから取得したデータ
                 _key: key // 重複チェック用のキー
               };
             });
@@ -96,9 +98,20 @@ const AdminPanel: React.FC = () => {
       // ローカルストレージからデータを取得
       const savedEntries = localStorage.getItem('journalEntries');
       if (savedEntries) {
-        const parsedEntries = JSON.parse(savedEntries);
-        setEntries(parsedEntries);
-        setFilteredEntries(parsedEntries);
+        try {
+          const parsedEntries = JSON.parse(savedEntries);
+          
+          // ローカルデータにsyncStatusを追加
+          const localEntries = parsedEntries.map((entry: any) => ({
+            ...entry,
+            syncStatus: 'local' // ローカルストレージから取得したデータ
+          }));
+          
+          setEntries(localEntries);
+          setFilteredEntries(localEntries);
+        } catch (error) {
+          console.error('ローカルデータの解析エラー:', error);
+        }
       }
     } catch (error) {
       console.error('データ読み込みエラー:', error);
@@ -131,6 +144,7 @@ const AdminPanel: React.FC = () => {
         if (entry.id === selectedEntry.id) {
           return {
             ...entry,
+            syncStatus: entry.syncStatus || 'local', // 同期状態を保持
             counselorMemo: editFormData.counselorMemo,
             isVisibleToUser: editFormData.isVisibleToUser,
             counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
@@ -260,7 +274,7 @@ const AdminPanel: React.FC = () => {
               {/* 基本情報 */}
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <div className="flex flex-wrap gap-3 mb-3">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 mb-1">
                     <Calendar className="w-4 h-4 text-gray-500" />
                     <span className="text-gray-700 font-jp-medium">
                       {formatDate(selectedEntry.date)}
@@ -271,6 +285,17 @@ const AdminPanel: React.FC = () => {
                       {selectedEntry.emotion}
                     </span>
                   </div>
+                  {selectedEntry.syncStatus && (
+                    <div className="flex items-center space-x-2 mt-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-jp-medium ${
+                        selectedEntry.syncStatus === 'supabase' 
+                          ? 'bg-green-100 text-green-800 border border-green-200' 
+                          : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                      }`}>
+                        {selectedEntry.syncStatus === 'supabase' ? 'Supabase同期済み' : 'ローカルデータ'}
+                      </span>
+                    </div>
+                  )}
                   {selectedEntry.user && (
                     <div className="flex items-center space-x-2">
                       <User className="w-4 h-4 text-gray-500" />
