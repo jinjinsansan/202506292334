@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Calendar, Search, MessageCircle, Settings, Users, AlertTriangle, Edit3, Trash2, Save, X, CheckCircle, Eye, EyeOff, User, Clock, Filter, Shield, Database, RefreshCw, Download, CheckSquare, Square, AlertCircle } from 'lucide-react';
+import { Calendar, Search, MessageCircle, Settings, Users, AlertTriangle, Edit3, Trash2, Save, X, CheckCircle, Eye, EyeOff, User, Clock, Filter, Shield, Database, RefreshCw, Download, CheckSquare, Square, AlertCircle, Loader } from 'lucide-react';
 import AdvancedSearchFilter from './AdvancedSearchFilter';
 import CounselorManagement from './CounselorManagement';
 import CounselorChat from './CounselorChat';
@@ -906,11 +906,7 @@ const AdminPanel: React.FC = () => {
                 </div>
               </div>
             </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </TabsContent>
+          )}
 
           <TabsContent value="advanced-search">
             <AdvancedSearchFilter 

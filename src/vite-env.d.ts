@@ -5,3 +5,9 @@ interface Window {
   supabase: any;
   autoSync: any;
 }
+
+// Supabaseクライアントをwindowオブジェクトに追加
+interface Window {
+  supabase: any;
+  autoSync: any;
+}

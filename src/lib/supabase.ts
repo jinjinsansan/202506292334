@@ -264,6 +264,34 @@ export const diaryService = {
     }
   },
   
+  // 日記の削除
+  async deleteDiary(id: string) {
+    if (!supabase) return { success: false, error: 'Supabase接続なし' };
+    
+    // ローカルモードの場合は削除をスキップ
+    if (isLocalMode) {
+      return { success: true, message: 'ローカルモードのため削除をスキップしました' };
+    }
+
+    try {
+      const { error } = await supabase
+        .from('diary_entries')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('日記削除エラー:', error);
+        return { success: false, error: error.message };
+      }
+      
+      return { success: true };
+    } catch (err) {
+      console.error('日記削除サービスエラー:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      return { success: false, error: errorMessage };
+    }
+  },
+  
   // ユーザーの日記を取得
   async getUserDiaries(userId: string) {
     if (!supabase) return [];
