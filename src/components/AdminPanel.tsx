@@ -443,7 +443,7 @@ const AdminPanel: React.FC = () => {
         </div>
 
         <Tabs defaultValue="search">
-          <TabsList className="mb-6 w-full">
+          <TabsList>
             <TabsTrigger value="search" onClick={() => setActiveTab('search')}>
               <Search className="w-4 h-4 mr-2" />
               日記検索
@@ -482,7 +482,7 @@ const AdminPanel: React.FC = () => {
           <TabsContent value="counselors">
             <div className="space-y-6">
               <Tabs defaultValue="counselor-management">
-                <TabsList className="mb-6 w-full">
+                <TabsList>
                   <TabsTrigger value="counselor-management">
                     <Users className="w-4 h-4 mr-2" />
                     カウンセラー管理

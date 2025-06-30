@@ -63,10 +63,12 @@
   .tabs-list-wrapper {
     overflow-x: auto;
     width: 100%;
+    margin-bottom: 1rem;
   }
   
   .tabs-list {
     display: inline-flex;
     min-width: max-content;
+     width: auto;
   }
 }
