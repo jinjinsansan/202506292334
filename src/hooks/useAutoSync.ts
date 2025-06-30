@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, userService, diaryService } from '../lib/supabase';
 import { getCurrentUser } from '../lib/deviceAuth';
+import { formatDiaryForSupabase } from '../lib/utils';
 
 interface AutoSyncState {
   isAutoSyncEnabled: boolean;
@@ -176,14 +177,11 @@ export const useAutoSync = (): AutoSyncState => {
       
       console.log('同期する日記データ:', entries.length, '件', 'ユーザーID:', userId);
 
-      // 各エントリーにuser_idを追加
-      const entriesWithUserId = entries.map((entry: any) => ({
-        ...entry,
-        user_id: userId
-      }));
+      // 各エントリーをSupabase形式に変換
+      const formattedEntries = entries.map((entry: any) => formatDiaryForSupabase(entry, userId));
       
       // 日記データを同期
-      const { success, error } = await diaryService.syncDiaries(userId, entriesWithUserId);
+      const { success, error } = await diaryService.syncDiaries(userId, formattedEntries);
       
       if (!success) {
         throw new Error(error || '日記の同期に失敗しました');

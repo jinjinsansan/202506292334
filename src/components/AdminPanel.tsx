@@ -568,10 +568,6 @@ const AdminPanel: React.FC = () => {
                   </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };

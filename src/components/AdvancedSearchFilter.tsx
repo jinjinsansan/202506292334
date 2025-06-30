@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, X, Calendar, User, AlertTriangle, Tag, ChevronDown, ChevronUp, RotateCcw, Download, Eye } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { formatDiaryForLocal } from '../lib/utils';
 
 interface SearchFilters {
   keyword: string;
@@ -150,6 +151,13 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
       
       // 検索結果を処理
       // ここで結果を処理して表示形式に変換
+        // Supabaseのデータをローカル形式に変換
+        const formattedData = data.map(entry => formatDiaryForLocal(entry));
+        setFilteredEntries(formattedData);
+        onFilteredResults(formattedData);
+      } else {
+        setFilteredEntries([]);
+        onFilteredResults([]);
       
     } catch (error) {
       console.error('検索エラー:', error);
