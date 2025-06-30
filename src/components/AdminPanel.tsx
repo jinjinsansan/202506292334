@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, Trash2, Eye, Edit3, AlertTriangle, CheckCircle, Clock, MessageCircle, Users, BookOpen, BarChart2, Settings, Save, FileText, Layers } from 'lucide-react';
-import CounselorManagement from './CounselorManagement';
 import AdvancedSearchFilter from './AdvancedSearchFilter';
+import CounselorManagement from './CounselorManagement';
 import CounselorChat from './CounselorChat';
 import ConsentHistoryManagement from './ConsentHistoryManagement';
 import DeviceAuthManagement from './DeviceAuthManagement';
@@ -123,6 +123,7 @@ const AdminPanel: React.FC = () => {
   const handleViewEntry = (entry: any) => {
     setSelectedEntry(entry);
     setEditMode(false);
+    // 編集モードをリセットして詳細表示モードに
     setEditFormData({
       counselorMemo: entry.counselorMemo || entry.counselor_memo || '',
       isVisibleToUser: entry.isVisibleToUser || entry.is_visible_to_user || false,
@@ -133,6 +134,7 @@ const AdminPanel: React.FC = () => {
 
   const handleEditEntry = () => {
     setEditMode(true);
+    // 既に選択されているエントリーを編集モードに切り替え
   };
 
   const handleSaveEdit = async () => {
@@ -255,7 +257,7 @@ const AdminPanel: React.FC = () => {
   // 詳細表示モーダル
   const renderEntryModal = () => {
     if (!selectedEntry) return null;
-
+    
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
