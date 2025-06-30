@@ -181,7 +181,7 @@ export const useAutoSync = (): AutoSyncState => {
         .filter((entry: any) => entry && entry.id && entry.date && entry.emotion) // 無効なデータをフィルタリング
         .map((entry: any) => {
           // 必須フィールドのみを含める
-          return {
+          const formattedEntry = {
             id: entry.id,
             user_id: userId,
             date: entry.date,
@@ -191,15 +191,13 @@ export const useAutoSync = (): AutoSyncState => {
             self_esteem_score: typeof entry.selfEsteemScore === 'number' ? entry.selfEsteemScore : 
                              (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 0),
             worthlessness_score: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
+                               (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 0),
             created_at: entry.created_at || new Date().toISOString()
           };
           
           // assigned_counselorフィールドが存在する場合のみ追加
           if (entry.assigned_counselor || entry.assignedCounselor) {
-            return {
-              ...formattedEntry,
-              assigned_counselor: entry.assigned_counselor || entry.assignedCounselor
-            };
+            formattedEntry.assigned_counselor = entry.assigned_counselor || entry.assignedCounselor;
           }
           
           // urgency_levelフィールドが存在する場合のみ追加

@@ -15,7 +15,7 @@ export function cn(...inputs: ClassValue[]) {
  * @returns Supabase形式の日記データ
  */
 export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
-  return {
+  const formattedEntry = {
     id: diaryEntry.id,
     user_id: diaryEntry.user_id || userId,
     date: diaryEntry.date,
@@ -23,6 +23,7 @@ export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
     event: diaryEntry.event,
     realization: diaryEntry.realization,
     self_esteem_score: diaryEntry.selfEsteemScore || 0,
+    worthlessness_score: diaryEntry.worthlessnessScore || 0,
     created_at: diaryEntry.created_at || new Date().toISOString()
   };
   
