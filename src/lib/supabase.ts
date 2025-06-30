@@ -100,6 +100,13 @@ export const diaryService = {
   async syncDiaries(userId: string, diaries: any[]) {
     if (!supabase) return { success: false, error: 'Supabase接続なし' };
 
+    // UUIDの形式を検証
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      console.error('無効なユーザーID形式:', userId);
+      return { success: false, error: '無効なユーザーID形式' };
+    }
+
     if (!userId) {
       return { success: false, error: 'ユーザーIDが指定されていません' };
     }
@@ -112,8 +119,12 @@ export const diaryService = {
       // 日記データの整形
       const formattedDiaries = diaries
         .filter(diary => diary && diary.id && diary.date && diary.emotion) // 無効なデータをフィルタリング
-        .map(diary => ({
-          id: diary.id,
+        .map(diary => {
+          // UUIDの形式を検証し、無効な場合は新しいUUIDを生成
+          const id = uuidRegex.test(diary.id) ? diary.id : crypto.randomUUID();
+          
+          return {
+          id: id,
           user_id: userId,
           date: diary.date,
           emotion: diary.emotion,
@@ -127,7 +138,7 @@ export const diaryService = {
           is_visible_to_user: diary.is_visible_to_user || diary.isVisibleToUser || false,
           counselor_name: diary.counselor_name || diary.counselorName || null,
           created_at: diary.created_at || new Date().toISOString()
-        }));
+        }});
       
       console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
       

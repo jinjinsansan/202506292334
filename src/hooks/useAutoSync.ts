@@ -142,6 +142,14 @@ export const useAutoSync = (): AutoSyncState => {
         setCurrentUser(supabaseUser);
       }
       
+      // UUIDの形式を検証
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(userId)) {
+        console.error('無効なユーザーID形式:', userId);
+        setError('無効なユーザーID形式のため同期できません');
+        return false;
+      }
+      
       // ローカルストレージから日記データを取得
       const savedEntries = localStorage.getItem('journalEntries');
       if (!savedEntries) {
