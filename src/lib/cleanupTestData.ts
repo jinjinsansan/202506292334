@@ -154,43 +154,6 @@ export const deleteAllDiaries = async (): Promise<{
 };
 
 /**
- * 特定の日記を削除する関数
- */
-export const deleteDiary = async (diaryId: string): Promise<{
-  success: boolean;
-  error?: string;
-}> => {
-  try {
-    // ローカルストレージからの削除
-    const savedEntries = localStorage.getItem('journalEntries');
-    if (savedEntries) {
-      const entries = JSON.parse(savedEntries);
-      const updatedEntries = entries.filter((entry: any) => entry.id !== diaryId);
-      localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
-    }
-
-    // Supabaseからの削除
-    if (supabase) {
-      const { error } = await supabase
-        .from('diary_entries')
-        .delete()
-        .eq('id', diaryId);
-      
-      if (error) {
-        console.error('Supabase日記削除エラー:', error);
-        return { success: false, error: error.message };
-      }
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error('日記削除エラー:', error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return { success: false, error: errorMessage };
-  }
-};
-
-/**
  * 複数の日記を削除する関数
  */
 export const bulkDeleteDiaries = async (diaryIds: string[]): Promise<{

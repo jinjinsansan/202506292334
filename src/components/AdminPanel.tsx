@@ -98,13 +98,7 @@ const AdminPanel: React.FC = () => {
       let supabaseEntries = [];
       // 方法1: autoSyncを使用（優先）- グローバルオブジェクトから取得
       if (window.autoSync && window.autoSync.syncDeleteDiary) {
-        try {
-          await window.autoSync.syncDeleteDiary(entryId);
-          console.log('autoSyncを使用してSupabaseから削除しました:', entryId);
-        } catch (syncError) {
-          console.error('autoSync削除エラー:', syncError);
-          // エラーをログに残すが、処理は続行する
-        }
+        console.log('autoSyncが利用可能です');
       } 
       // 方法2: 直接supabaseを使用（フォールバック）
       else if (supabase) {
@@ -304,29 +298,56 @@ const AdminPanel: React.FC = () => {
     
     try {
       // ローカルストレージからの削除
-      const savedEntries = localStorage.getItem('journalEntries');
-      if (savedEntries) {
-        const entries = JSON.parse(savedEntries);
-        const updatedEntries = entries.filter((entry: any) => entry.id !== entryId);
-        localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+      try {
+        const savedEntries = localStorage.getItem('journalEntries');
+        if (savedEntries) {
+          const entries = JSON.parse(savedEntries);
+          const updatedEntries = entries.filter((entry: any) => entry.id !== entryId);
+          localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+          console.log('ローカルストレージから削除しました:', entryId);
+        }
+      } catch (localError) {
+        console.error('ローカルストレージからの削除エラー:', localError);
+        // ローカルエラーでも処理を続行
       }
       
       // 2. Supabaseからの削除
       // 方法1: autoSyncを使用（優先）- グローバルオブジェクトから取得
       if (window.autoSync && typeof window.autoSync.syncDeleteDiary === 'function') {
-        const syncResult = await window.autoSync.syncDeleteDiary(entryId);
-        if (!syncResult) {
-          console.warn('Supabaseとの同期に失敗しましたが、ローカルデータは削除されました');
+        try {
+          const syncResult = await window.autoSync.syncDeleteDiary(entryId);
+          if (!syncResult) {
+            console.warn('Supabaseとの同期に失敗しましたが、ローカルデータは削除されました');
+          } else {
+            console.log('autoSyncを使用してSupabaseから削除しました:', entryId);
+          }
+        } catch (syncError) {
+          console.error('autoSync削除エラー:', syncError);
+          // エラーをログに残すが、処理は続行する
         }
-      } else {
-        console.warn('自動同期機能が利用できないため、ローカルデータのみ削除されました');
+      } 
+      // 方法2: 直接supabaseを使用（フォールバック）
+      else if (supabase && entryId) {
+        try {
+          const { error } = await supabase
+            .from('diary_entries')
+            .delete()
+            .eq('id', entryId);
+          
+          if (error) {
+            console.error('Supabase削除エラー:', error);
+          }
+        } catch (supabaseError) {
+          console.error('Supabase接続エラー:', supabaseError);
+        }
       }
       
       // 3. UI表示の更新
       setEntries(prevEntries => prevEntries.filter(entry => entry.id !== entryId));
-      setFilteredEntries(prevEntries => prevEntries.filter(entry => entry.id !== entryId));
+      setFilteredEntries(prevEntries => prevEntries.filter(entry => entry.id !== entryId));      
       
       alert('日記を削除しました！');
+      
     } catch (error) {
       console.error('削除エラー:', error);
       // エラーメッセージをより具体的に
