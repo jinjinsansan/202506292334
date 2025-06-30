@@ -136,6 +136,10 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 
   const urgencyLevels = [
     { value: 'high', label: '高', color: 'text-red-600' },
+    { value: 'medium', label: '中', color: 'text-yellow-600' },
+    { value: 'low', label: '低', color: 'text-green-600' }
+  ];
+
   // 管理者モードの場合はSupabaseから検索
   const handleSearch = () => {
     if (isAdminMode) {
