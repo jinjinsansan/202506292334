@@ -584,7 +584,7 @@ const WorthlessnessChart: React.FC = () => {
               <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
                 <div className="flex items-start space-x-3">
                   <div className="text-yellow-500 text-xl flex-shrink-0">⚠️</div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-yellow-800 font-jp-medium">
                       スコア対象の感情（無価値感、嬉しい、感謝、達成感、幸せ）を選んだ日記がありません。
                       これらの感情を選んだ日記を書くとグラフが表示されます。
