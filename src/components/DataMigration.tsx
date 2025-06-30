@@ -43,7 +43,12 @@ const DataMigration: React.FC = () => {
   const handleManualSync = async () => {
     if (!isConnected) {
       if (window.confirm('Supabaseに接続されていません。再接続を試みますか？')) {
-        retryConnection();
+        await retryConnection();
+        // 再接続後に接続状態を確認
+        if (!isConnected) {
+          alert('Supabaseへの接続に失敗しました。ネットワーク接続を確認してください。');
+          return;
+        }
       }
       return;
     }
@@ -55,8 +60,9 @@ const DataMigration: React.FC = () => {
     try {
       // 現在のユーザーを取得
       const user = getCurrentUser();
-      // ユーザー情報がない場合はローカルストレージから取得
-      const lineUsername = user?.lineUsername || localStorage.getItem('line-username');
+      
+      // ユーザー名を取得（ローカルストレージから）
+      const lineUsername = localStorage.getItem('line-username');
       
       if (!lineUsername) {
         throw new Error('ユーザー名が設定されていません');
@@ -65,21 +71,34 @@ const DataMigration: React.FC = () => {
       setMigrationStatus('ユーザー情報を確認中...');
       setMigrationProgress(20);
       
-      // ユーザーIDを取得
-      let userId = currentUser?.id;
+      // ユーザーIDを取得または作成
+      let userId;
       
-      // ユーザーIDがない場合は初期化
-      if (!userId && lineUsername) {
+      if (currentUser && currentUser.id) {
+        userId = currentUser.id;
+        console.log('既存のユーザーIDを使用:', userId);
+      } else {
+        // ユーザーIDがない場合は初期化
         setMigrationStatus(`ユーザー「${lineUsername}」を作成中...`);
-        const supabaseUser = await userService.createOrGetUser(lineUsername);
-        if (!supabaseUser || !supabaseUser.id) {
-          throw new Error('ユーザーの作成に失敗しました');
+        try {
+          const supabaseUser = await userService.createOrGetUser(lineUsername);
+          if (!supabaseUser || !supabaseUser.id) {
+            throw new Error('ユーザーの作成に失敗しました');
+          }
+          
+          userId = supabaseUser.id;
+          console.log('新しいユーザーを作成しました:', lineUsername, 'ID:', userId);
+        } catch (userError) {
+          console.error('ユーザー作成エラー:', userError);
+          throw new Error('ユーザーの作成に失敗しました: ' + (userError instanceof Error ? userError.message : String(userError)));
         }
-        
-        userId = supabaseUser.id;
-        console.log('新しいユーザーを作成しました:', lineUsername, 'ID:', userId);
-        setMigrationProgress(40);
       }
+      
+      if (!userId) {
+        throw new Error('ユーザーIDが取得できませんでした');
+      }
+      
+      setMigrationProgress(40);
       
       // ローカルストレージから日記データを取得
       setMigrationStatus('ローカルデータを読み込み中...');
@@ -122,7 +141,13 @@ const DataMigration: React.FC = () => {
       
       // 日記データをSupabase形式に変換
       const formattedEntries = entries
-        .filter((entry: any) => entry && entry.id && entry.date && entry.emotion) // 無効なデータをフィルタリング
+        .filter((entry: any) => {
+          if (!entry || !entry.id || !entry.date || !entry.emotion) {
+            console.warn('無効なエントリーをスキップ:', entry);
+            return false;
+          }
+          return true;
+        }) // 無効なデータをフィルタリング
         .map((entry: any) => {
           // 必須フィールドのみを含める
           const formattedEntry = {
@@ -132,35 +157,32 @@ const DataMigration: React.FC = () => {
             emotion: entry.emotion,
             event: entry.event || '',
             realization: entry.realization || '',
-            self_esteem_score: typeof entry.selfEsteemScore === 'number' 
-              ? entry.selfEsteemScore 
-              : (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 0),
-            worthlessness_score: typeof entry.worthlessnessScore === 'number' 
-              ? entry.worthlessnessScore 
-              : (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 0),
+            self_esteem_score: typeof entry.selfEsteemScore === 'number' ? entry.selfEsteemScore : 
+                              (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 
+                               (typeof entry.self_esteem_score === 'number' ? entry.self_esteem_score : 
+                                (typeof entry.self_esteem_score === 'string' ? parseInt(entry.self_esteem_score) : 50))),
+            worthlessness_score: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
+                                (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 
+                                 (typeof entry.worthlessness_score === 'number' ? entry.worthlessness_score : 
+                                  (typeof entry.worthlessness_score === 'string' ? parseInt(entry.worthlessness_score) : 50))),
             created_at: entry.created_at || new Date().toISOString()
           };
           
           // オプションフィールドは存在する場合のみ追加
-          if (entry.assigned_counselor || entry.assignedCounselor) {
-            formattedEntry.assigned_counselor = entry.assigned_counselor || entry.assignedCounselor;
-          }
+          const optionalFields = {
+            assigned_counselor: entry.assigned_counselor || entry.assignedCounselor || null,
+            urgency_level: entry.urgency_level || entry.urgencyLevel || null,
+            is_visible_to_user: entry.is_visible_to_user !== undefined ? entry.is_visible_to_user : 
+                               (entry.isVisibleToUser !== undefined ? entry.isVisibleToUser : false),
+            counselor_name: entry.counselor_name || entry.counselorName || null,
+            counselor_memo: entry.counselor_memo || entry.counselorMemo || null
+          };
           
-          if (entry.urgency_level || entry.urgencyLevel) {
-            formattedEntry.urgency_level = entry.urgency_level || entry.urgencyLevel;
-          }
-          
-          if (entry.is_visible_to_user !== undefined || entry.isVisibleToUser !== undefined) {
-            formattedEntry.is_visible_to_user = entry.is_visible_to_user || entry.isVisibleToUser || false;
-          }
-          
-          if (entry.counselor_name || entry.counselorName) {
-            formattedEntry.counselor_name = entry.counselor_name || entry.counselorName;
-          }
-
-          // counselor_memoフィールドが存在する場合のみ追加
-          if (entry.counselor_memo || entry.counselorMemo) {
-            formattedEntry.counselor_memo = entry.counselor_memo || entry.counselorMemo;
+          // 値が存在するフィールドのみを追加
+          for (const [key, value] of Object.entries(optionalFields)) {
+            if (value !== undefined) {
+              formattedEntry[key] = value;
+            }
           }
           
           return formattedEntry;
@@ -168,10 +190,10 @@ const DataMigration: React.FC = () => {
       
       // 日記データを同期
       const { success, error } = await diaryService.syncDiaries(userId, formattedEntries);
-      console.log('同期結果:', success ? '成功' : '失敗', error || '');
+      console.log('同期結果:', success ? '成功' : '失敗', error || '', 'データ件数:', formattedEntries.length);
       
-      if (!success && error) {
-        throw new Error(error || '日記の同期に失敗しました');
+      if (!success) {
+        throw new Error(error || `日記の同期に失敗しました (${formattedEntries.length}件)`);
       }
       
       // 同期時間を更新
@@ -188,6 +210,10 @@ const DataMigration: React.FC = () => {
       // 成功メッセージを表示
       alert(`同期が完了しました！${entries.length}件のデータを同期しました。`);
       
+      // 自動同期を有効化
+      localStorage.setItem('auto_sync_enabled', 'true');
+      setAutoSyncEnabled(true);
+      
       setTimeout(() => {
         setMigrationStatus(null);
         setMigrationProgress(0);
@@ -196,7 +222,16 @@ const DataMigration: React.FC = () => {
     } catch (error) {
       console.error('手動同期エラー:', error);
       setMigrationStatus(`同期エラー: ${error instanceof Error ? error.message : String(error)}`);
-      setMigrationProgress(0);
+      setMigrationProgress(100); // エラーでも100%にして完了を示す
+      
+      // エラーメッセージをアラートで表示
+      alert(`同期エラー: ${error instanceof Error ? error.message : String(error)}`);
+      
+      // 3秒後にステータスをクリア
+      setTimeout(() => {
+        setMigrationStatus(null);
+        setMigrationProgress(0);
+      }, 3000);
     } finally {
       setMigrating(false);
     }
