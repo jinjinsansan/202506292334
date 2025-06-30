@@ -135,8 +135,6 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
       
       // ユーザー検索
       if (filters.userSearch.trim()) {
-        // ユーザー名で検索
-        query = query.ilike('users.line_username', `%${filters.userSearch.trim()}%`);
         query = query.ilike('users.line_username', `%${filters.userSearch.trim()}%`);
       }
       

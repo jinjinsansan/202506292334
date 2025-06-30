@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Trash2, RefreshCw, CheckCircle, AlertTriangle, Shield, Database, AlertCircle, Layers } from 'lucide-react';
-import { cleanupTestData, deleteAllDiaries, removeDuplicateEntries, cleanupDuplicateEntries } from '../lib/cleanupTestData';
+import { Trash2, RefreshCw, CheckCircle, AlertTriangle, Shield, Database, AlertCircle } from 'lucide-react';
+import { cleanupTestData, deleteAllDiaries, removeDuplicateEntries } from '../lib/cleanupTestData';
 
 const DataCleanup: React.FC = () => {
   const [cleaning, setCleaning] = useState(false);
@@ -11,9 +11,7 @@ const DataCleanup: React.FC = () => {
   } | null>(null);
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false);
-  const [cleaningDuplicates, setCleaningDuplicates] = useState(false);
   const [removingDuplicates, setRemovingDuplicates] = useState(false);
-  const [cleaningDuplicates, setCleaningDuplicates] = useState(false);
 
   const handleCleanupTestData = async () => {
     if (!window.confirm('Boltが作成したテストデータを削除します。この操作は元に戻せません。続行しますか？')) {
@@ -89,109 +87,12 @@ const DataCleanup: React.FC = () => {
     }
   };
 
-  const handleCleanupDuplicates = async () => {
-    if (!window.confirm('重複した日記データを削除します。この操作は元に戻せません。続行しますか？')) {
-      return;
-    }
-    
-    setCleaningDuplicates(true);
-    try {
-      const result = await cleanupDuplicateEntries();
-      setResult(result);
-      
-      if (result.success) {
-        alert(`重複データの削除が完了しました。\n\nローカルから${result.localRemoved}件の重複データを削除しました。\nSupabaseから${result.supabaseRemoved}件の重複データを削除しました。`);
-      } else {
-        alert('重複データの削除中にエラーが発生しました。');
-      }
-    } catch (error) {
-      console.error('重複データ削除エラー:', error);
-      alert('重複データの削除中にエラーが発生しました。');
-    } finally {
-      setCleaningDuplicates(false);
-    }
-  };
-
-  const handleCleanupDuplicates = async () => {
-    if (!window.confirm('重複した日記データを削除します。この操作は元に戻せません。続行しますか？')) {
-      return;
-    }
-    
-    setCleaningDuplicates(true);
-    try {
-      const result = await cleanupDuplicateEntries();
-      setResult(result);
-      
-      if (result.success) {
-        alert(`重複データの削除が完了しました。\n\nローカルから${result.localRemoved}件の重複データを削除しました。\nSupabaseから${result.supabaseRemoved}件の重複データを削除しました。`);
-      } else {
-        alert('重複データの削除中にエラーが発生しました。');
-      }
-    } catch (error) {
-      console.error('重複データ削除エラー:', error);
-      alert('重複データの削除中にエラーが発生しました。');
-    } finally {
-      setCleaningDuplicates(false);
-    }
-  };
-
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <div className="flex items-center space-x-3 mb-6">
         <Trash2 className="w-8 h-8 text-red-600" />
         <h2 className="text-xl font-jp-bold text-gray-900">データ管理</h2>
       </div>
-      
-      <div className="bg-red-50 rounded-lg p-6 border border-red-200 mb-6">
-        <div className="flex items-start space-x-3">
-          <Layers className="w-6 h-6 text-red-600 mt-1 flex-shrink-0" />
-          <div>
-            <h3 className="font-jp-bold text-red-900 mb-3">重複データの完全削除</h3>
-            <p className="text-red-800 font-jp-normal mb-4">
-              同期エラーによって発生した重複データを完全に削除します。同じ日付・感情・内容を持つ重複エントリーを検出して削除します。
-              この操作はSupabaseのデータベースにも影響します。
-            </p>
-            <button
-              onClick={handleCleanupDuplicates}
-              disabled={cleaningDuplicates}
-              className="flex items-center justify-center space-x-2 bg-red-700 hover:bg-red-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-jp-medium transition-colors w-full"
-            >
-              {cleaningDuplicates ? (
-                <RefreshCw className="w-5 h-5 animate-spin" />
-              ) : (
-                <Layers className="w-5 h-5" />
-              )}
-              <span>重複データを完全削除</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-red-50 rounded-lg p-6 border border-red-200 mb-6">
-        <div className="flex items-start space-x-3">
-          <Layers className="w-6 h-6 text-red-600 mt-1 flex-shrink-0" />
-          <div>
-            <h3 className="font-jp-bold text-red-900 mb-3">重複データの完全削除</h3>
-            <p className="text-red-800 font-jp-normal mb-4">
-              同期エラーによって発生した重複データを完全に削除します。同じ日付・感情・内容を持つ重複エントリーを検出して削除します。
-              この操作はSupabaseのデータベースにも影響します。
-            </p>
-            <button
-              onClick={handleCleanupDuplicates}
-              disabled={cleaningDuplicates}
-              className="flex items-center justify-center space-x-2 bg-red-700 hover:bg-red-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-jp-medium transition-colors w-full"
-            >
-              {cleaningDuplicates ? (
-                <RefreshCw className="w-5 h-5 animate-spin" />
-              ) : (
-                <Layers className="w-5 h-5" />
-              )}
-              <span>重複データを完全削除</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200 mb-6">
         <div className="flex items-start space-x-3">
           <Database className="w-6 h-6 text-yellow-600 mt-1 flex-shrink-0" />

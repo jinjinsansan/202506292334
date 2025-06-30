@@ -218,29 +218,6 @@ export const useAutoSync = (): AutoSyncState => {
      // 重複チェック用のマップを作成
      const entryMap = new Map<string, boolean>();
      
-     // 重複チェック用のマップを作成
-     const entryMap = new Map<string, boolean>();
-     
-     // 未処理のエントリーのみをフィルタリング
-     const newEntries = entries.filter((entry: any) => {
-       // 重複チェック用のキーを作成（日付+感情+内容の先頭50文字）
-       const key = `${entry.date}_${entry.emotion}_${entry.event.substring(0, 50)}`;
-       
-       // 既に同じキーが存在する場合は重複とみなす
-       if (processedEntryMap.has(key) || entryMap.has(key)) {
-         console.log('重複エントリーをスキップ:', key);
-         return false;
-       }
-       
-       // 処理済みIDに含まれている場合もスキップ
-       if (currentProcessedIds.has(entry.id)) {
-         return false;
-       }
-       
-       // 重複チェック用のマップに追加
-       entryMap.set(key, true);
-       return true;
-     });
      const newEntries = entries.filter((entry: any) => {
        // 重複チェック用のキーを作成（日付+感情+内容の先頭50文字）
        const key = `${entry.date}_${entry.emotion}_${entry.event.substring(0, 50)}`;
@@ -400,13 +377,8 @@ export const useAutoSync = (): AutoSyncState => {
        // 重複チェック用のマップにも追加
        const key = `${entry.date}_${entry.emotion}_${entry.event.substring(0, 50)}`;
        processedEntryMap.set(key, true);
-       
-       // 重複チェック用のマップにも追加
-       const key = `${entry.date}_${entry.emotion}_${entry.event.substring(0, 50)}`;
-       processedEntryMap.set(key, true);
      });
      setProcessedEntryIds(currentProcessedIds);
-     setProcessedEntryMap(new Map([...processedEntryMap, ...entryMap]));
      setProcessedEntryMap(new Map([...processedEntryMap, ...entryMap]));
      
       // 同期時間を更新
