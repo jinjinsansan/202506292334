@@ -454,11 +454,15 @@ const DiarySearchPage: React.FC = () => {
               />
             </div>
 
-            {/* 無価値感スコア（無価値感を選んだ場合のみ） */}
-            {editFormData.emotion === '無価値感' && (
+            {/* 感情スコア（無価値感またはポジティブな感情を選んだ場合） */}
+            {(editFormData.emotion === '無価値感' || 
+              editFormData.emotion === '嬉しい' || 
+              editFormData.emotion === '感謝' || 
+              editFormData.emotion === '達成感' || 
+              editFormData.emotion === '幸せ') && (
               <div className="mb-6 bg-red-50 rounded-lg p-4 border border-red-200">
-                <h3 className="text-red-800 font-jp-bold mb-4">
-                  無価値感スコア
+                <h3 className={`${editFormData.emotion === '無価値感' ? 'text-red-800' : 'text-green-800'} font-jp-bold mb-4`}>
+                  {editFormData.emotion === '無価値感' ? '無価値感スコア' : 'ポジティブ感情スコア'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -758,7 +762,11 @@ const DiarySearchPage: React.FC = () => {
                     </div>
                   )}
 
-                  {entry.emotion === '無価値感' && (
+                  {(entry.emotion === '無価値感' || 
+                    entry.emotion === '嬉しい' || 
+                    entry.emotion === '感謝' || 
+                    entry.emotion === '達成感' || 
+                    entry.emotion === '幸せ') && (
                     <div className="flex flex-wrap gap-2 sm:gap-6 text-xs bg-white rounded-lg p-2 border border-gray-200">
                       <div className="flex items-center space-x-2">
                         <span className="text-gray-500 font-jp-medium">自己肯定感:</span>
@@ -862,7 +870,11 @@ const DiarySearchPage: React.FC = () => {
                 </div>
               )}
 
-              {entry.emotion === '無価値感' && (
+              {(entry.emotion === '無価値感' || 
+                entry.emotion === '嬉しい' || 
+                entry.emotion === '感謝' || 
+                entry.emotion === '達成感' || 
+                entry.emotion === '幸せ') && (
                 <div className="flex flex-wrap gap-2 sm:gap-6 text-sm bg-gray-50 rounded-lg p-3">
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-500 font-jp-medium">自己肯定感:</span>
