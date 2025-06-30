@@ -178,31 +178,40 @@ export const diaryService = {
           emotion: diary.emotion || '無価値感',
           event: diary.event || 'イベントなし',
           realization: diary.realization || '気づきなし',
-          self_esteem_score: typeof diary.selfEsteemScore === 'number' ? diary.selfEsteemScore : 
-                            (typeof diary.selfEsteemScore === 'string' ? parseInt(diary.selfEsteemScore) : 0),
-          worthlessness_score: typeof diary.worthlessnessScore === 'number' ? diary.worthlessnessScore : 
-                              (typeof diary.worthlessnessScore === 'string' ? parseInt(diary.worthlessnessScore) : 0),
+          self_esteem_score: typeof entry.selfEsteemScore === 'number' ? entry.selfEsteemScore : 
+                            (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 
+                             (typeof entry.self_esteem_score === 'number' ? entry.self_esteem_score : 
+                              (typeof entry.self_esteem_score === 'string' ? parseInt(entry.self_esteem_score) : 50))),
+          worthlessness_score: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
+                              (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 
+                               (typeof entry.worthlessness_score === 'number' ? entry.worthlessness_score : 
+                                (typeof entry.worthlessness_score === 'string' ? parseInt(entry.worthlessness_score) : 50))),
           created_at: diary.created_at || new Date().toISOString()
           };
           
           // オプションフィールドを追加
           const optionalFields = {
-            counselor_memo: diary.counselor_memo || diary.counselorMemo || null,
-            is_visible_to_user: diary.is_visible_to_user !== undefined ? diary.is_visible_to_user : 
-                               (diary.isVisibleToUser !== undefined ? diary.isVisibleToUser : false),
-            counselor_name: diary.counselor_name || diary.counselorName || null,
-            assigned_counselor: diary.assigned_counselor || diary.assignedCounselor || null,
-            urgency_level: diary.urgency_level || diary.urgencyLevel || null
+            counselor_memo: entry.counselor_memo || entry.counselorMemo || null,
+            is_visible_to_user: entry.is_visible_to_user !== undefined ? entry.is_visible_to_user : 
+                               (entry.isVisibleToUser !== undefined ? entry.isVisibleToUser : false),
+            counselor_name: entry.counselor_name || entry.counselorName || null,
+            assigned_counselor: entry.assigned_counselor || entry.assignedCounselor || null,
+            urgency_level: entry.urgency_level || entry.urgencyLevel || null
           };
           
           // 同期前に最初のデータをログに出力（デバッグ用）
           if (i === 0 && diary) {
-            console.log('同期するデータの例:', JSON.stringify(formattedEntry, null, 2));
+            console.log('同期するデータの例:', JSON.stringify({
+              ...formattedEntry,
+              ...optionalFields
+            }, null, 2));
           }
           
           // 値が存在するフィールドのみを追加
           for (const [key, value] of Object.entries(optionalFields)) {
-            formattedEntry[key] = value;
+            if (value !== undefined) {
+              formattedEntry[key] = value;
+            }
           }
           
           return formattedEntry;
