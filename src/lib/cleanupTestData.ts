@@ -1,8 +1,8 @@
 import { supabase } from './supabase';
 
 /**
- * Boltが作成したテストデータを削除する関数
- * 実際のユーザーデータは保持される
+ * テストデータを削除する関数
+ * Boltが作成したテストデータを削除し、実際のユーザーデータは保持します
  */
 export const cleanupTestData = async (): Promise<{
   localRemoved: number;
@@ -10,42 +10,42 @@ export const cleanupTestData = async (): Promise<{
   success: boolean;
 }> => {
   try {
-    // ローカルストレージからのテストデータ削除
     let localRemoved = 0;
-    
-    // 日記データの削除
+    let supabaseRemoved = 0;
+
+    // ローカルストレージからテストデータを削除
     const savedEntries = localStorage.getItem('journalEntries');
     if (savedEntries) {
       const entries = JSON.parse(savedEntries);
-      // テストデータの特徴（Boltが生成したデータの特徴）
+      
+      // テストデータを識別（例：特定のパターンを持つデータ）
       const realEntries = entries.filter((entry: any) => {
-        // テストデータの特徴（例: 特定のパターンを持つ内容）
-        const isBoltGenerated = 
+        // テストデータの特徴（例：特定の文字列を含むか、特定の日付範囲内か）
+        const isTestData = 
           (entry.event && entry.event.includes('テストデータ')) || 
           (entry.realization && entry.realization.includes('テストデータ')) ||
           (entry.event && entry.event.includes('This is a test entry')) ||
-          (entry.event && entry.event.includes('サンプルデータ'));
+          (entry.realization && entry.realization.includes('This is a test realization'));
         
-        if (isBoltGenerated) {
+        if (isTestData) {
           localRemoved++;
           return false;
         }
         return true;
       });
       
+      // 実際のユーザーデータのみを保存
       localStorage.setItem('journalEntries', JSON.stringify(realEntries));
     }
-    
-    // Supabaseからのテストデータ削除
-    let supabaseRemoved = 0;
-    
+
+    // Supabaseからテストデータを削除（接続されている場合のみ）
     if (supabase) {
       try {
-        // テストデータの特徴に基づいて削除
+        // テストデータを識別して削除
         const { data, error } = await supabase
           .from('diary_entries')
           .delete()
-          .or('event.ilike.%テストデータ%,event.ilike.%This is a test entry%,event.ilike.%サンプルデータ%')
+          .or('event.ilike.%テストデータ%,realization.ilike.%テストデータ%,event.ilike.%This is a test entry%,realization.ilike.%This is a test realization%')
           .select();
         
         if (error) {
@@ -57,7 +57,7 @@ export const cleanupTestData = async (): Promise<{
         console.error('Supabase接続エラー:', supabaseError);
       }
     }
-    
+
     return {
       localRemoved,
       supabaseRemoved,
