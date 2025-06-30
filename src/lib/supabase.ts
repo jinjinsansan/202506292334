@@ -138,7 +138,8 @@ export const diaryService = {
           is_visible_to_user: diary.is_visible_to_user || diary.isVisibleToUser || false,
           counselor_name: diary.counselor_name || diary.counselorName || null,
           created_at: diary.created_at || new Date().toISOString()
-        }});
+        };
+        });
       
       console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
       

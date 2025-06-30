@@ -150,6 +150,14 @@ export const useAutoSync = (): AutoSyncState => {
         return false;
       }
       
+      // UUIDの形式を検証
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(userId)) {
+        console.error('無効なユーザーID形式:', userId);
+        setError('無効なユーザーID形式のため同期できません');
+        return false;
+      }
+      
       // ローカルストレージから日記データを取得
       const savedEntries = localStorage.getItem('journalEntries');
       if (!savedEntries) {
@@ -187,10 +195,13 @@ export const useAutoSync = (): AutoSyncState => {
       // 各エントリーをSupabase形式に変換
       const formattedEntries = entries
         .filter((entry: any) => entry && entry.id && entry.date && entry.emotion) // 無効なデータをフィルタリング
-        .map((entry: any) => {
+        .map((entry: any) => {          
+          // UUIDの形式を検証し、無効な場合は新しいUUIDを生成
+          const id = uuidRegex.test(entry.id) ? entry.id : crypto.randomUUID();
+          
           // 必須フィールドのみを含める
           const formattedEntry = {
-            id: entry.id,
+            id: id,
             user_id: userId,
             date: entry.date,
             emotion: entry.emotion,
