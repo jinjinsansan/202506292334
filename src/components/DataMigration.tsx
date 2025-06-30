@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Database, Upload, Download, RefreshCw, CheckCircle, AlertTriangle, Shield, Info, Save } from 'lucide-react';
 import { supabase, userService, diaryService, syncService } from '../lib/supabase';
 import { useSupabase } from '../hooks/useSupabase';
-import { getCurrentUser } from '../lib/deviceAuth'; 
+import { getCurrentUser } from '../lib/deviceAuth';
 import { formatDiaryForSupabase } from '../lib/utils';
 
 const DataMigration: React.FC = () => {
@@ -334,14 +334,6 @@ const DataMigration: React.FC = () => {
                     </button>
                   )}
                 </div>
-                {!isConnected && (
-                  <button
-                    onClick={retryConnection}
-                    className="ml-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded-md font-jp-medium transition-colors"
-                  >
-                    再接続
-                  </button>
-                )}
               </div>
             </div>
             <div>
@@ -392,31 +384,30 @@ const DataMigration: React.FC = () => {
               <div className="flex items-start space-x-3 mb-4">
                 <RefreshCw className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-jp-bold text-gray-900 mb-2">自動同期設定</h3> 
+                  <h3 className="font-jp-bold text-gray-900 mb-2">自動同期設定</h3>
                   <p className="text-gray-700 font-jp-normal mb-4">
                     自動同期機能は5分ごとにデータをクラウドに保存します。端末を変更する際にもデータが引き継がれます。
                   </p>
                 </div>
-              </div>
-              
-              <button
-                onClick={handleManualSync} 
-                disabled={migrating || !isConnected}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
-              >
-                {migrating ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>同期中...</span>
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4" />
-                    <span>今すぐ同期する</span>
-                  </>
-                )}
-              </button>
             </div>
+            
+            <button
+              onClick={handleManualSync} 
+              disabled={migrating || !isConnected}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
+            >
+              {migrating ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>同期中...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" />
+                  <span>今すぐ同期する</span>
+                </>
+              )}
+            </button>
             
             <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200">
               <div className="flex items-center space-x-3">
@@ -446,24 +437,6 @@ const DataMigration: React.FC = () => {
                   </ul>
                 </div>
               </div>
-              
-              <button
-                onClick={handleManualSync}
-                disabled={migrating || !isConnected}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
-              >
-                {migrating ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>同期中...</span>
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4" />
-                    <span>今すぐ同期する</span>
-                  </>
-                )}
-              </button>
             </div>
             
             {/* データバックアップセクション */}
@@ -500,31 +473,31 @@ const DataMigration: React.FC = () => {
               <div className="flex items-start space-x-3 mb-4">
                 <Database className="w-6 h-6 text-indigo-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-jp-bold text-gray-900 mb-2">データ移行</h3> 
+                  <h3 className="font-jp-bold text-gray-900 mb-2">データ移行</h3>
                   <p className="text-gray-700 font-jp-normal mb-4">
                     ローカルデータとSupabaseデータを同期します。
                   </p>
                 </div>
               </div>
-              
-              <button
-                onClick={handleManualSync}
-                disabled={migrating || !isConnected}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
-              >
-                {migrating ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>同期中...</span>
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4" />
-                    <span>今すぐ同期する</span>
-                  </>
-                )}
-              </button>
             </div>
+            
+            <button
+              onClick={handleManualSync}
+              disabled={migrating || !isConnected}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
+            >
+              {migrating ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>同期中...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" />
+                  <span>今すぐ同期する</span>
+                </>
+              )}
+            </button>
 
             {/* 同期方向選択 */}
             <div className="mb-4 bg-white rounded-lg p-4 border border-gray-200">
@@ -549,23 +522,6 @@ const DataMigration: React.FC = () => {
                 </label>
               </div>
               
-              <button
-                onClick={handleManualSync}
-                disabled={migrating || !isConnected}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
-              >
-                {migrating ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>同期中...</span>
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4" />
-                    <span>今すぐ同期する</span>
-                  </>
-                )}
-              </button>
             </div>
 
             {/* 管理者向けバックアップセクション */}
