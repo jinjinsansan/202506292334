@@ -143,13 +143,6 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
           // 通常のユーザー名検索
           query = query.ilike('users.line_username', `%${filters.userSearch.trim()}%`);
         }
-        if (filters.userSearch.includes('@')) {
-          // メールアドレスの場合はそのまま検索
-          query = query.ilike('users.line_username', `%${filters.userSearch.trim()}%`);
-        } else {
-          // 通常のユーザー名検索
-          query = query.ilike('users.line_username', `%${filters.userSearch.trim()}%`);
-        }
       }
       
       const { data, error } = await query

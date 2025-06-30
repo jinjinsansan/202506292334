@@ -34,24 +34,12 @@ const AdminPanel: React.FC = () => {
       // Supabaseから日記データを取得（管理者モード）
       if (supabase) {
         try {
-          const { data, error } = await supabase
-            .from('diary_entries')
-            .select(`
-              *,
-              users (
-                line_username
-              )
-            `)
-            .order('created_at', { ascending: false })
-            .limit(100);
-            
-          if (error) {
-            console.error('Supabase日記取得エラー:', error);
-          } else if (data && data.length > 0) {
-            console.log('Supabaseから日記データを取得しました:', data.length, '件');
+          const diaryEntries = await diaryService.getAllDiaries();
+          if (diaryEntries && diaryEntries.length > 0) {
+            console.log('Supabaseから日記データを取得しました:', diaryEntries.length, '件');
             
             // データをフォーマット
-            const formattedEntries = data.map(item => ({
+            const formattedEntries = diaryEntries.map(item => ({
               id: item.id,
               date: item.date,
               emotion: item.emotion,
@@ -60,7 +48,7 @@ const AdminPanel: React.FC = () => {
               selfEsteemScore: item.self_esteem_score,
               worthlessnessScore: item.worthlessness_score,
               created_at: item.created_at,
-              user: item.users,
+              user: item.user,
               counselorMemo: item.counselor_memo,
               isVisibleToUser: item.is_visible_to_user,
               counselorName: item.counselor_name,
