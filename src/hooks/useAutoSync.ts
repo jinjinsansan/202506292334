@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, userService, diaryService } from '../lib/supabase';
 import { getCurrentUser } from '../lib/deviceAuth';
+import { formatDiaryForSupabase } from '../lib/utils';
 
 interface AutoSyncState {
   isAutoSyncEnabled: boolean;
@@ -20,9 +21,6 @@ export const useAutoSync = (): AutoSyncState => {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [processedEntryIds, setProcessedEntryIds] = useState<Set<string>>(new Set());
-  
-  // 重複チェック用のマップ
-  const [processedEntryMap, setProcessedEntryMap] = useState<Map<string, boolean>>(new Map());
   
   // 重複チェック用のマップ
   const [processedEntryMap, setProcessedEntryMap] = useState<Map<string, boolean>>(new Map());
@@ -80,9 +78,6 @@ export const useAutoSync = (): AutoSyncState => {
     }
     
     try {
-      // 重複チェック用のマップをリセット（手動同期の場合）
-      setProcessedEntryMap(new Map());
-      
       // 現在のユーザーを取得
       const user = getCurrentUser();
       // ユーザー情報がない場合はローカルストレージから取得
@@ -395,7 +390,7 @@ export const useAutoSync = (): AutoSyncState => {
     } finally {
       setIsSyncing(false);
     }
-  }, [isSyncing, currentUser, processedEntryIds]);
+  }, [isSyncing, currentUser, processedEntryIds, processedEntryMap]);
   
   // 日記削除時の同期処理
   const syncDeleteDiary = useCallback(async (diaryId: string): Promise<boolean> => {
@@ -521,6 +516,7 @@ export const useAutoSync = (): AutoSyncState => {
   const triggerManualSync = useCallback(async (): Promise<boolean> => {
    // 手動同期の場合は処理済みIDをリセットして全データを同期
    setProcessedEntryIds(new Set());
+   setProcessedEntryMap(new Map());
     return await syncData();
   }, [syncData]);
   
