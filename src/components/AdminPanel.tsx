@@ -220,14 +220,6 @@ const AdminPanel: React.FC = () => {
             counselor_name: isVisibleToUser ? currentCounselor : null
           });
           
-          const { data, error } = await supabase
-            counselor_memo: memoText,
-            is_visible_to_user: isVisibleToUser,
-            urgency_level: urgencyLevel || null,
-            assigned_counselor: assignedCounselor || null,
-            counselor_name: isVisibleToUser ? currentCounselor : null
-          });
-          
           const { error } = await supabase
             .from('diary_entries')
             .update({
@@ -241,9 +233,6 @@ const AdminPanel: React.FC = () => {
           
           if (error) {
             console.error('Supabaseメモ更新エラー:', error);
-            throw new Error(`Supabaseメモ更新エラー: ${error.message}`);
-          } else {
-            console.log('Supabaseメモ更新成功:', data);
             throw new Error(`Supabaseメモ更新エラー: ${error.message}`);
           } else {
             console.log('Supabaseメモ更新成功');
