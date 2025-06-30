@@ -79,7 +79,7 @@ export const useAutoSync = (): AutoSyncState => {
   // データ同期処理
   const syncData = useCallback(async (): Promise<boolean> => {
     if (!supabase) {
-      console.log('ローカルモードで動作中: 同期をスキップ');
+      console.log('ローカルモードで動作中: Supabase接続なし、同期をスキップ');
       return false;
     }
     
@@ -94,8 +94,9 @@ export const useAutoSync = (): AutoSyncState => {
     try {
       // 現在のユーザーを取得
       const user = getCurrentUser();
-      if (!user) {
-        throw new Error('ユーザーがログインしていません');
+      if (!user || !user.lineUsername) {
+        console.log('ユーザーがログインしていないか、ユーザー名がありません');
+        return false;
       }
       
       // ユーザーIDを取得
@@ -104,8 +105,9 @@ export const useAutoSync = (): AutoSyncState => {
       // ユーザーIDがない場合は初期化
       if (!userId) {
         const supabaseUser = await userService.createOrGetUser(user.lineUsername);
-        if (!supabaseUser) {
-          throw new Error('ユーザーの作成に失敗しました');
+        if (!supabaseUser || !supabaseUser.id) {
+          console.error('ユーザーの作成に失敗しました');
+          return false;
         }
         
         userId = supabaseUser.id;
@@ -115,13 +117,23 @@ export const useAutoSync = (): AutoSyncState => {
       // ローカルストレージから日記データを取得
       const savedEntries = localStorage.getItem('journalEntries');
       if (!savedEntries) {
-        console.log('同期するデータがありません');
+        console.log('同期する日記データがありません');
         setLastSyncTime(new Date().toISOString());
         localStorage.setItem('last_sync_time', new Date().toISOString());
         return true;
       }
       
-      const entries = JSON.parse(savedEntries);
+      let entries = JSON.parse(savedEntries);
+      
+      // 空の配列の場合は同期をスキップ
+      if (!entries || entries.length === 0) {
+        console.log('同期する日記データがありません（空の配列）');
+        setLastSyncTime(new Date().toISOString());
+        localStorage.setItem('last_sync_time', new Date().toISOString());
+        return true;
+      }
+      
+      console.log('同期する日記データ:', entries.length, '件');
       
       // 日記データを同期
       const { success, error } = await diaryService.syncDiaries(userId, entries);
@@ -134,8 +146,8 @@ export const useAutoSync = (): AutoSyncState => {
       const now = new Date().toISOString();
       setLastSyncTime(now);
       localStorage.setItem('last_sync_time', now);
-      
-      console.log('データ同期完了:', entries.length, '件');
+
+      console.log('データ同期完了:', entries.length, '件', '時刻:', now);
       return true;
     } catch (error) {
       console.error('データ同期エラー:', error);

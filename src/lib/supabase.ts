@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase設定
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = 'https://afojjlfuwglzukzinpzx.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmb2pqbGZ1d2dsenVremlucHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MDc4MzEsImV4cCI6MjA2NjE4MzgzMX0.ovSwuxvBL5gHtW4XdDkipz9QxWL_njAkr7VQgy1uVRY';
 const isLocalMode = import.meta.env.VITE_LOCAL_MODE === 'true';
 
 // Supabaseクライアントの作成（ローカルモードでない場合のみ）
@@ -82,20 +82,39 @@ export const diaryService = {
   // 日記の同期
   async syncDiaries(userId: string, diaries: any[]) {
     if (!supabase) return { success: false, error: 'Supabase接続なし' };
-    
+
     try {
       // 日記データの整形
-      const formattedDiaries = diaries.map(diary => ({
-        ...diary,
-        user_id: userId
-      }));
+      const formattedDiaries = diaries.map(diary => {
+        // IDを文字列からUUIDに変換する必要がある場合の対応
+        const diaryId = diary.id;
+        
+        return {
+          id: diaryId,
+          user_id: userId,
+          date: diary.date,
+          emotion: diary.emotion,
+          event: diary.event,
+          realization: diary.realization,
+          self_esteem_score: diary.selfEsteemScore || 0,
+          worthlessness_score: diary.worthlessnessScore || 0,
+          counselor_memo: diary.counselor_memo || null,
+          is_visible_to_user: diary.is_visible_to_user || false,
+          counselor_name: diary.counselor_name || null,
+          assigned_counselor: diary.assigned_counselor || null,
+          urgency_level: diary.urgency_level || null
+        };
+      });
+      
+      console.log('同期する日記データ:', formattedDiaries);
       
       // 一括挿入（競合時は更新）
       const { data, error } = await supabase
         .from('diary_entries')
         .upsert(formattedDiaries, {
           onConflict: 'id',
-          ignoreDuplicates: false
+          ignoreDuplicates: false,
+          returning: 'minimal'
         });
       
       if (error) {
@@ -103,6 +122,7 @@ export const diaryService = {
         return { success: false, error: error.message };
       }
       
+      console.log('日記同期成功:', formattedDiaries.length, '件');
       return { success: true, data };
     } catch (error) {
       console.error('日記同期サービスエラー:', error);
@@ -198,7 +218,7 @@ export const consentService = {
   // 同意履歴の保存
   async saveConsentHistory(consentRecord: any) {
     if (!supabase) return { success: false, error: 'Supabase接続なし' };
-    
+
     try {
       const { data, error } = await supabase
         .from('consent_histories')
@@ -246,7 +266,7 @@ export const syncService = {
   // 同意履歴をSupabaseに同期
   async syncConsentHistories() {
     if (!supabase) return false;
-    
+
     try {
       // ローカルストレージから同意履歴を取得
       const savedHistories = localStorage.getItem('consent_histories');
@@ -278,7 +298,7 @@ export const syncService = {
   // Supabaseから同意履歴をローカルに同期
   async syncConsentHistoriesToLocal() {
     if (!supabase) return false;
-    
+
     try {
       const { data, error } = await supabase
         .from('consent_histories')
