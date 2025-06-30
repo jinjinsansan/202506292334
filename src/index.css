@@ -58,4 +58,15 @@
   .graph-svg text { 
     font-family: system-ui, sans-serif; 
   }
+  
+  /* タブコンポーネントのスタイル修正 */
+  .tabs-list-wrapper {
+    overflow-x: auto;
+    width: 100%;
+  }
+  
+  .tabs-list {
+    display: inline-flex;
+    min-width: max-content;
+  }
 }
