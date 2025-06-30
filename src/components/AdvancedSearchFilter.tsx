@@ -598,7 +598,25 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                     <span className="text-sm font-jp-medium text-gray-900">{entry.date}</span>
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-jp-medium">
                       {entry.emotion}
+                    {entry.syncStatus && (
+                      <span className={`px-2 py-1 rounded-full text-xs font-jp-medium ${
+                        entry.syncStatus === 'supabase' 
+                          ? 'bg-green-100 text-green-800 border border-green-200' 
+                          : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                      }`}>
+                        {entry.syncStatus === 'supabase' ? 'Supabase' : 'ローカル'}
+                      </span>
+                    )}
                     </span>
+                    {entry.syncStatus && (
+                      <span className={`px-2 py-1 rounded-full text-xs font-jp-medium ${
+                        entry.syncStatus === 'supabase' 
+                          ? 'bg-green-100 text-green-800 border border-green-200' 
+                          : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                      }`}>
+                        {entry.syncStatus === 'supabase' ? 'Supabase' : 'ローカル'}
+                      </span>
+                    )}
                     {entry.urgency_level && (
                       <span className={`px-2 py-1 rounded-full text-xs font-jp-medium ${
                         entry.urgency_level === 'high' ? 'bg-red-100 text-red-800' :
