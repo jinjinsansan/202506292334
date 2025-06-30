@@ -31,7 +31,7 @@ const AdminPanel: React.FC = () => {
   const loadEntries = async () => {
     setLoading(true);
     try {
-      // Supabaseから直接日記データを取得（管理者モード）
+      // Supabaseから直接日記データを取得
       if (supabase) {
         try {
           const { data: diaryData, error } = await supabase
@@ -50,25 +50,44 @@ const AdminPanel: React.FC = () => {
             console.log('Supabaseから日記データを取得しました:', diaryData.length, '件');
             
             // データをフォーマット
-            const formattedEntries = diaryData.map(item => ({
-              id: item.id,
-              date: item.date,
-              emotion: item.emotion,
-              event: item.event,
-              realization: item.realization,
-              selfEsteemScore: item.self_esteem_score,
-              worthlessnessScore: item.worthlessness_score,
-              created_at: item.created_at,
-              user: item.users,
-              counselorMemo: item.counselor_memo,
-              isVisibleToUser: item.is_visible_to_user,
-              counselorName: item.counselor_name,
-              assignedCounselor: item.assigned_counselor,
-              urgencyLevel: item.urgency_level
-            }));
+            const formattedEntries = diaryData.map(item => {
+              // 重複チェック用のキーを作成
+              const key = `${item.date}_${item.emotion}_${item.event?.substring(0, 50)}`;
+              
+              return {
+                id: item.id,
+                date: item.date,
+                emotion: item.emotion,
+                event: item.event || '',
+                realization: item.realization || '',
+                selfEsteemScore: item.self_esteem_score || 0,
+                worthlessnessScore: item.worthlessness_score || 0,
+                created_at: item.created_at,
+                user: item.users,
+                counselorMemo: item.counselor_memo || '',
+                isVisibleToUser: item.is_visible_to_user || false,
+                counselorName: item.counselor_name || '',
+                assignedCounselor: item.assigned_counselor || '',
+                urgencyLevel: item.urgency_level || '',
+                _key: key // 重複チェック用のキー
+              };
+            });
             
-            setEntries(formattedEntries);
-            setFilteredEntries(formattedEntries);
+            // 重複を除外
+            const uniqueMap = new Map();
+            const uniqueEntries = [];
+            
+            for (const entry of formattedEntries) {
+              if (!uniqueMap.has(entry._key)) {
+                uniqueMap.set(entry._key, entry);
+                uniqueEntries.push(entry);
+              }
+            }
+            
+            console.log(`重複を除外: ${formattedEntries.length} → ${uniqueEntries.length}`);
+            
+            setEntries(uniqueEntries);
+            setFilteredEntries(uniqueEntries);
             return;
           }
         } catch (supabaseError) {
