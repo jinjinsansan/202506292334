@@ -191,10 +191,33 @@ export const useAutoSync = (): AutoSyncState => {
             self_esteem_score: typeof entry.selfEsteemScore === 'number' ? entry.selfEsteemScore : 
                              (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 0),
             worthlessness_score: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
-                               (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 0),
-            counselor_memo: entry.counselor_memo || entry.counselorMemo || null,
             created_at: entry.created_at || new Date().toISOString()
           };
+          
+          // assigned_counselorフィールドが存在する場合のみ追加
+          if (entry.assigned_counselor || entry.assignedCounselor) {
+            return {
+              ...formattedEntry,
+              assigned_counselor: entry.assigned_counselor || entry.assignedCounselor
+            };
+          }
+          
+          // urgency_levelフィールドが存在する場合のみ追加
+          if (entry.urgency_level || entry.urgencyLevel) {
+            formattedEntry.urgency_level = entry.urgency_level || entry.urgencyLevel;
+          }
+          
+          // is_visible_to_userフィールドが存在する場合のみ追加
+          if (entry.is_visible_to_user !== undefined || entry.isVisibleToUser !== undefined) {
+            formattedEntry.is_visible_to_user = entry.is_visible_to_user || entry.isVisibleToUser || false;
+          }
+          
+          // counselor_nameフィールドが存在する場合のみ追加
+          if (entry.counselor_name || entry.counselorName) {
+            formattedEntry.counselor_name = entry.counselor_name || entry.counselorName;
+          }
+          
+          return formattedEntry;
         });
       
       // 日記データを同期

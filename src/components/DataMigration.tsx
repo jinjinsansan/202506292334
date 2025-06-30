@@ -135,9 +135,31 @@ const DataMigration: React.FC = () => {
             self_esteem_score: typeof entry.selfEsteemScore === 'number' ? entry.selfEsteemScore : 
                              (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 0),
             worthlessness_score: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
-                               (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 0),
-            counselor_memo: entry.counselor_memo || entry.counselorMemo || null,
             created_at: entry.created_at || new Date().toISOString()
+          };
+          
+          // オプションフィールドは存在する場合のみ追加
+          const optionalFields: Record<string, any> = {};
+          
+          if (entry.assigned_counselor || entry.assignedCounselor) {
+            optionalFields.assigned_counselor = entry.assigned_counselor || entry.assignedCounselor;
+          }
+          
+          if (entry.urgency_level || entry.urgencyLevel) {
+            optionalFields.urgency_level = entry.urgency_level || entry.urgencyLevel;
+          }
+          
+          if (entry.is_visible_to_user !== undefined || entry.isVisibleToUser !== undefined) {
+            optionalFields.is_visible_to_user = entry.is_visible_to_user || entry.isVisibleToUser || false;
+          }
+          
+          if (entry.counselor_name || entry.counselorName) {
+            optionalFields.counselor_name = entry.counselor_name || entry.counselorName;
+          }
+          
+          return {
+            ...formattedEntry,
+            ...optionalFields
           };
         });
       
