@@ -572,8 +572,8 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
         </div>
 
         {filteredEntries.length === 0 ? (
-          <div className="text-center py-12">
-            <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <div className="text-center py-8">
+            <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 font-jp-normal">検索条件に一致する日記が見つかりませんでした。</p>
           </div>
         ) : (

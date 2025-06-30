@@ -10,6 +10,7 @@ interface AutoSyncState {
   error: string | null;
   currentUser: any | null;
   triggerManualSync: () => Promise<boolean>;
+  syncDeleteDiary: (diaryId: string) => Promise<boolean>;
 }
 
 export const useAutoSync = (): AutoSyncState => {
@@ -287,7 +288,7 @@ export const useAutoSync = (): AutoSyncState => {
   
   // 日記削除時の同期処理
   const syncDeleteDiary = useCallback(async (diaryId: string): Promise<boolean> => {
-    if (!supabase || isLocalMode) {
+    if (!supabase) {
       console.log('ローカルモードで動作中: Supabase接続なし、削除同期をスキップします');
       return false;
     }
