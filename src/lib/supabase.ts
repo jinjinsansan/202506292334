@@ -104,7 +104,26 @@ export const diaryService = {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(userId)) {
       console.error('無効なユーザーID形式:', userId);
-      return { success: false, error: '無効なユーザーID形式' };
+      
+      // 無効なユーザーIDの場合は、エラーを返す代わりに新しいユーザーを作成
+      try {
+        const lineUsername = localStorage.getItem('line-username');
+        if (!lineUsername) {
+          return { success: false, error: 'ユーザー名が設定されていません' };
+        }
+        
+        console.log('無効なユーザーIDを検出。新しいユーザーを作成します...');
+        const newUser = await userService.createOrGetUser(lineUsername);
+        if (!newUser || !newUser.id) {
+          return { success: false, error: '新しいユーザーの作成に失敗しました' };
+        }
+        
+        userId = newUser.id;
+        console.log('新しいユーザーを作成しました:', lineUsername, 'ID:', userId);
+      } catch (error) {
+        console.error('ユーザー作成エラー:', error);
+        return { success: false, error: 'ユーザー作成に失敗しました' };
+      }
     }
 
     if (!userId) {
@@ -121,10 +140,29 @@ export const diaryService = {
         .filter(diary => diary && diary.id && diary.date && diary.emotion) // 無効なデータをフィルタリング
         .map(diary => {
           // UUIDの形式を検証し、無効な場合は新しいUUIDを生成
-          const id = uuidRegex.test(diary.id) ? diary.id : crypto.randomUUID();
+          let diaryId = diary.id;
+          if (!uuidRegex.test(diaryId)) {
+            try {
+              // crypto.randomUUID()が利用可能な場合はそれを使用
+              if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                diaryId = crypto.randomUUID();
+              } else {
+                // 代替の方法でUUIDを生成
+                diaryId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                  const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                  return v.toString(16);
+                });
+              }
+              console.log(`無効なID "${diary.id}" を新しいID "${diaryId}" に置き換えました`);
+            } catch (error) {
+              console.error('UUID生成エラー:', error);
+              // エラーが発生した場合は元のIDを使用
+              diaryId = diary.id;
+            }
+          }
           
           return {
-          id: id,
+          id: diaryId,
           user_id: userId,
           date: diary.date,
           emotion: diary.emotion,

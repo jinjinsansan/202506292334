@@ -146,8 +146,24 @@ export const useAutoSync = (): AutoSyncState => {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(userId)) {
         console.error('無効なユーザーID形式:', userId);
-        setError('無効なユーザーID形式のため同期できません');
-        return false;
+        
+        // 無効なユーザーIDの場合は、新しいユーザーを作成して再試行
+        try {
+          console.log('無効なユーザーIDを検出。新しいユーザーを作成します...');
+          const newUser = await userService.createOrGetUser(lineUsername);
+          if (!newUser || !newUser.id) {
+            setError('新しいユーザーの作成に失敗しました');
+            return false;
+          }
+          
+          userId = newUser.id;
+          setCurrentUser(newUser);
+          console.log('新しいユーザーを作成しました:', lineUsername, 'ID:', userId);
+        } catch (error) {
+          console.error('ユーザー作成エラー:', error);
+          setError('ユーザー作成に失敗しました');
+          return false;
+        }
       }
       
       // ローカルストレージから日記データを取得
@@ -188,12 +204,31 @@ export const useAutoSync = (): AutoSyncState => {
       const formattedEntries = entries
         .filter((entry: any) => entry && entry.id && entry.date && entry.emotion) // 無効なデータをフィルタリング
         .map((entry: any) => {          
-          // UUIDの形式を検証し、無効な場合は新しいUUIDを生成
-          const id = uuidRegex.test(entry.id) ? entry.id : crypto.randomUUID();
+          // UUIDの形式を検証し、無効な場合は新しいUUIDを生成（ブラウザ環境に応じて処理）
+          let entryId = entry.id;
+          if (!uuidRegex.test(entryId)) {
+            try {
+              // crypto.randomUUID()が利用可能な場合はそれを使用
+              if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                entryId = crypto.randomUUID();
+              } else {
+                // 代替の方法でUUIDを生成
+                entryId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                  const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                  return v.toString(16);
+                });
+              }
+              console.log(`無効なID "${entry.id}" を新しいID "${entryId}" に置き換えました`);
+            } catch (error) {
+              console.error('UUID生成エラー:', error);
+              // エラーが発生した場合は元のIDを使用
+              entryId = entry.id;
+            }
+          }
           
           // 必須フィールドのみを含める
           const formattedEntry = {
-            id: id,
+            id: entryId,
             user_id: userId,
             date: entry.date,
             emotion: entry.emotion,
