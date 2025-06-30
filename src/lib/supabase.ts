@@ -389,7 +389,38 @@ export const chatService = {
       return [];
     }
   },
-  
+
+  // 全ての日記を取得
+  async getAllDiaries() {
+    if (!supabase) return [];
+    
+    try {
+      const { data, error } = await supabase
+        .from('diary_entries')
+        .select(`
+          *,
+          users (
+            line_username
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      if (error) {
+        console.error('全日記取得エラー:', error);
+        return [];
+      }
+      
+      // ユーザー情報を含めて返す
+      return data?.map(entry => ({
+        ...entry,
+        user: entry.users
+      })) || [];
+    } catch (error) {
+      console.error('全日記取得サービスエラー:', error);
+      return [];
+    }
+  },
   // 全ての日記を取得
   async getAllDiaries() {
     if (!supabase) return [];
