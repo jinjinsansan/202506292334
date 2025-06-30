@@ -321,8 +321,8 @@ const DataMigration: React.FC = () => {
             <div className="flex items-center space-x-3">
               <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
               <div>
-                <div>
-                  <span className="font-jp-medium text-gray-900">
+                <h3 className="font-jp-bold text-gray-900 mb-2">自動同期設定</h3>
+                <p className="text-gray-700 font-jp-normal mb-4">
                     Supabase: {isConnected ? '接続中' : '未接続'}
                   </span>
                   {!isConnected && (
@@ -391,23 +391,23 @@ const DataMigration: React.FC = () => {
                 </div>
               </div>
             
-            <button
-              onClick={handleManualSync} 
-              disabled={migrating || !isConnected}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
-            >
-              {migrating ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>同期中...</span>
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4" />
-                  <span>今すぐ同期する</span>
-                </>
-              )}
-            </button>
+              <button
+                onClick={handleManualSync} 
+                disabled={migrating || !isConnected}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-jp-medium transition-colors flex items-center justify-center space-x-2 mb-4"
+              >
+                {migrating ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>同期中...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    <span>今すぐ同期する</span>
+                  </>
+                )}
+              </button>
             
             <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200">
               <div className="flex items-center space-x-3">
