@@ -5,7 +5,7 @@
 ## 🌟 主な機能
 
 ### ユーザー向け機能
-- **感情日記**: 8種類のネガティブ感情を記録・分析
+- **感情日記**: 8種類のネガティブ感情と4種類のポジティブ感情を記録・分析
 - **無価値感推移**: グラフによる自己肯定感の可視化
 - **日記検索**: キーワード・日付・感情での高度な検索
 - **SNSシェア**: 成長の記録をシェア（X/Twitterシェア対応）
@@ -51,6 +51,9 @@ npm install
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
+# ローカルモード設定（オプション）
+VITE_LOCAL_MODE=false
+
 # メンテナンスモード設定（オプション）
 VITE_MAINTENANCE_MODE=false
 VITE_MAINTENANCE_MESSAGE=システムメンテナンス中です
@@ -77,16 +80,14 @@ npm run dev
 
 ## 👥 カウンセラーアカウント
 
-| 名前 | メールアドレス |
-|------|----------------|
-| 心理カウンセラー仁 | jin@namisapo.com |
-| 心理カウンセラーAOI | aoi@namisapo.com |
-| 心理カウンセラーあさみ | asami@namisapo.com |
-| 心理カウンセラーSHU | shu@namisapo.com |
-| 心理カウンセラーゆーちゃ | yucha@namisapo.com |
-| 心理カウンセラーSammy | sammy@namisapo.com |
-
-**共通パスワード**: `counselor123`
+| 名前 | メールアドレス | パスワード |
+|------|----------------|------------|
+| 心理カウンセラー仁 | jin@namisapo.com | counselor123 |
+| 心理カウンセラーAOI | aoi@namisapo.com | counselor123 |
+| 心理カウンセラーあさみ | asami@namisapo.com | counselor123 |
+| 心理カウンセラーSHU | shu@namisapo.com | counselor123 |
+| 心理カウンセラーゆーちゃ | yucha@namisapo.com | counselor123 |
+| 心理カウンセラーSammy | sammy@namisapo.com | counselor123 |
 
 ## 🔧 新機能の詳細
 

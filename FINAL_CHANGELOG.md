@@ -1,6 +1,6 @@
 # Changelog - 最終版
 
-## [2025-01-24] - GitHub移行前最終バックアップ
+## [2025-06-30] - GitHub移行前最終バックアップ
 
 ### 🆕 新機能追加
 - **カウンセラーコメント機能**: カウンセラーメモをユーザーに表示する機能を実装
@@ -28,6 +28,16 @@
   - デバイス認証管理画面
   - セキュリティダッシュボード
 
+- **データバックアップ・復元機能**: ユーザーデータの管理機能を実装
+  - ローカルデータのJSONバックアップ
+  - バックアップファイルからの復元
+  - 端末変更時のデータ移行サポート
+
+- **ポジティブ感情対応**: 感情選択の拡張
+  - 嬉しい、感謝、達成感、幸せなどのポジティブ感情を追加
+  - 感情選択UIの改善（ネガティブ/ポジティブのセクション分け）
+  - 感情タイプ説明ページの拡充
+
 ### 🔧 改善・修正
 - **エラー修正**: 
   - AdminPanel.tsx の JSX構文エラーを修正
@@ -52,13 +62,14 @@
   - 統計データの表示機能
 
 ### 📁 新規ファイル
-- `supabase/migrations/20250624173543_wispy_shape.sql` - カウンセラーコメント機能用のデータベース拡張
 - `src/hooks/useAutoSync.ts` - 自動同期フック
 - `src/components/AutoSyncSettings.tsx` - 自動同期設定UI
 - `src/components/ConsentHistoryManagement.tsx` - 同意履歴管理UI
 - `src/lib/deviceAuth.ts` - デバイス認証ライブラリ
 - `src/components/DeviceAuthLogin.tsx` - デバイス認証ログイン
 - `src/components/DeviceAuthRegistration.tsx` - デバイス認証登録
+- `src/components/DataBackupRecovery.tsx` - データバックアップ・復元
+- `src/components/UserDataManagement.tsx` - ユーザーデータ管理
 
 ### 🗄️ データベース更新
 - `diary_entries`テーブルに`is_visible_to_user`と`counselor_name`フィールドを追加
@@ -69,6 +80,7 @@
 - 同意履歴の完全追跡による法的要件対応
 - データ同期時のエラーハンドリング強化
 - デバイス認証による多層セキュリティ
+- データバックアップによるデータ保全
 
 ### 📱 対応環境
 - **ブラウザ**: Chrome, Firefox, Safari, Edge (最新版)
@@ -126,6 +138,6 @@
 **一般社団法人NAMIDAサポート協会**  
 テープ式心理学による心の健康サポート
 
-**プロジェクト完了日**: 2025年1月24日  
+**プロジェクト完了日**: 2025年6月30日  
 **GitHub移行準備**: 完了  
 **最終動作確認**: 完了

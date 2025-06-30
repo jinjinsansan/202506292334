@@ -88,6 +88,25 @@ interface SearchFilters {
   };
 }
 
+interface SearchFilters {
+  keyword: string;
+  emotion: string;
+  urgency: string;
+  counselor: string;
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  userSearch: string;
+  hasNotes: boolean | null;
+  scoreRange: {
+    selfEsteemMin: number;
+    selfEsteemMax: number;
+    worthlessnessMin: number;
+    worthlessnessMax: number;
+  };
+}
+
 const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
   entries,
   onFilteredResults,
