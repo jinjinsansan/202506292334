@@ -39,7 +39,6 @@ const DataMigration: React.FC = () => {
     }
   }, []);
 
-
   // 手動同期ボタンのハンドラー
   const handleManualSync = async () => {
     if (!isConnected) {
@@ -136,7 +135,9 @@ const DataMigration: React.FC = () => {
         // 通常モードの場合は現在のユーザーのデータ数を取得
         const localEntries = localStorage.getItem('journalEntries');
         if (localEntries) {
-            const entries = JSON.parse(localEntries);
+          let entries;
+          try {
+            entries = JSON.parse(localEntries);
             setLocalDataCount(Array.isArray(entries) ? entries.length : 0);
           } catch (error) {
             console.error('ローカルデータの解析エラー:', error);
@@ -284,15 +285,6 @@ const DataMigration: React.FC = () => {
               <div>
                 <span className="font-jp-medium text-gray-900">
                   Supabase: {isConnected ? '接続中' : '未接続'}
-                </span>
-                {!isConnected && (
-                  <button
-                    onClick={retryConnection}
-                    className="ml-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded-md font-jp-medium transition-colors"
-                  >
-                    再接続
-                  </button>
-                )}
                 </span>
                 {!isConnected && (
                   <button
@@ -465,7 +457,7 @@ const DataMigration: React.FC = () => {
                     <span>今すぐ同期する</span>
                   </>
                 )}
-              </div>
+              </button>
             </div>
 
             {/* 同期方向選択 */}
