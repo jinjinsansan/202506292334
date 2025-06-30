@@ -132,10 +132,12 @@ const DataMigration: React.FC = () => {
             emotion: entry.emotion,
             event: entry.event || '',
             realization: entry.realization || '',
-            self_esteem_score: typeof entry.selfEsteemScore === 'number' ? entry.selfEsteemScore : 
-                             (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 0),
-            worthlessness_score: typeof entry.worthlessnessScore === 'number' ? entry.worthlessnessScore : 
-                               (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 0),
+            self_esteem_score: typeof entry.selfEsteemScore === 'number' 
+              ? entry.selfEsteemScore 
+              : (typeof entry.selfEsteemScore === 'string' ? parseInt(entry.selfEsteemScore) : 0),
+            worthlessness_score: typeof entry.worthlessnessScore === 'number' 
+              ? entry.worthlessnessScore 
+              : (typeof entry.worthlessnessScore === 'string' ? parseInt(entry.worthlessnessScore) : 0),
             created_at: entry.created_at || new Date().toISOString()
           };
           
@@ -154,6 +156,11 @@ const DataMigration: React.FC = () => {
           
           if (entry.counselor_name || entry.counselorName) {
             formattedEntry.counselor_name = entry.counselor_name || entry.counselorName;
+          }
+
+          // counselor_memoフィールドが存在する場合のみ追加
+          if (entry.counselor_memo || entry.counselorMemo) {
+            formattedEntry.counselor_memo = entry.counselor_memo || entry.counselorMemo;
           }
           
           return formattedEntry;
