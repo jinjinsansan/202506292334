@@ -670,7 +670,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                     <div className="flex items-center space-x-1">
                       <button
                         onClick={() => onViewEntry(entry)}
-                        className="text-blue-600 hover:text-blue-700 p-1"
+                        className="text-blue-600 hover:text-blue-700 p-1 cursor-pointer"
                         title="詳細を見る"
                       >
                         <Eye className="w-4 h-4" />

@@ -413,7 +413,7 @@ const WorthlessnessChart: React.FC = () => {
                 <div className="relative w-full h-64 overflow-hidden">
                   <svg
                     viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
+                    preserveAspectRatio="none" 
                     className="absolute inset-0 w-full h-full graph-svg"
                     shapeRendering="auto"
                   >
@@ -421,7 +421,7 @@ const WorthlessnessChart: React.FC = () => {
                     <g stroke="#e5e7eb" strokeWidth="0.2" vectorEffect="non-scaling-stroke">
                       {[0, 25, 50, 75, 100].map(tick => (
                         <g key={tick}>
-                          <line x1="0" y1={toY(tick)} x2="100" y2={toY(tick)} />
+                          <line x1="0" y1={toY(tick)} x2="100" y2={toY(tick)} vectorEffect="non-scaling-stroke" />
                           <text
                             x="0"
                             y={toY(tick) - 1}
@@ -450,8 +450,8 @@ const WorthlessnessChart: React.FC = () => {
                         fill="none"
                         stroke={color}
                         strokeWidth="0.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
                         vectorEffect="non-scaling-stroke"
                       />
                     ))}
@@ -465,7 +465,7 @@ const WorthlessnessChart: React.FC = () => {
                           cx={x}
                           cy={toY(Number(d[k as keyof ScoreEntry] as number))}
                           r="1"
-                          fill={idx ? '#ef4444' : '#3b82f6'}
+                          fill={idx ? '#ef4444' : '#3b82f6'} 
                           stroke="none"
                           vectorEffect="non-scaling-stroke"
                         >
