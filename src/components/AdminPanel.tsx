@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Card, CardContent } from './ui/card';
-import { Calendar, Search, MessageCircle, Settings, Users, AlertTriangle, Edit3, Trash2, Save, X, CheckCircle, Eye, EyeOff, User, Clock, Filter, Shield, Database, RefreshCw, Download } from 'lucide-react';
+import { Calendar, Search, MessageCircle, Settings, Users, AlertTriangle, Edit3, Trash2, Save, X, CheckCircle, Eye, EyeOff, User, Clock, Filter, Shield, Database, RefreshCw, Download, Loader } from 'lucide-react';
 import AdvancedSearchFilter from './AdvancedSearchFilter';
 import CounselorManagement from './CounselorManagement';
 import CounselorChat from './CounselorChat';
@@ -493,7 +493,7 @@ const AdminPanel: React.FC = () => {
         </div>
 
         <Tabs defaultValue="search" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-7 gap-1 mb-6 overflow-x-auto">
+          <TabsList className="grid grid-cols-7 gap-1 mb-6 overflow-x-auto w-full">
             <TabsTrigger value="search" className="flex items-center justify-center px-2 py-1.5">
               <Search className="w-4 h-4" />
               <span className="hidden md:inline">日記</span>
@@ -526,9 +526,9 @@ const AdminPanel: React.FC = () => {
 
           <TabsContent value="search" className="space-y-6">
             {loading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600 font-jp-normal">読み込み中...</p>
+              <div className="bg-white rounded-xl shadow-lg p-6 text-center py-8">
+                <Loader className="w-8 h-8 text-blue-600 mx-auto mb-4 animate-spin" />
+                <p className="text-gray-600 font-jp-normal">データを読み込み中...</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -538,12 +538,19 @@ const AdminPanel: React.FC = () => {
                   {entries.length === 0 ? (
                     <div className="text-center py-8">
                       <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-jp-medium text-gray-500 mb-2">
+                      <h3 className="text-lg font-jp-medium text-gray-500 mb-4">
                         日記がありません
                       </h3>
                       <p className="text-gray-400 font-jp-normal">
                         まだ日記が登録されていません
                       </p>
+                      <button
+                        onClick={loadEntries}
+                        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-jp-medium transition-colors inline-flex items-center space-x-2"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>再読み込み</span>
+                      </button>
                     </div>
                   ) : (
                     <div className="space-y-4">
