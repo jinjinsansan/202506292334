@@ -19,7 +19,7 @@ const DiaryPage: React.FC = () => {
   const [formData, setFormData] = useState({
     date: getJapaneseDate().toISOString().split('T')[0],
     event: '',
-    emotion: '', 
+    emotion: '',
     selfEsteemScore: 50,
     worthlessnessScore: 50,
     realization: ''
@@ -333,7 +333,11 @@ const DiaryPage: React.FC = () => {
       };
       
       // 無価値感を選んだ場合はスコアを追加
-      if (finalFormData.emotion === '無価値感') {
+      if (finalFormData.emotion === '無価値感' || 
+          finalFormData.emotion === '嬉しい' || 
+          finalFormData.emotion === '感謝' || 
+          finalFormData.emotion === '達成感' || 
+          finalFormData.emotion === '幸せ') {
         // 数値型として保存（NaNを防ぐため0をデフォルト値に）
         newEntry.selfEsteemScore = Number(finalWorthlessnessScores.todaySelfEsteem) || 50;
         newEntry.worthlessnessScore = Number(finalWorthlessnessScores.todayWorthlessness) || 50;
@@ -356,7 +360,11 @@ const DiaryPage: React.FC = () => {
       });
       
       // 無価値感を選んだ場合、次回のために今回のスコアを前日のスコアとして設定
-      if (finalFormData.emotion === '無価値感') {
+      if (finalFormData.emotion === '無価値感' || 
+          finalFormData.emotion === '嬉しい' || 
+          finalFormData.emotion === '感謝' || 
+          finalFormData.emotion === '達成感' || 
+          finalFormData.emotion === '幸せ') {
         setWorthlessnessScores({
           yesterdaySelfEsteem: Number(finalWorthlessnessScores.todaySelfEsteem) || 0,
           yesterdayWorthlessness: Number(finalWorthlessnessScores.todayWorthlessness) || 0,
@@ -567,7 +575,7 @@ const DiaryPage: React.FC = () => {
   // 無価値感スコア直接変更時の自己肯定感スコア自動計算
   const handleWorthlessnessChange = (field: 'yesterdayWorthlessness' | 'todayWorthlessness', value: number) => {
     const selfEsteemField = field === 'yesterdayWorthlessness' ? 'yesterdaySelfEsteem' : 'todaySelfEsteem';
-    
+
     // 値が空の場合は両方のフィールドを空にする
     if (value === null || isNaN(value)) {
       setWorthlessnessScores(prev => ({
@@ -577,11 +585,11 @@ const DiaryPage: React.FC = () => {
       }));
       return;
     }
-    
+
     // 値を0〜100の間に制限
     const clampedValue = Math.min(Math.max(value, 0), 100);
     const calculatedSelfEsteem = 100 - clampedValue;
-    
+
     setWorthlessnessScores(prev => ({
       ...prev,
       [field]: clampedValue,
@@ -824,10 +832,14 @@ const DiaryPage: React.FC = () => {
         </div>
 
         {/* 無価値感を選んだ場合のスコア入力 */}
-        {formData.emotion === '無価値感' && (
+        {(formData.emotion === '無価値感' || 
+          formData.emotion === '嬉しい' || 
+          formData.emotion === '感謝' || 
+          formData.emotion === '達成感' || 
+          formData.emotion === '幸せ') && (
           <div className="bg-red-50 rounded-lg p-4 sm:p-6 border border-red-200 mb-6">
-            <h3 className="text-red-800 font-jp-bold mb-4">
-              「無価値感」を選んだ場合のみ入力
+            <h3 className={`${formData.emotion === '無価値感' ? 'text-red-800' : 'text-green-800'} font-jp-bold mb-4`}>
+              「${formData.emotion}」を選んだ場合の入力
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
