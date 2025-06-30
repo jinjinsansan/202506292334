@@ -9,7 +9,7 @@ const DataMigration: React.FC = () => {
   const [localDataCount, setLocalDataCount] = useState<number>(0);
   const [supabaseDataCount, setSupabaseDataCount] = useState<number>(0);
   const [migrating, setMigrating] = useState(false);
-  const [migrationStatus, setMigrationStatus] = useState<string>('');
+  const [migrationStatus, setMigrationStatus] = useState<string | null>(null);
   const [migrationProgress, setMigrationProgress] = useState(0);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [userExists, setUserExists] = useState(false);
@@ -320,20 +320,20 @@ const DataMigration: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="font-jp-medium text-gray-900">
+              <div>
                 <h3 className="font-jp-bold text-gray-900 mb-2">自動同期設定</h3>
                 <p className="text-gray-700 font-jp-normal mb-4">
-                    Supabase: {isConnected ? '接続中' : '未接続'}
+                  Supabase: {isConnected ? '接続中' : '未接続'}
                 </p>
-                  {!isConnected && (
-                    <button
-                      onClick={retryConnection}
-                      className="ml-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded-md font-jp-medium transition-colors"
-                    >
-                      再接続
-                    </button>
-                  )}
-              </span>
+                {!isConnected && (
+                  <button
+                    onClick={retryConnection}
+                    className="ml-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded-md font-jp-medium transition-colors"
+                  >
+                    再接続
+                  </button>
+                )}
+              </div>
             </div>
             <div>
               {isAdminMode && (
@@ -408,32 +408,33 @@ const DataMigration: React.FC = () => {
                 )}
               </button>
             
-            <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center space-x-3">
-                <div className={`w-3 h-3 rounded-full ${autoSyncEnabled ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                <span className="font-jp-medium text-gray-900">自動同期</span>
+              <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${autoSyncEnabled ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                  <span className="font-jp-medium text-gray-900">自動同期</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={autoSyncEnabled} 
+                    onChange={(e) => toggleAutoSync(e.target.checked)}
+                    className="sr-only peer" 
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={autoSyncEnabled} 
-                  onChange={(e) => toggleAutoSync(e.target.checked)}
-                  className="sr-only peer" 
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
             
-            <div className="mt-4 bg-green-50 rounded-lg p-4 border border-green-200">
-              <div className="flex items-start space-x-2">
-                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-green-800 font-jp-normal">
-                  <p className="font-jp-medium mb-1">自動同期のメリット</p>
-                  <ul className="list-disc list-inside space-y-1 ml-4">
-                    <li>端末変更時にデータが引き継がれます</li>
-                    <li>ブラウザのキャッシュクリアでデータが失われません</li>
-                    <li>カウンセラーがあなたの日記を確認できます</li>
-                 </ul>
+              <div className="mt-4 bg-green-50 rounded-lg p-4 border border-green-200">
+                <div className="flex items-start space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-green-800 font-jp-normal">
+                    <p className="font-jp-medium mb-1">自動同期のメリット</p>
+                    <ul className="list-disc list-inside space-y-1 ml-4">
+                      <li>端末変更時にデータが引き継がれます</li>
+                      <li>ブラウザのキャッシュクリアでデータが失われません</li>
+                      <li>カウンセラーがあなたの日記を確認できます</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
@@ -520,7 +521,6 @@ const DataMigration: React.FC = () => {
                   <span className="text-gray-700 font-jp-normal">Supabase → ローカル</span>
                 </label>
               </div>
-              
             </div>
 
             {/* 管理者向けバックアップセクション */}
