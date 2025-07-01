@@ -102,9 +102,12 @@ const AdminPanel: React.FC = () => {
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4" />
-                <span>{saving ? '保存中...' : '保存'}</span>
-              </button>
-            ) : null}
+                      <span>保存</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
