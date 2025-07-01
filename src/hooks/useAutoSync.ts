@@ -403,7 +403,7 @@ export const useAutoSync = (): AutoSyncState => {
   // 日記削除時の同期処理
   const syncDeleteDiary = useCallback(async (diaryId: string): Promise<boolean> => {
     if (!supabase) {
-      console.log('ローカルモードで動作中: Supabase接続なし、削除同期をスキップします', diaryId);
+      console.log('ローカルモードで動作中: Supabase接続なし、削除同期をスキップします');
       return true; // ローカルモードでは成功とみなす
     }
     
@@ -424,7 +424,6 @@ export const useAutoSync = (): AutoSyncState => {
       
       if (error) {
         console.error('Supabase日記削除エラー:', error, 'ID:', diaryId);
-        // エラーがあっても処理を続行（ローカルでは削除されている）
         return false;
       }
       
@@ -437,7 +436,7 @@ export const useAutoSync = (): AutoSyncState => {
      
       // 同期時間を更新
       const now = new Date().toISOString();
-      setLastSyncTime(now);
+      setLastSyncTime(now); 
       localStorage.setItem('last_sync_time', now);
 
       console.log('日記削除同期完了:', diaryId, '時刻:', now);
@@ -483,7 +482,8 @@ export const useAutoSync = (): AutoSyncState => {
           const { error } = await supabase
             .from('diary_entries')
             .delete()
-            .in('id', chunk);
+            .in('id', chunk)
+            .select();
           
           if (error) {
             console.error(`日記の一括削除エラー (${i}~${i+chunk.length})`, error, 'IDs:', chunk);

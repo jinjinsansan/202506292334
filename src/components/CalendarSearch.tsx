@@ -391,7 +391,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                       <div className="flex items-center space-x-2">
                         {entry.user?.line_username && (
                           <span className="text-xs text-gray-500 font-jp-normal">
-                           {entry.user.line_username || 'ユーザー'}
+                            {entry.user.line_username || 'ユーザー'}
                           </span>
                         )}
                       </div>

@@ -47,7 +47,9 @@ const AdminPanel: React.FC = () => {
   const loadEntries = async () => {
     setLoading(true);
     try {
-      // Supabaseから直接日記データを取得
+      console.log('管理画面: 日記データを読み込みます');
+      
+      // Supabaseから日記データを取得
       if (supabase) {
         try {
           console.log('Supabaseから日記データを取得します');
@@ -64,7 +66,7 @@ const AdminPanel: React.FC = () => {
           if (error) {
             console.error('Supabaseからの日記データ取得エラー:', error);
             throw error;
-          } else if (diaryData && diaryData.length > 0) {
+          } else if (diaryData) {
             console.log('Supabaseから日記データを取得しました:', diaryData.length, '件');
             
             // データをフォーマット
@@ -75,9 +77,9 @@ const AdminPanel: React.FC = () => {
               return {
                 id: item.id,
                 date: item.date,
-                emotion: item.emotion || '不明',
-                event: item.event || '内容なし',
-                realization: item.realization || '内容なし',
+                emotion: item.emotion || '不明', 
+                event: item.event || '',
+                realization: item.realization || '',
                 selfEsteemScore: item.self_esteem_score || 0,
                 worthlessnessScore: item.worthlessness_score || 0,
                 created_at: item.created_at,
@@ -108,7 +110,8 @@ const AdminPanel: React.FC = () => {
             setEntries(uniqueEntries);
             setFilteredEntries(uniqueEntries);
             console.log('日記データを設定しました:', formattedEntries.length, '件');
-            return;
+            setLoading(false);
+            return; // Supabaseからデータを取得できたので終了
           }
         } catch (supabaseError) {
           console.error('Supabase接続エラー:', supabaseError);
@@ -118,7 +121,7 @@ const AdminPanel: React.FC = () => {
       // ローカルストレージからデータを取得
       const savedEntries = localStorage.getItem('journalEntries');
       if (savedEntries) {
-        console.log('ローカルストレージから日記データを取得します');
+        console.log('ローカルストレージから日記データを取得します', savedEntries.length);
         try {
           const parsedEntries = JSON.parse(savedEntries);
           
@@ -135,7 +138,7 @@ const AdminPanel: React.FC = () => {
           console.error('ローカルデータの解析エラー:', error);
         }
       } else {
-        console.log('ローカルストレージに日記データがありません');
+        console.log('ローカルストレージに日記データがありません', localStorage);
       }
     } catch (error) {
       console.error('データ読み込みエラー:', error);
@@ -164,7 +167,7 @@ const AdminPanel: React.FC = () => {
   const handleSaveEdit = async () => {
     if (!selectedEntry) return;
 
-    console.log('日記を保存します:', editFormData);
+    console.log('日記を保存します:', editFormData, selectedEntry);
     setSaving(true);
     
     try {
@@ -173,7 +176,7 @@ const AdminPanel: React.FC = () => {
         if (entry.id === selectedEntry.id) {
           return {
             ...entry,
-            syncStatus: entry.syncStatus || 'local', // 同期状態を保持
+            syncStatus: entry.syncStatus || 'local',
             date: editFormData.date,
             emotion: editFormData.emotion,
             event: editFormData.event,
@@ -220,7 +223,7 @@ const AdminPanel: React.FC = () => {
   };
 
   const handleDeleteEntry = async (entryId: string) => {
-    if (!window.confirm('この日記を削除しますか？この操作は元に戻せません。')) {
+    if (!window.confirm('この日記を削除しますか？この操作は元に戻せません')) {
       return;
     }
 
@@ -727,7 +730,7 @@ const AdminPanel: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" key="admin-panel-root">
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 mb-6">
           <h1 className="text-2xl font-jp-bold text-gray-900 flex items-center">
@@ -748,7 +751,7 @@ const AdminPanel: React.FC = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="search" className="w-full">
+        <Tabs defaultValue="diary" className="w-full">
           <TabsList className="w-full mb-6 overflow-x-auto flex-nowrap bg-gray-100">
             <TabsTrigger value="diary" onClick={() => setActiveTab('diary')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <BookOpen className="w-4 h-4 mr-2" aria-hidden="true" />
@@ -1026,7 +1029,7 @@ const AdminPanel: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-
+      
       {/* 詳細表示モーダル */}
       {renderEntryModal()}
     </div>

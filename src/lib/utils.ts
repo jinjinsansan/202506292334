@@ -37,9 +37,9 @@ export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
   // urgency_levelフィールドが存在する場合のみ追加
   if (diaryEntry.urgency_level !== undefined || diaryEntry.urgencyLevel !== undefined) {
     // 緊急度の値を取得
-    let urgencyValue = diaryEntry.urgency_level !== undefined ? 
-                      diaryEntry.urgency_level : 
-                      diaryEntry.urgencyLevel || '';
+    let urgencyValue = diaryEntry.urgency_level !== undefined 
+      ? diaryEntry.urgency_level 
+      : diaryEntry.urgencyLevel || '';
     
     // 許可された値のみを設定（high, medium, low、または空文字列）
     if (urgencyValue !== 'high' && urgencyValue !== 'medium' && urgencyValue !== 'low' && urgencyValue !== '') {
@@ -49,6 +49,28 @@ export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
     }
     
     formattedEntry.urgency_level = urgencyValue;
+  }
+  
+  // NULL値を空文字列に変換
+  if (formattedEntry.counselor_memo === null) {
+    formattedEntry.counselor_memo = '';
+  }
+  
+  if (formattedEntry.counselor_name === null) {
+    formattedEntry.counselor_name = '';
+  }
+  
+  if (formattedEntry.assigned_counselor === null) {
+    formattedEntry.assigned_counselor = '';
+  }
+  
+  if (formattedEntry.urgency_level === null) {
+    formattedEntry.urgency_level = '';
+  }
+  
+  // is_visible_to_userがNULLの場合はfalseに設定
+  if (formattedEntry.is_visible_to_user === null) {
+    formattedEntry.is_visible_to_user = false;
   }
   
   // is_visible_to_userフィールドが存在する場合のみ追加

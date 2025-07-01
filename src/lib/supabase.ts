@@ -271,26 +271,109 @@ export const diaryService = {
           
           // 緊急度の処理
           if (diary.urgency_level !== undefined) {
-            const urgencyValue = diary.urgency_level || '';
+            let urgencyValue = diary.urgency_level || '';
             
             // 許可された値のみを設定（high, medium, low、または空文字列）
             if (urgencyValue !== 'high' && urgencyValue !== 'medium' && urgencyValue !== 'low' && urgencyValue !== '') {
               // 無効な値の場合は空文字列に設定
               console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
-              formattedEntry.urgency_level = '';
-            } else {
-              formattedEntry.urgency_level = urgencyValue;
+              urgencyValue = '';
             }
+            
+            formattedEntry.urgency_level = urgencyValue;
           } else if (diary.urgencyLevel !== undefined) {
-            const urgencyValue = diary.urgencyLevel || '';
+            let urgencyValue = diary.urgencyLevel || '';
             
             // 許可された値のみを設定（high, medium, low、または空文字列）
             if (urgencyValue !== 'high' && urgencyValue !== 'medium' && urgencyValue !== 'low' && urgencyValue !== '') {
               // 無効な値の場合は空文字列に設定
               console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
-              formattedEntry.urgency_level = '';
+              urgencyValue = '';
+            }
+            
+            formattedEntry.urgency_level = urgencyValue;
+          }
+          
+          // NULL値を空文字列に変換
+          if (formattedEntry.counselor_memo === null) {
+            formattedEntry.counselor_memo = '';
+          }
+          
+          if (formattedEntry.counselor_name === null) {
+            formattedEntry.counselor_name = '';
+          }
+          
+          if (formattedEntry.assigned_counselor === null) {
+            formattedEntry.assigned_counselor = '';
+          }
+          
+          if (formattedEntry.urgency_level === null) {
+            formattedEntry.urgency_level = '';
+          }
+          
+          // is_visible_to_userがNULLの場合はfalseに設定
+          if (formattedEntry.is_visible_to_user === null) {
+            formattedEntry.is_visible_to_user = false;
+          }
+          
+          return formattedEntry;
+        });
+      
+      console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
+      
+      // デバッグ用：最初の数件のデータを表示
+      if (formattedDiaries.length > 0) {
+        console.log('同期データサンプル:', formattedDiaries.slice(0, 2));
+      }
+      
+      if (formattedDiaries.length === 0) {
+        return { success: true, message: '有効な同期データがありません' };
+      }
+      
+      // 一括挿入（競合時は更新）
+      const { data, error } = await supabase
+        .from('diary_entries')
+        .upsert(
+          formattedDiaries, 
+          {
+            onConflict: 'id',
+            ignoreDuplicates: false,
+            returning: 'minimal'
+          }
+        );
+      
+      if (error) {
+        console.error('日記同期エラー:', error, 'データ件数:', formattedDiaries.length, 'エラー詳細:', error.details);
+        
+        // エラーが発生した場合、1件ずつ同期を試みる
+        if (formattedDiaries.length > 1) {
+          console.log('1件ずつ同期を試みます...');
+          let successCount = 0;
+          
+          for (const diary of formattedDiaries) {
+            try {
+              const { error: singleError } = await supabase
+                .from('diary_entries')
+                .upsert([diary], {
+                  onConflict: 'id',
+                  ignoreDuplicates: false,
+                  returning: 'minimal'
+                });
+              
+              if (!singleError) {
+                successCount++;
+              } else {
+                console.error('個別同期エラー:', singleError, 'ID:', diary.id);
+              }
             } else {
-              formattedEntry.urgency_level = urgencyValue;
+              console.error('個別同期例外:', err);
+            }
+          }
+          
+          console.log(`個別同期結果: ${successCount}/${formattedDiaries.length}件成功`);
+          
+          if (successCount > 0) {
+            return { success: true, message: `${successCount}/${formattedDiaries.length}件の同期に成功しました` };
             }
           }
           
