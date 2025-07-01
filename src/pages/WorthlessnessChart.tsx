@@ -410,22 +410,22 @@ const WorthlessnessChart: React.FC = () => {
                 </div>
                 
                 {/* グラフ本体 */}
-                <div className="relative w-full h-64 overflow-hidden">
+                <div className="relative w-full h-[280px] overflow-hidden">
                   <svg
                     viewBox="0 0 100 100" 
                     preserveAspectRatio="none" 
                     className="absolute inset-0 w-full h-full graph-svg"
-                    shapeRendering="auto"
+                    shapeRendering="geometricPrecision"
                   >
                     {/* グリッド */}
-                    <g stroke="#e5e7eb" strokeWidth="0.2" vectorEffect="non-scaling-stroke">
+                    <g stroke="#e5e7eb" strokeWidth="0.4" vectorEffect="non-scaling-stroke">
                       {[0, 25, 50, 75, 100].map(tick => (
                         <g key={tick}>
                           <line x1="0" y1={toY(tick)} x2="100" y2={toY(tick)} vectorEffect="non-scaling-stroke" />
                           <text
                             x="0"
-                            y={toY(tick) - 1}
-                            fontSize="2"
+                            y={toY(tick) - 1.5}
+                            fontSize="3"
                             fill="#9ca3af"
                             style={{ userSelect: 'none' }}
                           >
@@ -449,7 +449,7 @@ const WorthlessnessChart: React.FC = () => {
                           .join(' ')}
                         fill="none"
                         stroke={color}
-                        strokeWidth="0.5"
+                        strokeWidth="1"
                         strokeLinecap="round" 
                         strokeLinejoin="round" 
                         vectorEffect="non-scaling-stroke"
@@ -464,8 +464,10 @@ const WorthlessnessChart: React.FC = () => {
                           key={`${k}-${i}`}
                           cx={x}
                           cy={toY(Number(d[k as keyof ScoreEntry] as number))}
-                          r="1"
-                          stroke="none"
+                          r="2"
+                          fill={idx ? '#ef4444' : '#3b82f6'}
+                          stroke="#fff"
+                          strokeWidth="0.3"
                           vectorEffect="non-scaling-stroke"
                         >
                           <title>
@@ -482,8 +484,8 @@ const WorthlessnessChart: React.FC = () => {
                       <text
                         key={`x-label-${index}`}
                         x={toX(index, displayedData.length)}
-                        y="97"
-                        fontSize="2"
+                        y="98"
+                        fontSize="3"
                         textAnchor="middle"
                         fill="#6b7280"
                       >
@@ -497,11 +499,6 @@ const WorthlessnessChart: React.FC = () => {
               </div>
             </div>
             
-            {/* グラフの説明 */}
-            <div className="mt-2 text-xs text-gray-500 text-center">
-              <p>※ グラフは最新の日付を含む直近の期間を表示しています</p>
-            </div>
-
             {/* 最新スコア */}
             {displayedData.length > 0 ? (
               <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
