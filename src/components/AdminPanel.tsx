@@ -896,7 +896,7 @@ const AdminPanel: React.FC = () => {
                       )}
                       <span className="font-jp-medium">{backupStatus}</span>
                     </div>
-                  </div>
+                  </TabsContent>
                 )}
               </div>
             </div>
