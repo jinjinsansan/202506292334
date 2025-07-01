@@ -48,13 +48,6 @@ const CounselorMemoModal: React.FC<CounselorMemoModalProps> = ({
         .from('diary_entries')
         .update(payload)          // ★ upsert は使わない
         .eq('id', diaryId);
-        is_visible_to_user: isVisibleToUser,
-        counselor_name: counselorName
-      };
-      
-      // Supabaseに保存
-      const { error } = await supabase
-        .from('diary_entries')
         .update(payload)          // ★ upsert は使わない
         .eq('id', diaryId);
         
