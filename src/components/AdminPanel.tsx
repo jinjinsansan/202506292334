@@ -589,7 +589,7 @@ const AdminPanel: React.FC = () => {
                       <select
                         value={editFormData.urgencyLevel}
                         onChange={(e) => setEditFormData({...editFormData, urgencyLevel: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal text-sm"
                       >
                         <option value="">未設定</option>
                         <option value="high">高</option>
