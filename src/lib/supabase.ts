@@ -365,7 +365,7 @@ export const diaryService = {
               } else {
                 console.error('個別同期エラー:', singleError, 'ID:', diary.id);
               }
-            } else {
+            } catch (err) {
               console.error('個別同期例外:', err);
             }
           }
