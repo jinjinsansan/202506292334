@@ -55,8 +55,6 @@ const AdminPanel: React.FC = () => {
       }
 
       setSelectedEntry(null);
-      setEditMode(false);
-      alert('変更を保存しました！');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('保存エラー:', errorMessage);
