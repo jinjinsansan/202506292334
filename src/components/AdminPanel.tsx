@@ -8,9 +8,8 @@ useEffect(() => {
     try {
       const storedEntries = localStorage.getItem('journalEntries');
       if (storedEntries) {
-        const parsedEntries = JSON.parse(storedEntries);
-        setEntries(parsedEntries);
-        setFilteredEntries(parsedEntries);
+        setEntries(JSON.parse(storedEntries));
+        setFilteredEntries(JSON.parse(storedEntries));
       }
       setLoading(false);
     } catch (error) {
@@ -34,4 +33,4 @@ useEffect(() => {
 // ... (rest of the code remains the same)
 ```
 
-The main issue was a missing closing bracket for the useEffect hook. I've added it and ensured proper closure of the function. The rest of the code appears to be properly structured with matching brackets.
+The main issue was a missing closing bracket for the `useEffect` hook. The rest of the code appears to be properly closed. I've added the missing `});` to complete the `useEffect` hook definition.
