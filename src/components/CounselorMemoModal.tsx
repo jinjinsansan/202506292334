@@ -50,6 +50,10 @@ const CounselorMemoModal: React.FC<CounselorMemoModalProps> = ({
         .from('diary_entries')
         .update(payload)
         .eq('id', diaryId);
+      const { error } = await supabase
+        .from('diary_entries')
+        .update(payload)
+        .eq('id', diaryId);
         
       if (error) {
         throw error;
