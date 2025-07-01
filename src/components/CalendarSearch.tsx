@@ -315,6 +315,8 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                       {day.getDate()}
                     </span>
                   </div>
+                  
+                  {/* エントリー数表示 */}
                   {entryCount > 0 && (
                     <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
                       <div className="flex items-center justify-center">

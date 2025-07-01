@@ -144,6 +144,7 @@ const AdminPanel: React.FC = () => {
     console.log('保存前のデータ:', editFormData);
     console.log('保存前のデータ:', editFormData);
     console.log('保存前のデータ:', editFormData);
+    console.log('保存前のデータ:', editFormData);
     try {
       // ローカルストレージのデータを更新
       const updatedEntries = entries.map(entry => {
@@ -187,6 +188,7 @@ const AdminPanel: React.FC = () => {
         await window.autoSync.triggerManualSync();
         console.log('自動同期を実行しました');
         console.log('自動同期を実行しました');
+        console.log('自動同期を実行しました');
       }
 
       setSelectedEntry(null);
@@ -211,6 +213,8 @@ const AdminPanel: React.FC = () => {
 
     setSaving(true);
 
+    setSaving(true);
+
     try {
       // ローカルストレージからの削除
       const updatedEntries = entries.filter(entry => entry.id !== entryId);
@@ -220,7 +224,8 @@ const AdminPanel: React.FC = () => {
         is_visible_to_user: editFormData.isVisibleToUser, // Supabase形式のフィールドも更新
         assignedCounselor: editFormData.assignedCounselor,
         assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
-        urgencyLevel: editFormData.urgencyLevel,
+        const syncResult = await window.autoSync.syncDeleteDiary(entryId);
+        console.log('削除同期結果:', syncResult);
         urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
         counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
         counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
@@ -255,6 +260,8 @@ const AdminPanel: React.FC = () => {
       alert(`更新に失敗しました: ${error}`);
       console.error('削除エラー:', error);
       alert('削除に失敗しました。もう一度お試しください。');
+    } finally {
+      setSaving(false);
     } finally {
       setSaving(false);
     }
