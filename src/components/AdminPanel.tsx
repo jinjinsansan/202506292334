@@ -4,7 +4,6 @@ Here's the fixed version with all missing closing brackets added:
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, Trash2, Eye, Edit3, AlertTriangle, CheckCircle, Clock, MessageCircle, Users, BookOpen, BarChart2, Settings, Save, FileText, Layers, Upload } from 'lucide-react';
-import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, Trash2, Eye, Edit3, AlertTriangle, CheckCircle, Clock, MessageCircle, Users, BookOpen, BarChart2, Settings, Save, FileText, Layers, Upload } from 'lucide-react';
 import AdvancedSearchFilter from './AdvancedSearchFilter';
 import CounselorManagement from './CounselorManagement';
 import CounselorChat from './CounselorChat';
@@ -162,25 +161,23 @@ const AdminPanel: React.FC = () => {
     console.log('日記を保存します:', editFormData);
     setSaving(true);
     
-    try {
       const updatedEntries = entries.map(entry => {
-          return {
-            ...entry, // 元のエントリーのプロパティをすべて保持
-            user_id: entry.user_id || selectedEntry.user_id, // ユーザーIDを保持
-            syncStatus: entry.syncStatus || 'local', // 同期状態を保持
-            counselorMemo: editFormData.counselorMemo,
-            isVisibleToUser: editFormData.isVisibleToUser,
-            counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
-            is_visible_to_user: editFormData.isVisibleToUser, // Supabase形式のフィールドも更新
-            assignedCounselor: editFormData.assignedCounselor,
-            assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
-            urgencyLevel: editFormData.urgencyLevel,
-            urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
-            counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
-            counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
-          };
-        }
-        return entry;
+          if (entry.id === selectedEntry.id) {
+            return {
+              ...entry, // 元のエントリーのプロパティをすべて保持
+              counselorMemo: editFormData.counselorMemo,
+              isVisibleToUser: editFormData.isVisibleToUser,
+              counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
+              is_visible_to_user: editFormData.isVisibleToUser, // Supabase形式のフィールドも更新
+              assignedCounselor: editFormData.assignedCounselor,
+              assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
+              urgencyLevel: editFormData.urgencyLevel,
+              urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
+              counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
+              counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
+            };
+          }
+          return entry;
       });
 
       setEntries(updatedEntries);
@@ -426,7 +423,7 @@ const AdminPanel: React.FC = () => {
                 onClick={() => setSelectedEntry(null)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                ×
+                <Trash2 className="w-4 h-4" /> 
               </button>
             </div>
 
