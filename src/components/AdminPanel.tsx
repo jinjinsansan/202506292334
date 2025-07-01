@@ -21,7 +21,7 @@ const AdminPanel: React.FC = () => {
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
     counselorMemo: '',
-    isVisibleToUser: false,
+    isVisibleToUser: false, 
     assignedCounselor: '', 
     urgencyLevel: '' 
   });
@@ -286,21 +286,6 @@ const AdminPanel: React.FC = () => {
 
   const handleFilteredResults = (filtered: any[]) => {
     setFilteredEntries(filtered);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // フォーム送信処理
-  };
-
-  // ユーザー名を取得する関数
-  const getUserName = (entry: any): string => {
-    // ユーザー情報がある場合はそれを使用
-    if (entry.user && entry.user.line_username) {
-      return entry.user.line_username;
-    }
-    // ローカルデータの場合
-    return 'ユーザー';
   };
 
   // ユーザー名を取得する関数
