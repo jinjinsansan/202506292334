@@ -1,6 +1,27 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
  
+/**
+ * Combines class names using clsx and tailwind-merge
+ */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+/**
+ * 日記データをSupabase形式に変換する関数
+ * @param diaryEntry ローカルの日記データ
+ * @param userId ユーザーID
+ * @returns Supabase形式の日記データ
+ */
+export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
+  const formattedEntry = {
+    id: diaryEntry.id,
+    user_id: diaryEntry.user_id || userId,
+    date: diaryEntry.date,
+    emotion: diaryEntry.emotion,
+    event: diaryEntry.event,
+    realization: diaryEntry.realization,
     self_esteem_score: diaryEntry.selfEsteemScore || diaryEntry.self_esteem_score || 0,
     worthlessness_score: diaryEntry.worthlessnessScore || diaryEntry.worthlessness_score || 0,
     created_at: diaryEntry.created_at || new Date().toISOString()
@@ -28,70 +49,6 @@ import { twMerge } from "tailwind-merge"
     }
     
     formattedEntry.urgency_level = urgencyValue;
-      : diaryEntry.urgencyLevel || '';
-    
-    // 許可された値のみを設定（high, medium, low、または空文字列）
-    if (urgencyValue !== 'high' && urgencyValue !== 'medium' && urgencyValue !== 'low' && urgencyValue !== '') {
-      // 無効な値の場合は空文字列に設定
-      console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
-      urgencyValue = '';
-    }
-    
-    formattedEntry.urgency_level = urgencyValue;
-      : diaryEntry.urgencyLevel || '';
-    
-    // 許可された値のみを設定（high, medium, low、または空文字列）
-    if (urgencyValue !== 'high' && urgencyValue !== 'medium' && urgencyValue !== 'low' && urgencyValue !== '') {
-      // 無効な値の場合は空文字列に設定
-      console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
-      urgencyValue = '';
-    }
-    
-    formattedEntry.urgency_level = urgencyValue;
-  }
-  
-  // NULL値を空文字列に変換
-  if (formattedEntry.counselor_memo === null) {
-    formattedEntry.counselor_memo = '';
-  }
-  
-  if (formattedEntry.counselor_name === null) {
-    formattedEntry.counselor_name = '';
-  }
-  
-  if (formattedEntry.assigned_counselor === null) {
-    formattedEntry.assigned_counselor = '';
-  }
-  
-  if (formattedEntry.urgency_level === null) {
-    formattedEntry.urgency_level = '';
-  }
-  
-  // is_visible_to_userがNULLの場合はfalseに設定
-  if (formattedEntry.is_visible_to_user === null) {
-    formattedEntry.is_visible_to_user = false;
-  }
-  
-  // NULL値を空文字列に変換
-  if (formattedEntry.counselor_memo === null) {
-    formattedEntry.counselor_memo = '';
-  }
-  
-  if (formattedEntry.counselor_name === null) {
-    formattedEntry.counselor_name = '';
-  }
-  
-  if (formattedEntry.assigned_counselor === null) {
-    formattedEntry.assigned_counselor = '';
-  }
-  
-  if (formattedEntry.urgency_level === null) {
-    formattedEntry.urgency_level = '';
-  }
-  
-  // is_visible_to_userがNULLの場合はfalseに設定
-  if (formattedEntry.is_visible_to_user === null) {
-    formattedEntry.is_visible_to_user = false;
   }
   
   // is_visible_to_userフィールドが存在する場合のみ追加
@@ -104,6 +61,48 @@ import { twMerge } from "tailwind-merge"
   // counselor_nameフィールドが存在する場合のみ追加
   if (diaryEntry.counselor_name !== undefined || diaryEntry.counselorName !== undefined) {
     formattedEntry.counselor_name = diaryEntry.counselor_name !== undefined ? 
+                                    diaryEntry.counselor_name : 
+                                    diaryEntry.counselorName;
+  }
+  
+  // counselor_memoフィールドが存在する場合のみ追加
+  if (diaryEntry.counselor_memo !== undefined || diaryEntry.counselorMemo !== undefined) {
+    formattedEntry.counselor_memo = diaryEntry.counselor_memo !== undefined ? 
+                                    diaryEntry.counselor_memo : 
+                                    diaryEntry.counselorMemo;
+  }
+  
+  // NULL値を空文字列に変換
+  if (formattedEntry.counselor_memo === null) {
+    formattedEntry.counselor_memo = '';
+  }
+  
+  if (formattedEntry.counselor_name === null) {
+    formattedEntry.counselor_name = '';
+  }
+  
+  if (formattedEntry.assigned_counselor === null) {
+    formattedEntry.assigned_counselor = '';
+  }
+  
+  if (formattedEntry.urgency_level === null) {
+    formattedEntry.urgency_level = '';
+  }
+  
+  // is_visible_to_userがNULLの場合はfalseに設定
+  if (formattedEntry.is_visible_to_user === null) {
+    formattedEntry.is_visible_to_user = false;
+  }
+  
+  return formattedEntry;
+}
+
+/**
+ * Supabaseデータをローカル形式に変換する関数
+ * @param supabaseEntry Supabaseの日記データ
+ * @returns ローカル形式の日記データ
+ */
+export function formatDiaryForLocal(supabaseEntry: any) {
   return {
     id: supabaseEntry.id,
     user_id: supabaseEntry.user_id,

@@ -21,9 +21,9 @@ const AdminPanel: React.FC = () => {
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
     counselorMemo: '',
-    isVisibleToUser: false, 
-    assignedCounselor: '', 
-    urgencyLevel: '' 
+    isVisibleToUser: false,
+    assignedCounselor: '',
+    urgencyLevel: ''
   });
   const [backupData, setBackupData] = useState<File | null>(null);
   const [restoring, setRestoring] = useState(false);
@@ -414,17 +414,6 @@ const AdminPanel: React.FC = () => {
       fileReader.onerror = () => {
         setBackupStatus('ファイルの読み込みに失敗しました。');
         setRestoring(false);
-      };
-      
-      fileReader.readAsText(backupData);
-      
-    } catch (error) {
-      console.error('バックアップ復元エラー:', error);
-      setBackupStatus('バックアップの復元に失敗しました。');
-      setRestoring(false);
-    }
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     if (isNaN(date.getTime()) || !dateString) {
