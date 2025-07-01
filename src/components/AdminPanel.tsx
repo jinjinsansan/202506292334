@@ -1088,6 +1088,3 @@ const AdminPanel: React.FC = () => {
       {renderEntryModal()}
     </div>
   );
-};
-
-export default AdminPanel;
