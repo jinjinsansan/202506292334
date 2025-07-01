@@ -95,7 +95,7 @@ const AdminPanel: React.FC = () => {
                   {saving ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>保存中</span>
+                      <span>保存中...</span>
                     </>
                   ) : (
                     <>
@@ -398,10 +398,10 @@ const AdminPanel: React.FC = () => {
               <div className="text-center py-8">
                 <Settings className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-jp-medium text-gray-500 mb-2">
-                  システム設定
+                  <h3 className="font-jp-bold text-green-900">バックアップ成功</h3>
                 </h3>
                 <p className="text-gray-400 font-jp-normal">
-                  アプリケーションの設定を管理します
+                  バックアップが正常に作成されました。安全な場所に保存してください。
                 </p>
               </div>
             </div>
