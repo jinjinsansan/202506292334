@@ -142,6 +142,7 @@ const AdminPanel: React.FC = () => {
   const handleSaveEdit = async () => {
 
     console.log('保存前のデータ:', editFormData);
+    console.log('保存前のデータ:', editFormData);
     try {
       // ローカルストレージのデータを更新
       const updatedEntries = entries.map(entry => {
@@ -207,18 +208,35 @@ const AdminPanel: React.FC = () => {
     try {
       // ローカルストレージからの削除
       const updatedEntries = entries.filter(entry => entry.id !== entryId);
-      setEntries(updatedEntries);
+        counselorMemo: editFormData.counselorMemo,
+        isVisibleToUser: editFormData.isVisibleToUser,
+        counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
+        is_visible_to_user: editFormData.isVisibleToUser, // Supabase形式のフィールドも更新
+        assignedCounselor: editFormData.assignedCounselor,
+        assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
+        urgencyLevel: editFormData.urgencyLevel,
+        entry.id === selectedEntry.id ? {
+          ...entry,
+          ...updatedEntry
+        } : entry
+        counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
+        counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
       setFilteredEntries(updatedEntries);
       localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
 
+      // 更新後のデータをログに出力
+      console.log('保存後のデータ:', updatedEntry);
+      
       // Supabaseからの削除（自動同期機能を使用）
       if (window.autoSync && typeof window.autoSync.syncDeleteDiary === 'function') {
-        await window.autoSync.syncDeleteDiary(entryId);
+        console.log('自動同期を実行します...');
+        const syncResult = await window.autoSync.triggerManualSync();
+        console.log('自動同期結果:', syncResult);
       }
 
-      setSelectedEntry(null);
+      alert('カウンセラーコメントを保存しました！');
       alert('日記を削除しました！');
-    } catch (error) {
+      alert(`更新に失敗しました: ${error}`);
       console.error('削除エラー:', error);
       alert('削除に失敗しました。もう一度お試しください。');
     }

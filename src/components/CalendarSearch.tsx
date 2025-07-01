@@ -422,17 +422,25 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                       <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200 mb-3">
                         <h4 className="font-jp-semibold text-gray-700 mb-1 text-xs">カウンセラーメモ</h4>
                         <p className="text-gray-600 text-xs font-jp-normal">
-                          {entry.counselorMemo.length > 100 ? `${entry.counselorMemo.substring(0, 100)}...` : entry.counselorMemo}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between items-center">
-                      <div className="text-xs text-gray-500">
-                        {entry.assignedCounselor ? `担当: ${entry.assignedCounselor}` : '未割り当て'}
-                      </div>
-                      <div className="flex space-x-2">
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => onViewEntry(entry)}
+                        className="text-blue-600 hover:text-blue-700 p-1 cursor-pointer"
+                        title="詳細を見る"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      {onDeleteEntry && (
                         <button
+                          onClick={() => onDeleteEntry(entry.id)}
+                          className="text-red-600 hover:text-red-700 p-1 cursor-pointer"
+                          title="削除"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                          {entry.counselorMemo.length > 100 ? `${entry.counselorMemo.substring(0, 100)}...` : entry.counselorMemo}
                           onClick={() => onViewEntry(entry)}
                           className="text-blue-600 hover:text-blue-700 p-1 cursor-pointer"
                           title="詳細を見る"
@@ -442,26 +450,18 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                         {onDeleteEntry && (
                           <button
                             onClick={() => onDeleteEntry(entry.id)}
-                            className="text-red-600 hover:text-red-700 p-1 cursor-pointer"
-                            title="削除"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
                   </div>
-                ))}
+                  
                   {/* カウンセラーコメント表示 */}
                   {(entry.counselorMemo || entry.counselor_memo) && (entry.isVisibleToUser || entry.is_visible_to_user) && (
-                    <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 mb-3">
+                    <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 mt-3">
                       <h4 className="font-jp-semibold text-gray-700 mb-1 text-xs">カウンセラーコメント</h4>
                       <p className="text-gray-600 text-xs font-jp-normal">
                         {entry.counselorMemo || entry.counselor_memo}
                       </p>
                     </div>
                   )}
-
+                ))}
               </div>
             )}
           </div>
