@@ -22,29 +22,44 @@ export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
     emotion: diaryEntry.emotion,
     event: diaryEntry.event,
     realization: diaryEntry.realization,
-    self_esteem_score: diaryEntry.selfEsteemScore || 0,
-    worthlessness_score: diaryEntry.worthlessnessScore || 0,
+    self_esteem_score: diaryEntry.selfEsteemScore || diaryEntry.self_esteem_score || 0,
+    worthlessness_score: diaryEntry.worthlessnessScore || diaryEntry.worthlessness_score || 0,
     created_at: diaryEntry.created_at || new Date().toISOString()
   };
   
   // assigned_counselorフィールドが存在する場合のみ追加
-  if (diaryEntry.assigned_counselor || diaryEntry.assignedCounselor) {
-    formattedEntry.assigned_counselor = diaryEntry.assigned_counselor || diaryEntry.assignedCounselor;
+  if (diaryEntry.assigned_counselor !== undefined || diaryEntry.assignedCounselor !== undefined) {
+    formattedEntry.assigned_counselor = diaryEntry.assigned_counselor !== undefined ? 
+                                        diaryEntry.assigned_counselor : 
+                                        diaryEntry.assignedCounselor;
   }
   
   // urgency_levelフィールドが存在する場合のみ追加
-  if (diaryEntry.urgency_level || diaryEntry.urgencyLevel) {
-    formattedEntry.urgency_level = diaryEntry.urgency_level || diaryEntry.urgencyLevel;
+  if (diaryEntry.urgency_level !== undefined || diaryEntry.urgencyLevel !== undefined) {
+    formattedEntry.urgency_level = diaryEntry.urgency_level !== undefined ? 
+                                   diaryEntry.urgency_level : 
+                                   diaryEntry.urgencyLevel;
   }
   
   // is_visible_to_userフィールドが存在する場合のみ追加
   if (diaryEntry.is_visible_to_user !== undefined || diaryEntry.isVisibleToUser !== undefined) {
-    formattedEntry.is_visible_to_user = diaryEntry.is_visible_to_user || diaryEntry.isVisibleToUser || false;
+    formattedEntry.is_visible_to_user = diaryEntry.is_visible_to_user !== undefined ? 
+                                        diaryEntry.is_visible_to_user : 
+                                        diaryEntry.isVisibleToUser;
   }
   
   // counselor_nameフィールドが存在する場合のみ追加
-  if (diaryEntry.counselor_name || diaryEntry.counselorName) {
-    formattedEntry.counselor_name = diaryEntry.counselor_name || diaryEntry.counselorName;
+  if (diaryEntry.counselor_name !== undefined || diaryEntry.counselorName !== undefined) {
+    formattedEntry.counselor_name = diaryEntry.counselor_name !== undefined ? 
+                                    diaryEntry.counselor_name : 
+                                    diaryEntry.counselorName;
+  }
+  
+  // counselor_memoフィールドが存在する場合のみ追加
+  if (diaryEntry.counselor_memo !== undefined || diaryEntry.counselorMemo !== undefined) {
+    formattedEntry.counselor_memo = diaryEntry.counselor_memo !== undefined ? 
+                                    diaryEntry.counselor_memo : 
+                                    diaryEntry.counselorMemo;
   }
   
   return formattedEntry;

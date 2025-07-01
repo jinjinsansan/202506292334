@@ -315,40 +315,38 @@ export const useAutoSync = (): AutoSyncState => {
           }
           
           // カウンセラーメモの処理
-          if (entry.counselor_memo !== undefined) {
-            formattedEntry.counselor_memo = entry.counselor_memo;
-          } else if (entry.counselorMemo !== undefined) {
-            formattedEntry.counselor_memo = entry.counselorMemo;
+         if (entry.counselor_memo !== undefined || entry.counselorMemo !== undefined) {
+           formattedEntry.counselor_memo = entry.counselor_memo !== undefined ? 
+                                          entry.counselor_memo : 
+                                          entry.counselorMemo;
           }
           
           // 表示設定の処理
-          if (entry.is_visible_to_user !== undefined) {
-            formattedEntry.is_visible_to_user = entry.is_visible_to_user;
-          } else if (entry.isVisibleToUser !== undefined) {
-            formattedEntry.is_visible_to_user = entry.isVisibleToUser;
-          } else {
-            formattedEntry.is_visible_to_user = false;
+         if (entry.is_visible_to_user !== undefined || entry.isVisibleToUser !== undefined) {
+           formattedEntry.is_visible_to_user = entry.is_visible_to_user !== undefined ? 
+                                              entry.is_visible_to_user : 
+                                              entry.isVisibleToUser;
           }
           
           // カウンセラー名の処理
-          if (entry.counselor_name !== undefined) {
-            formattedEntry.counselor_name = entry.counselor_name;
-          } else if (entry.counselorName !== undefined) {
-            formattedEntry.counselor_name = entry.counselorName;
+         if (entry.counselor_name !== undefined || entry.counselorName !== undefined) {
+           formattedEntry.counselor_name = entry.counselor_name !== undefined ? 
+                                          entry.counselor_name : 
+                                          entry.counselorName;
           }
           
           // 担当カウンセラーの処理
-          if (entry.assigned_counselor !== undefined) {
-            formattedEntry.assigned_counselor = entry.assigned_counselor;
-          } else if (entry.assignedCounselor !== undefined) {
-            formattedEntry.assigned_counselor = entry.assignedCounselor;
+         if (entry.assigned_counselor !== undefined || entry.assignedCounselor !== undefined) {
+           formattedEntry.assigned_counselor = entry.assigned_counselor !== undefined ? 
+                                              entry.assigned_counselor : 
+                                              entry.assignedCounselor;
           }
           
           // 緊急度の処理
-          if (entry.urgency_level !== undefined) {
-            formattedEntry.urgency_level = entry.urgency_level;
-          } else if (entry.urgencyLevel !== undefined) {
-            formattedEntry.urgency_level = entry.urgencyLevel;
+         if (entry.urgency_level !== undefined || entry.urgencyLevel !== undefined) {
+           formattedEntry.urgency_level = entry.urgency_level !== undefined ? 
+                                         entry.urgency_level : 
+                                         entry.urgencyLevel;
           }
           
           return formattedEntry;
