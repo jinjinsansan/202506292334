@@ -328,6 +328,9 @@ export const diaryService = {
         console.log('同期データサンプル:', formattedDiaries.slice(0, 2));
       }
       
+      // 所有者列(user_id, username)を送らないようにサニタイズ
+      const sanitized = formattedDiaries.map(({ user_id, username, ...rest }) => rest);
+      
       if (formattedDiaries.length === 0) {
         return { success: true, message: '有効な同期データがありません' };
       }
@@ -355,11 +358,14 @@ export const diaryService = {
             try {
               // 所有者列(user_id, username)を送らないようにサニタイズ
               const { user_id, username, ...sanitizedDiary } = diary;
+              
+              // 所有者列(user_id, username)を送らないようにサニタイズ
+              const { user_id, username, ...sanitizedDiary } = diary;
               // 所有者列(user_id, username)を送らないようにサニタイズ
               const { user_id, username, ...sanitizedDiary } = diary;
               const { error: singleError } = await supabase
                 .from('diary_entries').upsert([sanitizedDiary], {
-                onConflict: 'id',
+                  onConflict: 'id',
                 ignoreDuplicates: false,
                 returning: 'minimal'
               });

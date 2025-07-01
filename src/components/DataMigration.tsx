@@ -143,12 +143,8 @@ const DataMigration: React.FC = () => {
       // 所有者列(user_id, username)を送らないようにサニタイズ
       const sanitized = formattedEntries.map(({ user_id, username, ...rest }) => rest);
       const { success, error } = await diaryService.syncDiaries(userId, sanitized);
-        .filter((entry: any) => {
-          if (!entry || !entry.id || !entry.date || !entry.emotion) {
-            console.warn('無効なエントリーをスキップ:', entry);
-            return false;
-          }
-          return true;
+        .filter((entry: any) => entry && entry.id && entry.date && entry.emotion)
+        .map((entry: any) => {
         }) // 無効なデータをフィルタリング
         .map((entry: any) => {
           // 必須フィールドのみを含める
@@ -188,7 +184,9 @@ const DataMigration: React.FC = () => {
           }
           
           return formattedEntry;
-        });
+        })
+      
+      // 所有者列(user_id, username)を送らないようにサニタイズ
       
       // 所有者列(user_id, username)を送らないようにサニタイズ
       const sanitized = formattedEntries.map(({ user_id, username, ...rest }) => rest);
@@ -203,6 +201,10 @@ const DataMigration: React.FC = () => {
       if (!success) {
         throw new Error(error || `日記の同期に失敗しました (${formattedEntries.length}件)`);
       }
+      
+      // 所有者列(user_id, username)を送らないようにサニタイズ
+      const sanitized = formattedEntries.map(({ user_id, username, ...rest }) => rest);
+      const { success, error } = await diaryService.syncDiaries(userId, sanitized);
       
       // 同期時間を更新
       const now = new Date().toISOString();
