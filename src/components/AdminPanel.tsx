@@ -19,7 +19,6 @@ const AdminPanel: React.FC = () => {
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
-  const [loadingError, setLoadingError] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
     counselorMemo: '',
     isVisibleToUser: false,
@@ -62,11 +61,7 @@ const AdminPanel: React.FC = () => {
     setLoading(true);
     setLoadingError(null);
     
-    setLoadingError(null);
-    
     try {
-      console.log('管理画面: 日記データを読み込みます');
-      
       console.log('管理画面: 日記データを読み込みます');
       
       console.log('管理画面: 日記データを読み込みます');
@@ -87,7 +82,6 @@ const AdminPanel: React.FC = () => {
           
           if (error) {
             console.error('Supabaseからの日記データ取得エラー:', error.message);
-            setLoadingError(`Supabaseからのデータ取得エラー: ${error.message}`);
             setLoadingError(`Supabaseからのデータ取得エラー: ${error.message}`);
             throw error;
           } else if (diaryData) {
@@ -135,13 +129,11 @@ const AdminPanel: React.FC = () => {
             setFilteredEntries(uniqueEntries);
             console.log('日記データを設定しました:', formattedEntries.length, '件');
             setLoading(false);
-            return; // Supabaseからデータを取得できたので終了
             setLoading(false);
             return; // Supabaseからデータを取得できたので終了
           }
         } catch (supabaseError) {
           console.error('Supabase接続エラー:', supabaseError.message || supabaseError);
-          setLoadingError(`Supabase接続エラー: ${supabaseError.message || 'Unknown error'}`);
           setLoadingError(`Supabase接続エラー: ${supabaseError.message || 'Unknown error'}`);
         }
       }
@@ -165,20 +157,15 @@ const AdminPanel: React.FC = () => {
         } catch (error) {
           console.error('ローカルデータの解析エラー:', error.message || error);
           setLoadingError(`ローカルデータの解析エラー: ${error.message || 'Unknown error'}`);
-          setLoadingError(`ローカルデータの解析エラー: ${error.message || 'Unknown error'}`);
         }
       } else {
         console.log('ローカルストレージに日記データがありません', localStorage);
         // 空の配列を設定
         setEntries([]);
         setFilteredEntries([]);
-        // 空の配列を設定
-        setEntries([]);
-        setFilteredEntries([]);
       }
     } catch (error) {
       console.error('データ読み込みエラー:', error.message || error);
-      setLoadingError(`データ読み込みエラー: ${error.message || 'Unknown error'}`);
       setLoadingError(`データ読み込みエラー: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
@@ -303,6 +290,20 @@ const AdminPanel: React.FC = () => {
   };
 
   // ユーザー名を取得する関数
+  const getUserName = (entry: any): string => {
+    // ユーザー情報がある場合はそれを使用
+    if (entry.user && entry.user.line_username) {
+      return entry.user.line_username;
+    }
+    // ローカルデータの場合
+    return 'ユーザー';
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // フォーム送信処理
+  };
+
   // バックアップファイルの選択
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -440,7 +441,6 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  // ユーザー名を取得する関数
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     if (isNaN(date.getTime()) || !dateString) {
@@ -848,18 +848,6 @@ const AdminPanel: React.FC = () => {
                 </div>
               )}
               
-              
-              {loadingError && (
-                <div className="bg-red-50 rounded-lg p-4 border border-red-200 mb-4">
-                  <div className="flex items-start space-x-3">
-                    <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-red-800 font-jp-medium">{loadingError}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
               <AdvancedSearchFilter 
                 entries={entries} 
                 onFilteredResults={handleFilteredResults} 
@@ -875,19 +863,6 @@ const AdminPanel: React.FC = () => {
                 <Search className="w-5 h-5 text-blue-600 mr-2" aria-hidden="true" />
                 詳細検索
               </h2>
-              
-              {loadingError && (
-                <div className="bg-red-50 rounded-lg p-4 border border-red-200 mb-4">
-                  <div className="flex items-start space-x-3">
-                    <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-red-800 font-jp-medium">{loadingError}</p>
-                      <p className="text-red-700 text-sm">データの読み込みに失敗しました。再読み込みボタンを試してください。</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
               
               {loadingError && (
                 <div className="bg-red-50 rounded-lg p-4 border border-red-200 mb-4">
