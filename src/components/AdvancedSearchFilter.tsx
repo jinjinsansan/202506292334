@@ -87,6 +87,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
   const [loading, setLoading] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [supabaseError, setSupabaseError] = useState<string | null>(null);
 
   // 日記ページと同じ感情リスト
   const negativeEmotions = [
@@ -109,91 +110,18 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
   // 管理者モードの場合はSupabaseから検索
   const handleSearch = () => {
     if (isAdminMode) {
+      console.log('管理者モードで検索を実行します');
       setSearchLoading(true);
       searchAllDiaries();
+    } else {
+      console.log('通常モードで検索を実行します');
+      // 通常モードでは既存のフィルタリングロジックを使用
+      filterEntries();
     }
   };
 
-  // Supabaseから全ての日記を検索する関数
-  const searchAllDiaries = async () => {
-    try {
-      let query = supabase
-        .from('diary_entries')
-        .select(`
-          *,
-          users (
-            line_username
-          )
-        `);
-
-      // 検索条件を適用
-      if (filters.keyword) {
-        query = query.or(`event.ilike.%${filters.keyword}%,realization.ilike.%${filters.keyword}%,counselor_memo.ilike.%${filters.keyword}%`);
-      }
-      
-      if (filters.emotion) {
-        query = query.eq('emotion', filters.emotion);
-      }
-      
-      // 日付範囲フィルター
-      if (filters.dateRange.start) {
-        query = query.gte('date', filters.dateRange.start);
-      }
-      if (filters.dateRange.end) {
-        query = query.lte('date', filters.dateRange.end);
-      }
-      
-      // ユーザー検索
-      if (filters.userSearch.trim()) {
-        query = query.ilike('users.line_username', `%${filters.userSearch.trim()}%`);
-      }
-      
-      const { data, error } = await query
-        .order('created_at', { ascending: false })
-        .limit(100);
-      
-      if (error) {
-        console.error('Supabase検索エラー:', error);
-        return;
-      }
-      
-      // 検索結果を処理して表示
-      if (data && data.length > 0) {
-        const formattedResults = data.map(item => ({
-          id: item.id,
-          date: item.date,
-          emotion: item.emotion,
-          event: item.event,
-          realization: item.realization,
-          self_esteem_score: item.self_esteem_score,
-          worthlessness_score: item.worthlessness_score,
-          created_at: item.created_at,
-          user: item.users,
-          assigned_counselor: item.assigned_counselor,
-          urgency_level: item.urgency_level,
-          counselor_memo: item.counselor_memo,
-          is_visible_to_user: item.is_visible_to_user,
-          counselor_name: item.counselor_name
-        }));
-        
-        setFilteredEntries(formattedResults);
-        onFilteredResults(formattedResults);
-      } else {
-        setFilteredEntries([]);
-        onFilteredResults([]);
-      }
-      
-    } catch (error) {
-      console.error('検索エラー:', error);
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-
-  // フィルタリング処理
-  useEffect(() => {
-    if (isAdminMode) return; // 管理者モードの場合はローカルフィルタリングをスキップ
-
+  // フィルタリング処理を関数として抽出
+  const filterEntries = () => {
     let filtered = [...entries];
 
     // キーワード検索
@@ -265,6 +193,126 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 
     setFilteredEntries(filtered);
     onFilteredResults(filtered);
+  };
+
+  // Supabaseから全ての日記を検索する関数
+  const searchAllDiaries = async () => {
+    try {
+      setSupabaseError(null);
+      console.log('Supabaseから日記を検索します');
+      
+      if (!supabase) {
+        console.error('Supabase接続がありません');
+        setSupabaseError('Supabase接続がありません');
+        setSearchLoading(false);
+        return;
+      }
+      
+      let query = supabase
+        .from('diary_entries')
+        .select(`
+          *,
+          users (
+            line_username
+          )
+        `);
+
+      // 検索条件を適用
+      if (filters.keyword) {
+        const keyword = filters.keyword;
+        query = query.or(`event.ilike.%${keyword}%,realization.ilike.%${keyword}%,counselor_memo.ilike.%${keyword}%`);
+      }
+      
+      if (filters.emotion) {
+        query = query.eq('emotion', filters.emotion);
+      }
+      
+      // 日付範囲フィルター
+      if (filters.dateRange.start) {
+        query = query.gte('date', filters.dateRange.start);
+      }
+      if (filters.dateRange.end) {
+        query = query.lte('date', filters.dateRange.end);
+      }
+      
+      // ユーザー検索
+      if (filters.userSearch.trim()) {
+        query = query.ilike('users.line_username', `%${filters.userSearch.trim()}%`);
+      }
+
+      // 緊急度フィルター
+      if (filters.urgency) {
+        query = query.eq('urgency_level', filters.urgency);
+      }
+
+      // カウンセラーフィルター
+      if (filters.counselor) {
+        query = query.eq('assigned_counselor', filters.counselor);
+      }
+
+      // メモの有無フィルター
+      if (filters.hasNotes !== null) {
+        if (filters.hasNotes) {
+          query = query.not('counselor_memo', 'is', null).not('counselor_memo', 'eq', '');
+        } else {
+          query = query.or('counselor_memo.is.null,counselor_memo.eq.');
+        }
+      }
+      
+      const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      if (error) {
+        console.error('Supabase検索エラー:', error);
+        setSupabaseError(`検索エラー: ${error.message}`);
+        setFilteredEntries([]);
+        onFilteredResults([]);
+        return;
+      }
+      
+      // 検索結果を処理して表示
+      if (data && data.length > 0) {
+        console.log(`Supabaseから${data.length}件の日記を取得しました`);
+        const formattedResults = data.map(item => ({
+          id: item.id,
+          date: item.date,
+          emotion: item.emotion,
+          event: item.event,
+          realization: item.realization,
+          self_esteem_score: item.self_esteem_score,
+          worthlessness_score: item.worthlessness_score,
+          created_at: item.created_at,
+          user: item.users,
+          assigned_counselor: item.assigned_counselor,
+          urgency_level: item.urgency_level,
+          counselor_memo: item.counselor_memo,
+          is_visible_to_user: item.is_visible_to_user,
+          counselor_name: item.counselor_name
+        }));
+        
+        setFilteredEntries(formattedResults);
+        onFilteredResults(formattedResults);
+      } else {
+        console.log('検索結果が0件でした');
+        setFilteredEntries([]);
+        onFilteredResults([]);
+      }
+      
+    } catch (error) {
+      console.error('検索エラー:', error);
+      setSupabaseError(`検索処理エラー: ${error instanceof Error ? error.message : String(error)}`);
+      setFilteredEntries([]);
+      onFilteredResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // フィルタリング処理
+  useEffect(() => {
+    if (isAdminMode) return; // 管理者モードの場合はローカルフィルタリングをスキップ
+    filterEntries();
   }, [filters, entries, isAdminMode]);
 
   // フィルターリセット
@@ -598,7 +646,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-jp-bold text-gray-900">検索結果</h3>
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <div className="flex flex-col sm:flex-row items-end sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 text-sm text-gray-600">
             {searchLoading ? (
               <div className="flex items-center space-x-2">
                 <Loader className="w-4 h-4 text-blue-600 animate-spin" />
@@ -611,6 +659,11 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                   <span>/ 全体: {entries.length}件</span>
                 )}
               </>
+            )}
+            {supabaseError && (
+              <div className="text-red-600 text-xs">
+                {supabaseError}
+              </div>
             )}
           </div>
         </div>
