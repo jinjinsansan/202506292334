@@ -374,73 +374,6 @@ export const diaryService = {
           
           if (successCount > 0) {
             return { success: true, message: `${successCount}/${formattedDiaries.length}件の同期に成功しました` };
-            }
-          }
-          
-          // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
-          if (formattedEntry.urgency_level === null) {
-            formattedEntry.urgency_level = '';
-          }
-          
-          
-          return formattedEntry;
-        });
-      
-      console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
-      
-      // デバッグ用：最初の数件のデータを表示
-      if (formattedDiaries.length > 0) {
-        console.log('同期データサンプル:', formattedDiaries.slice(0, 2));
-      }
-      
-      if (formattedDiaries.length === 0) {
-        return { success: true, message: '有効な同期データがありません' };
-      }
-      
-      // 一括挿入（競合時は更新）
-      const { data, error } = await supabase
-        .from('diary_entries')
-        .upsert(
-          formattedDiaries, 
-          {
-            onConflict: 'id',
-            ignoreDuplicates: false,
-            returning: 'minimal'
-          }
-        );
-      
-      if (error) {
-        console.error('日記同期エラー:', error, 'データ件数:', formattedDiaries.length, 'エラー詳細:', error.details);
-        
-        // エラーが発生した場合、1件ずつ同期を試みる
-        if (formattedDiaries.length > 1) {
-          console.log('1件ずつ同期を試みます...');
-          let successCount = 0;
-          
-          for (const diary of formattedDiaries) {
-            try {
-              const { error: singleError } = await supabase
-                .from('diary_entries')
-                .upsert([diary], {
-                  onConflict: 'id',
-                  ignoreDuplicates: false,
-                  returning: 'minimal'
-                });
-              
-              if (!singleError) {
-                successCount++;
-              } else {
-                console.error('個別同期エラー:', singleError, 'ID:', diary.id);
-              }
-            } catch (err) {
-              console.error('個別同期例外:', err);
-            }
-          }
-          
-          console.log(`個別同期結果: ${successCount}/${formattedDiaries.length}件成功`);
-          
-          if (successCount > 0) {
-            return { success: true, message: `${successCount}/${formattedDiaries.length}件の同期に成功しました` };
           }
         }
         
@@ -577,8 +510,8 @@ export const chatService = {
       console.error('全日記取得サービスエラー:', error);
       return [];
     }
-  }
-  ,
+  },
+  
   // メッセージの送信
   async sendMessage(chatRoomId: string, content: string, senderId?: string, counselorId?: string) {
     if (!supabase) return null;
