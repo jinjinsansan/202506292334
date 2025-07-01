@@ -227,6 +227,7 @@ const DiarySearchPage: React.FC = () => {
   const getEmotionColor = (emotion: string) => {
     const colorMap: { [key: string]: string } = {
       // ネガティブな感情
+      // ネガティブな感情
       '恐怖': 'bg-purple-100 text-purple-800 border-purple-200',
       '悲しみ': 'bg-blue-100 text-blue-800 border-blue-200',
       '怒り': 'bg-red-100 text-red-800 border-red-200',
@@ -235,6 +236,11 @@ const DiarySearchPage: React.FC = () => {
       '罪悪感': 'bg-orange-100 text-orange-800 border-orange-200',
       '寂しさ': 'bg-indigo-100 text-indigo-800 border-indigo-200',
       '恥ずかしさ': 'bg-pink-100 text-pink-800 border-pink-200',
+      // ポジティブな感情
+      '嬉しい': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      '感謝': 'bg-teal-100 text-teal-800 border-teal-200',
+      '達成感': 'bg-lime-100 text-lime-800 border-lime-200',
+      '幸せ': 'bg-amber-100 text-amber-800 border-amber-200'
       // ポジティブな感情
       '嬉しい': 'bg-yellow-100 text-yellow-800 border-yellow-200',
       '感謝': 'bg-teal-100 text-teal-800 border-teal-200',
@@ -696,7 +702,21 @@ const DiarySearchPage: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {recentEntries.map((entry) => (
-                <div key={entry.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                <div key={entry.id} className={`rounded-lg p-4 hover:shadow-md transition-shadow ${
+                  entry.emotion === '恐怖' ? 'bg-purple-50' :
+                  entry.emotion === '悲しみ' ? 'bg-blue-50' :
+                  entry.emotion === '怒り' ? 'bg-red-50' :
+                  entry.emotion === '悔しい' ? 'bg-green-50' :
+                  entry.emotion === '無価値感' ? 'bg-gray-50' :
+                  entry.emotion === '罪悪感' ? 'bg-orange-50' :
+                  entry.emotion === '寂しさ' ? 'bg-indigo-50' :
+                  entry.emotion === '恥ずかしさ' ? 'bg-pink-50' :
+                  entry.emotion === '嬉しい' ? 'bg-yellow-50' :
+                  entry.emotion === '感謝' ? 'bg-teal-50' :
+                  entry.emotion === '達成感' ? 'bg-lime-50' :
+                  entry.emotion === '幸せ' ? 'bg-amber-50' :
+                  'bg-white'
+                }`}>
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap">
                       <span className={`px-3 py-1 rounded-full text-sm font-jp-medium border ${getEmotionColor(entry.emotion)}`}>
@@ -806,7 +826,21 @@ const DiarySearchPage: React.FC = () => {
             <h2 className="text-xl font-jp-bold text-gray-900 mb-6">検索結果</h2>
             <div className="space-y-4">
           {filteredEntries.map((entry) => (
-            <div key={entry.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div key={entry.id} className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow ${
+              entry.emotion === '恐怖' ? 'bg-purple-50' :
+              entry.emotion === '悲しみ' ? 'bg-blue-50' :
+              entry.emotion === '怒り' ? 'bg-red-50' :
+              entry.emotion === '悔しい' ? 'bg-green-50' :
+              entry.emotion === '無価値感' ? 'bg-gray-50' :
+              entry.emotion === '罪悪感' ? 'bg-orange-50' :
+              entry.emotion === '寂しさ' ? 'bg-indigo-50' :
+              entry.emotion === '恥ずかしさ' ? 'bg-pink-50' :
+              entry.emotion === '嬉しい' ? 'bg-yellow-50' :
+              entry.emotion === '感謝' ? 'bg-teal-50' :
+              entry.emotion === '達成感' ? 'bg-lime-50' :
+              entry.emotion === '幸せ' ? 'bg-amber-50' :
+              'bg-white'
+            }`}>
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap">
                   <span className={`px-3 py-1 rounded-full text-sm font-jp-medium border ${getEmotionColor(entry.emotion)}`}>

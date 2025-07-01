@@ -224,6 +224,9 @@ const AdminPanel: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    if (isNaN(date.getTime()) || !dateString) {
+      return dateString || '日付なし';
+    }
     return date.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'long',
@@ -233,6 +236,7 @@ const AdminPanel: React.FC = () => {
 
   const getEmotionColor = (emotion: string) => {
     const colorMap: { [key: string]: string } = {
+      // ネガティブな感情
       '恐怖': 'bg-purple-100 text-purple-800 border-purple-200',
       '悲しみ': 'bg-blue-100 text-blue-800 border-blue-200',
       '怒り': 'bg-red-100 text-red-800 border-red-200',
@@ -241,6 +245,7 @@ const AdminPanel: React.FC = () => {
       '罪悪感': 'bg-orange-100 text-orange-800 border-orange-200',
       '寂しさ': 'bg-indigo-100 text-indigo-800 border-indigo-200',
       '恥ずかしさ': 'bg-pink-100 text-pink-800 border-pink-200',
+      // ポジティブな感情
       '嬉しい': 'bg-yellow-100 text-yellow-800 border-yellow-200',
       '感謝': 'bg-teal-100 text-teal-800 border-teal-200',
       '達成感': 'bg-lime-100 text-lime-800 border-lime-200',
@@ -291,7 +296,7 @@ const AdminPanel: React.FC = () => {
                 <div className="flex flex-wrap gap-3 mb-3">
                   <div className="flex items-center space-x-2 mb-1">
                     <Calendar className="w-4 h-4 text-gray-500" />
-                    <span className="text-gray-700 font-jp-medium">
+                    <span className="text-gray-700 font-jp-medium whitespace-nowrap">
                       {formatDate(selectedEntry.date)}
                     </span>
                   </div>
@@ -447,7 +452,7 @@ const AdminPanel: React.FC = () => {
                     <div className="space-y-4">
                       <div className="bg-white rounded-lg p-3 border border-gray-200">
                         <h4 className="text-sm font-jp-medium text-gray-700 mb-2">メモ内容</h4>
-                        <p className="text-gray-700 font-jp-normal whitespace-pre-wrap">
+                        <p className="text-gray-700 font-jp-normal whitespace-pre-wrap break-words">
                           {selectedEntry.counselorMemo || selectedEntry.counselor_memo || '（メモはありません）'}
                         </p>
                       </div>
