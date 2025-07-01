@@ -55,6 +55,16 @@ interface AdvancedSearchFilterProps {
   onDeleteEntry?: (entryId: string) => void;
 }
 
+// ユーザー名を取得する関数
+const getUserName = (entry: any): string => {
+  // ユーザー情報がある場合はそれを使用
+  if (entry.user && entry.user.line_username) {
+    return entry.user.line_username;
+  }
+  // ローカルデータの場合
+  return 'ユーザー';
+};
+
 const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
   entries,
   onFilteredResults,
