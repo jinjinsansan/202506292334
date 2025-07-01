@@ -331,7 +331,7 @@ export const diaryService = {
       }
       
       // 所有者列(user_id, username)を送らないようにサニタイズ
-      const sanitized = diaries.map(({ user_id, username, ...rest }) => rest);
+      const sanitized = formattedDiaries.map(({ user_id, username, ...rest }) => rest);
       // 一括挿入（競合時は更新）
       const { data, error } = await supabase
         .from('diary_entries')
@@ -353,10 +353,8 @@ export const diaryService = {
             try {
               // 所有者列(user_id, username)を送らないようにサニタイズ
               const { user_id, username, ...sanitizedDiary } = diary;
-              // 所有者列(user_id, username)を送らないようにサニタイズ
-              const { user_id, username, ...sanitizedDiary } = diary;
               const { error: singleError } = await supabase
-                .from('diary_entries').upsert([sanitizedDiary], {
+                .from('diary_entries').upsert([diary], {
                 onConflict: 'id',
                 ignoreDuplicates: false,
                 returning: 'minimal'
