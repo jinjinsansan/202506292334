@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Calendar, LineChart, Share2, Download, Filter, RefreshCw, TrendingUp } from 'lucide-react';
 import dayjs from 'dayjs'; 
-import isBetween from 'dayjs/plugin/isBetween';
+import isBetween from 'dayjs/plugin/isBetween'; 
 dayjs.extend(isBetween);
 
 /* 型例：日記データ */
@@ -276,7 +276,7 @@ const WorthlessnessChart: React.FC = () => {
   // Y 軸スケール計算
   const { min, max, span } = useMemo(() => {
     if (displayedData.length === 0) {
-      return { min: 0, max: 100, span: 100 }; 
+      return { min: 0, max: 100, span: 100 };
     }
     
     const allScores = displayedData.flatMap(d => [
@@ -296,8 +296,8 @@ const WorthlessnessChart: React.FC = () => {
   }, [displayedData]);
 
   // 座標変換関数
-  const toX = (i: number, total: number) => (i / Math.max(1, total - 1)) * 100; 
-  const toY = (val: number) => ((max - val) / span) * 100; 
+  const toX = (i: number, total: number) => (i / Math.max(1, total - 1)) * 100;
+  const toY = (val: number) => ((max - val) / span) * 100;
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 px-2">
@@ -410,10 +410,10 @@ const WorthlessnessChart: React.FC = () => {
                 </div>
                 
                 {/* グラフ本体 */}
-                <div className="relative w-full h-[280px] overflow-hidden">
+                <div className="relative w-full h-60 overflow-hidden">
                   <svg
-                    viewBox="0 0 100 100" 
-                    preserveAspectRatio="none" 
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
                     className="absolute inset-0 w-full h-full graph-svg"
                     shapeRendering="geometricPrecision"
                   >
@@ -421,7 +421,7 @@ const WorthlessnessChart: React.FC = () => {
                     <g stroke="#e5e7eb" strokeWidth="0.4" vectorEffect="non-scaling-stroke">
                       {[0, 25, 50, 75, 100].map(tick => (
                         <g key={tick}>
-                          <line x1="0" y1={toY(tick)} x2="100" y2={toY(tick)} vectorEffect="non-scaling-stroke" />
+                          <line x1="0" y1={toY(tick)} x2="100" y2={toY(tick)} />
                           <text
                             x="0"
                             y={toY(tick) - 1.5}
@@ -439,7 +439,7 @@ const WorthlessnessChart: React.FC = () => {
                     {[
                       { key: 'selfEsteemScore', color: '#3b82f6' },
                       { key: 'worthlessnessScore', color: '#ef4444' },
-                    ].map(({ key, color }) => ( 
+                    ].map(({ key, color }) => (
                       <polyline
                         key={key}
                         points={displayedData
@@ -450,8 +450,8 @@ const WorthlessnessChart: React.FC = () => {
                         fill="none"
                         stroke={color}
                         strokeWidth="1"
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                         vectorEffect="non-scaling-stroke"
                       />
                     ))}
@@ -498,7 +498,7 @@ const WorthlessnessChart: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* 最新スコア */}
             {displayedData.length > 0 ? (
               <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
