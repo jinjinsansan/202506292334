@@ -143,6 +143,9 @@ const AdminPanel: React.FC = () => {
     if (!selectedEntry) return;
 
     try {
+      // カウンセラー名を設定
+      const currentCounselor = localStorage.getItem('current_counselor') || 'カウンセラー';
+      
       // ローカルストレージのデータを更新
       const updatedEntries = entries.map(entry => {
         if (entry.id === selectedEntry.id) {
@@ -157,8 +160,8 @@ const AdminPanel: React.FC = () => {
             assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
             urgencyLevel: editFormData.urgencyLevel,
             urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
-            counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
-            counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
+            counselorName: currentCounselor,
+            counselor_name: currentCounselor // Supabase形式のフィールドも更新
           };
         }
         return entry;
@@ -168,9 +171,13 @@ const AdminPanel: React.FC = () => {
       setFilteredEntries(updatedEntries);
       localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
 
+      console.log('更新された日記エントリー:', updatedEntries.find(e => e.id === selectedEntry.id));
+
       // 自動同期機能を使用してSupabaseに同期
       if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
+        console.log('Supabaseに同期を開始します...');
         await window.autoSync.triggerManualSync();
+        console.log('Supabaseへの同期が完了しました');
       }
 
       setSelectedEntry(null);
@@ -368,7 +375,7 @@ const AdminPanel: React.FC = () => {
                       <textarea
                         value={editFormData.counselorMemo}
                         onChange={(e) => setEditFormData({...editFormData, counselorMemo: e.target.value})}
-                        className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal resize-none"
+                        className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal resize-none whitespace-pre-wrap"
                         placeholder="カウンセラーメモを入力..."
                       />
                     </div>

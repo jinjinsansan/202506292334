@@ -187,8 +187,6 @@ export const diaryService = {
                                 (typeof diary.worthlessnessScore === 'string' ? parseInt(diary.worthlessnessScore) : 
                                  (typeof diary.worthlessness_score === 'number' ? diary.worthlessness_score : 
                                   (typeof diary.worthlessness_score === 'string' ? parseInt(diary.worthlessness_score) : 50))),
-            event: diary.event || '',
-            realization: diary.realization || '',
             created_at: diary.created_at || new Date().toISOString()
           };
           
@@ -232,6 +230,11 @@ export const diaryService = {
           } else if (diary.counselorMemo !== undefined) {
             formattedEntry.counselor_memo = diary.counselorMemo;
           }
+         
+         // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
+         if (formattedEntry.counselor_memo === null) {
+           formattedEntry.counselor_memo = '';
+         }
           
           // 表示設定の処理
           if (diary.is_visible_to_user !== undefined) {
@@ -248,6 +251,11 @@ export const diaryService = {
           } else if (diary.counselorName !== undefined) {
             formattedEntry.counselor_name = diary.counselorName;
           }
+         
+         // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
+         if (formattedEntry.counselor_name === null) {
+           formattedEntry.counselor_name = '';
+         }
           
           // 担当カウンセラーの処理
           if (diary.assigned_counselor !== undefined) {
@@ -255,6 +263,11 @@ export const diaryService = {
           } else if (diary.assignedCounselor !== undefined) {
             formattedEntry.assigned_counselor = diary.assignedCounselor;
           }
+         
+         // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
+         if (formattedEntry.assigned_counselor === null) {
+           formattedEntry.assigned_counselor = '';
+         }
           
           // 緊急度の処理
           if (diary.urgency_level !== undefined) {
@@ -262,12 +275,22 @@ export const diaryService = {
           } else if (diary.urgencyLevel !== undefined) {
             formattedEntry.urgency_level = diary.urgencyLevel;
           }
+         
+         // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
+         if (formattedEntry.urgency_level === null) {
+           formattedEntry.urgency_level = '';
+         }
           
           
           return formattedEntry;
         });
       
       console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
+     
+     // デバッグ用：最初の数件のデータを表示
+     if (formattedDiaries.length > 0) {
+       console.log('同期データサンプル:', formattedDiaries.slice(0, 2));
+     }
       
       if (formattedDiaries.length === 0) {
         return { success: true, message: '有効な同期データがありません' };
@@ -286,7 +309,40 @@ export const diaryService = {
         );
       
       if (error) {
-        console.error('日記同期エラー:', error, 'データ件数:', formattedDiaries.length);
+       console.error('日記同期エラー:', error, 'データ件数:', formattedDiaries.length, 'エラー詳細:', error.details);
+       
+       // エラーが発生した場合、1件ずつ同期を試みる
+       if (formattedDiaries.length > 1) {
+         console.log('1件ずつ同期を試みます...');
+         let successCount = 0;
+         
+         for (const diary of formattedDiaries) {
+           try {
+             const { error: singleError } = await supabase
+               .from('diary_entries')
+               .upsert([diary], {
+                 onConflict: 'id',
+                 ignoreDuplicates: false,
+                 returning: 'minimal'
+               });
+             
+             if (!singleError) {
+               successCount++;
+             } else {
+               console.error('個別同期エラー:', singleError, 'ID:', diary.id);
+             }
+           } catch (err) {
+             console.error('個別同期例外:', err);
+           }
+         }
+         
+         console.log(`個別同期結果: ${successCount}/${formattedDiaries.length}件成功`);
+         
+         if (successCount > 0) {
+           return { success: true, message: `${successCount}/${formattedDiaries.length}件の同期に成功しました` };
+         }
+       }
+       
         return { success: false, error: error.message };
       }
       
