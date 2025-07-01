@@ -1,10 +1,14 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { Calendar, LineChart, Share2, Download, Filter, RefreshCw, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Share2, Download, Filter, RefreshCw, TrendingUp } from 'lucide-react';
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
+  ResponsiveContainer, Legend 
+} from 'recharts';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
 
-/* 型例：日記データ */
+/* 型定義 */
 interface ScoreEntry {
   date: string;                // ISO 形式 '2025-06-04'
   selfEsteemScore: number;     // 0‒100
@@ -23,7 +27,7 @@ interface EmotionCount {
   count: number;
 }
 
-/* ----- ★ タブ state ----- */
+/* タブの種類 */
 type RangeKey = 'week' | 'month' | 'all';
 
 const WorthlessnessChart: React.FC = () => {
@@ -253,16 +257,18 @@ const WorthlessnessChart: React.FC = () => {
   };
 
   // 表示用データを準備
-  const displayedData = useMemo(() => {
-    if (period === 'all' || chartData.length === 0) return chartData;
-
+  const displayedData = React.useMemo(() => {
+    if (chartData.length === 0) return [];
+    
     // 0点のデータを除外
     const validData = chartData.filter(d => 
       (d.selfEsteemScore > 0 || d.worthlessnessScore > 0) && 
       d.date // 日付が存在するデータのみ
     );
     
-    if (validData.length === 0) return chartData;
+    if (validData.length === 0) return [];
+    
+    if (period === 'all') return validData;
     
     // データが持つ最新日を基準にする
     const latestDate = dayjs(
@@ -271,49 +277,47 @@ const WorthlessnessChart: React.FC = () => {
     
     const from = period === 'week'
       ? latestDate.subtract(6, 'day').startOf('day')   // 直近7日間
-      : latestDate.subtract(29,'day').startOf('day'); // 直近30日間
+      : latestDate.subtract(29,'day').startOf('day');  // 直近30日間
     
     const filtered = validData.filter(d =>
       dayjs(d.date).isBetween(from, latestDate, 'day', '[]')
     );
     
-    // データが 0 件ならフォールバックで全件返す（表示が空にならない保険）
     return filtered.length ? filtered : validData;
   }, [chartData, period]);
 
-  // Y 軸スケール計算
-  const { min, max, span } = useMemo(() => {
-    if (displayedData.length === 0) {
-      return { min: 0, max: 100, span: 100 };
-    }
-    
-    // 0点のデータを除外して計算
-    const allScores = displayedData
-      .flatMap(d => [
-        Number(d.worthlessnessScore || 0)
-      ])
-      .filter(score => score > 0);
-    
-    if (allScores.length === 0) {
-      return { min: 0, max: 100, span: 100 };
-    }
-    
-    let minVal = Math.min(...allScores);
-    let maxVal = Math.max(...allScores);
-    
-    // 上下に 5% の余白を持たせつつ 0‒100 にクリップ
-    minVal = Math.max(0, minVal - 5);
-    maxVal = Math.min(100, maxVal + 5);
-    
-    
-    const yRange = maxVal - minVal || 1;   // 0 除算防止
-    
-    return { min: minVal, max: maxVal, span: yRange };
+  // Rechartsで使用するためのデータ形式に変換
+  const chartFormattedData = React.useMemo(() => {
+    return displayedData.map(entry => ({
+      date: entry.date,
+      selfEsteemScore: entry.selfEsteemScore,
+      worthlessnessScore: entry.worthlessnessScore,
+      formattedDate: formatDate(entry.date)
+    }));
   }, [displayedData]);
 
-  // 座標変換関数
-  const toX = (i: number, total: number) => (i / Math.max(1, total - 1)) * 100;
-  const toY = (val: number) => ((max - val) / span) * 100;
+  // カスタムツールチップ
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
+          <p className="font-jp-medium text-gray-900 mb-1">{dayjs(data.date).format('YYYY/MM/DD')}</p>
+          <div className="space-y-1">
+            <p className="text-sm">
+              <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+              自己肯定感: <span className="font-jp-bold">{data.selfEsteemScore}</span>
+            </p>
+            <p className="text-sm">
+              <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+              無価値感: <span className="font-jp-bold">{data.worthlessnessScore}</span>
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 px-2">
@@ -400,7 +404,7 @@ const WorthlessnessChart: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* グラフ */}
+            {/* Rechartsグラフ */}
             <div className="bg-white rounded-lg p-4 border border-gray-200 overflow-hidden relative">
               {initialScore && period === 'all' && (
                 <div className="absolute top-2 left-2 bg-blue-50 rounded-lg p-2 border border-blue-200 text-xs z-10">
@@ -409,125 +413,46 @@ const WorthlessnessChart: React.FC = () => {
               )}
               
               <div className="w-full" style={{ height: '300px' }}>
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm font-jp-medium text-gray-700">自己肯定感</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <span className="text-sm font-jp-medium text-gray-700">無価値感</span>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {period === 'week' ? '過去7日間' : period === 'month' ? '過去30日間' : '全期間'}
-                  </div>
-                </div>
-                
-                {/* グラフ本体 */}
-                <div className="relative w-full h-60 overflow-hidden">
-                  <svg
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
-                    className="absolute inset-0 w-full h-full graph-svg"
-                    shapeRendering="geometricPrecision"
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={chartFormattedData}
+                    margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
                   >
-                    {/* グリッド */}
-                    <g stroke="#e5e7eb" strokeWidth="0.4" vectorEffect="non-scaling-stroke">
-                      {[0, 25, 50, 75, 100].map(tick => (
-                        <g key={tick}>
-                          <line x1="0" y1={toY(tick)} x2="100" y2={toY(tick)} />
-                          <text
-                            x="0"
-                            y={toY(tick) - 1.5}
-                            fontSize="3"
-                            fill="#9ca3af"
-                            style={{ userSelect: 'none' }}
-                          >
-                            {tick}
-                          </text>
-                        </g>
-                      ))}
-                    </g>
-
-                    {/* 折れ線 */}
-                    {[
-                      { key: 'selfEsteemScore', color: '#3b82f6' },
-                      { key: 'worthlessnessScore', color: '#ef4444' },
-                    ].map(({ key, color }) => (
-                      <polyline
-                        key={key}
-                        points={displayedData
-                          .map((d, i) =>
-                            `${toX(i, displayedData.length)},${toY(Number(d[key as keyof ScoreEntry] as number))}`
-                          )
-                          .join(' ')}
-                        fill="none"
-                        stroke={color}
-                        strokeWidth="1"
-                        className="graph-line"
-                        className="graph-line"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="graph-line"
-                        vectorEffect="non-scaling-stroke"
-                      />
-                    ))}
-
-                    {/* 点 */}
-                    {displayedData.map((d, i) => {
-                      const x = toX(i, displayedData.length);
-                      return ['selfEsteemScore', 'worthlessnessScore'].map((k, idx) => (
-                        <circle
-                          key={`${k}-${i}`}
-                          cx={x}
-                          cy={toY(Number(d[k as keyof ScoreEntry] as number))}
-                          r="2"
-                          fill={idx ? '#ef4444' : '#3b82f6'}
-                          stroke="#fff"
-                          strokeWidth="0.5"
-                          vectorEffect="non-scaling-stroke"
-                        >
-                          <title>
-                            {`${d.date} ${idx ? '無価値感' : '自己肯定感'} ${
-                              d[k as keyof ScoreEntry]
-                            }`}
-                          </title>
-                        </circle>
-                      ));
-                    })}
-                    
-                    {/* X軸ラベル */}
-                    {displayedData.map((data, index) => {
-                      // 最大6つのラベルを表示するための間隔を計算
-                      // 最大6つのラベルを表示するための間隔を計算
-                      const interval = Math.max(1, Math.floor(displayedData.length / 6));
-                      // 最初、最後、および間隔ごとのラベルを表示
-                      const shouldShow = index === 0 || 
-                                        index === displayedData.length - 1 || 
-                                        index % interval === 0;
-                      
-                      if (!shouldShow) return null;
-                      
-                      return (
-                      <text
-                        key={`x-label-${index}`}
-                        x={toX(index, displayedData.length)}
-                        y="98"
-                        fontSize="3"
-                        textAnchor="middle"
-                        fill="#6b7280"
-                      >
-                        {index === 0 && period === 'all' && initialScore 
-                          ? '初期' 
-                          : formatDate(data.date)
-                        }
-                      </text>
-                      );
-                    })}
-                  </svg>
-                </div>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis 
+                      dataKey="formattedDate" 
+                      padding={{ left: 10, right: 10 }}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis 
+                      domain={[0, 100]} 
+                      padding={{ top: 5, bottom: 5 }}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="selfEsteemScore"
+                      name="自己肯定感"
+                      stroke="#3b82f6"
+                      strokeWidth={1}
+                      dot={{ r: 2, strokeWidth: 1 }}
+                      activeDot={{ r: 4 }}
+                      connectNulls={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="worthlessnessScore"
+                      name="無価値感"
+                      stroke="#ef4444"
+                      strokeWidth={1}
+                      dot={{ r: 2, strokeWidth: 1 }}
+                      activeDot={{ r: 4 }}
+                      connectNulls={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </div>
 
