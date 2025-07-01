@@ -74,9 +74,9 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
     hasNotes: null,
     scoreRange: {
       selfEsteemMin: 1,
-      selfEsteemMax: 10,
+      selfEsteemMax: 100,
       worthlessnessMin: 1,
-      worthlessnessMax: 10
+      worthlessnessMax: 100
     }
   });
 
@@ -330,9 +330,9 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
       hasNotes: null,
       scoreRange: {
         selfEsteemMin: 1,
-        selfEsteemMax: 10,
+        selfEsteemMax: 100,
         worthlessnessMin: 1,
-        worthlessnessMax: 10
+        worthlessnessMax: 100
       }
     });
   };
@@ -554,7 +554,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                   <input
                     type="range"
                     min="1"
-                    max="10"
+                    max="100"
                     value={filters.scoreRange.selfEsteemMin}
                     onChange={(e) => setFilters(prev => ({ 
                       ...prev, 
@@ -567,7 +567,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                   <input
                     type="range"
                     min="1"
-                    max="10"
+                    max="100"
                     value={filters.scoreRange.selfEsteemMax}
                     onChange={(e) => setFilters(prev => ({ 
                       ...prev, 
@@ -585,7 +585,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                   <input
                     type="range"
                     min="1"
-                    max="10"
+                    max="100"
                     value={filters.scoreRange.worthlessnessMin}
                     onChange={(e) => setFilters(prev => ({ 
                       ...prev, 
@@ -598,7 +598,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                   <input
                     type="range"
                     min="1"
-                    max="10"
+                    max="100"
                     value={filters.scoreRange.worthlessnessMax}
                     onChange={(e) => setFilters(prev => ({ 
                       ...prev, 
