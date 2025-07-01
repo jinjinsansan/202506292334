@@ -8,6 +8,7 @@ import ConsentHistoryManagement from './ConsentHistoryManagement';
 import DeviceAuthManagement from './DeviceAuthManagement';
 import SecurityDashboard from './SecurityDashboard';
 import DataCleanup from './DataCleanup';
+import CalendarSearch from './CalendarSearch';
 
 const AdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState('search');
@@ -615,21 +616,10 @@ const AdminPanel: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="calendar" className="space-y-6">
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
-                <Calendar className="w-5 h-5 text-blue-600 mr-2" />
-                カレンダー検索
-              </h2>
-              <div className="text-center py-8">
-                <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-jp-medium text-gray-500 mb-2">
-                  カレンダー検索機能
-                </h3>
-                <p className="text-gray-400 font-jp-normal">
-                  日付ベースで日記を検索できます
-                </p>
-              </div>
-            </div>
+            <CalendarSearch 
+              onViewEntry={handleViewEntry}
+              onDeleteEntry={handleDeleteEntry}
+            />
           </TabsContent>
 
           <TabsContent value="stats" className="space-y-6">
