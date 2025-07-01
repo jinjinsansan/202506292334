@@ -66,6 +66,23 @@
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
   }
+  
+  /* SVGグラフ用スタイル */
+  .graph-svg [stroke] { 
+    vector-effect: non-scaling-stroke; 
+  }
+  .graph-svg circle { 
+    vector-effect: non-scaling-stroke; 
+  }
+  .graph-svg text { 
+    font-family: system-ui, sans-serif; 
+  }
+  .graph-line {
+    stroke-width: 1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
   /* タブコンポーネントのスタイル修正 */
   .tabs-list-wrapper {
     overflow-x: auto;
