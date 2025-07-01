@@ -74,7 +74,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
   const [filteredEntries, setFilteredEntries] = useState<JournalEntry[]>(entries);
   const [savedSearches, setSavedSearches] = useState<any[]>([]);
   const [showSaveSearch, setShowSaveSearch] = useState(false);
-  const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
 
   // 日記ページと同じ感情リスト
@@ -109,9 +109,6 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
   const uniqueEmotions = [...new Set(entries.map(entry => entry.emotion).filter(Boolean))];
   const uniqueCounselors = [...new Set(entries.map(entry => entry.assigned_counselor).filter(Boolean))];
   const uniqueUrgencyLevels = [...new Set(entries.map(entry => entry.urgency_level).filter(Boolean))];
-
-  const handleFilterChange = (key: keyof SearchFilters, value: any) => {
-    setFilters(prev => ({
       ...prev,
       [key]: value
     }));
@@ -219,8 +216,6 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
     } finally {
       setSearchLoading(false);
     }
-  };
-
   // ローカルフィルタリング処理
   const filterEntries = () => {
     let filtered = [...entries];
@@ -317,6 +312,23 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
     if (!isAdminMode) {
       filterEntries();
     }
+  };
+
+  // 管理者モードの場合はSupabaseから検索
+  const handleSearch = async () => {
+    if (isAdminMode) {
+      setSearchLoading(true);
+      await searchAllDiaries();
+    } else {
+      filterEntries();
+    }
+  };
+
+  // フィルターが変更されたときに自動的にフィルタリングを実行
+  useEffect(() => {
+    if (!isAdminMode) {
+      filterEntries();
+    }
   }, [filters, entries, isAdminMode]);
 
   // 検索結果のエクスポート
@@ -382,12 +394,14 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
       userSearch: '',
       hasNotes: null,
       scoreRange: {
-        selfEsteemMin: 1,
-        selfEsteemMax: 10,
-        worthlessnessMin: 1,
+        selfEsteemMin: 1, 
+        selfEsteemMax: 10, 
+        worthlessnessMin: 1, 
         worthlessnessMax: 10
       }
     });
+    setFilteredEntries(entries);
+    onFilteredResults(entries);
     setFilteredEntries(entries);
     onFilteredResults(entries);
   };
@@ -412,9 +426,8 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `journal_entries_${new Date().toISOString().split('T')[0]}.csv`);
+    link.href = URL.createObjectURL(blob);
+    link.download = `journal_entries_${new Date().toISOString().split('T')[0]}.csv`;
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -423,6 +436,47 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 
   useEffect(() => {
     setFilteredEntries(entries);
+  }, [entries]);
+
+  const getUrgencyColor = (urgency?: string) => {
+    switch (urgency) {
+      case 'high': return 'text-red-600 bg-red-50';
+      case 'medium': return 'text-yellow-600 bg-yellow-50';
+      case 'low': return 'text-green-600 bg-green-50';
+      default: return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const getUrgencyLabel = (urgency?: string) => {
+    switch (urgency) {
+      case 'high': return '高';
+      case 'medium': return '中';
+      case 'low': return '低';
+      default: return '-';
+    }
+  };
+
+  // 感情に対応する背景色を取得
+  const getEmotionBgColor = (emotion: string) => {
+    const negEmotion = negativeEmotions.find(e => e.name === emotion);
+    if (negEmotion) return negEmotion.bgColor;
+    
+    const posEmotion = positiveEmotions.find(e => e.name === emotion);
+    if (posEmotion) return posEmotion.bgColor;
+    
+    return 'bg-white';
+  };
+  
+  // 感情に対応するテキスト色を取得
+  const getEmotionTextColor = (emotion: string) => {
+    const negEmotion = negativeEmotions.find(e => e.name === emotion);
+    if (negEmotion) return negEmotion.textColor;
+    
+    const posEmotion = positiveEmotions.find(e => e.name === emotion);
+    if (posEmotion) return posEmotion.textColor;
+    
+    return 'text-gray-800';
+  };
   }, [entries]);
 
   const getUrgencyColor = (urgency?: string) => {
@@ -673,32 +727,6 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                 <button
                   onClick={handleSearch}
                   className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs font-jp-medium transition-colors flex items-center space-x-1"
-                >
-                  <Search className="w-3 h-3" />
-                  <span>検索</span>
-                </button>
-              </>
-            )}
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleReset}
-              className="flex items-center space-x-1 px-3 py-1 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm font-jp-medium"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>リセット</span>
-            </button>
-            <button
-              onClick={exportToCSV}
-              className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:text-green-800 border border-green-300 rounded-md hover:bg-green-50 transition-colors text-sm font-jp-medium"
-            >
-              <Download className="w-3 h-3" />
-              <span>CSV出力</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Results */}
       <div className="space-y-4">
         {filteredEntries.map((entry) => (
@@ -830,4 +858,40 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
   );
 };
 
-export default AdvancedSearchFilter;
+        {/* Action Buttons */}
+        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+          <div className="flex items-center space-x-4 text-sm font-jp-normal text-gray-600">
+            {searchLoading ? (
+              <div className="flex items-center space-x-2">
+                <Loader className="w-4 h-4 text-blue-600 animate-spin" />
+                <span>検索中...</span>
+              </div>
+            ) : (
+              <>
+                <span>表示: {filteredEntries.length}件</span>
+                <span>/ 全体: {entries.length}件</span>
+                <button
+                  onClick={handleSearch}
+                  className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs font-jp-medium transition-colors flex items-center space-x-1"
+                >
+                  <Search className="w-3 h-3" />
+                  <span>検索</span>
+                </button>
+              </>
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={resetFilters}
+              className="flex items-center space-x-1 px-3 py-1 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm font-jp-medium"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>リセット</span>
+            </button>
+            <button
+              onClick={exportToCSV}
+              className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:text-green-800 border border-green-300 rounded-md hover:bg-green-50 transition-colors text-sm font-jp-medium"
+            >
+              <Download className="w-3 h-3" />
+              <span>CSV出力</span>
+            </button>

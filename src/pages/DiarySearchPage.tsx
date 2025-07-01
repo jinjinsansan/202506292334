@@ -227,7 +227,6 @@ const DiarySearchPage: React.FC = () => {
   const getEmotionColor = (emotion: string) => {
     const colorMap: { [key: string]: string } = {
       // ネガティブな感情
-      // ネガティブな感情
       '恐怖': 'bg-purple-100 text-purple-800 border-purple-200',
       '悲しみ': 'bg-blue-100 text-blue-800 border-blue-200',
       '怒り': 'bg-red-100 text-red-800 border-red-200',
@@ -236,9 +235,6 @@ const DiarySearchPage: React.FC = () => {
       '罪悪感': 'bg-orange-100 text-orange-800 border-orange-200',
       '寂しさ': 'bg-indigo-100 text-indigo-800 border-indigo-200',
       '恥ずかしさ': 'bg-pink-100 text-pink-800 border-pink-200',
-      // ポジティブな感情
-      '感謝': 'bg-teal-100 text-teal-800 border-teal-200',
-      '達成感': 'bg-lime-100 text-lime-800 border-lime-200',
       // ポジティブな感情
       '嬉しい': 'bg-yellow-100 text-yellow-800 border-yellow-200',
       '感謝': 'bg-teal-100 text-teal-800 border-teal-200',
