@@ -436,6 +436,19 @@ const AdminPanel: React.FC = () => {
     return textMap[level] || '未設定';
   };
 
+  // ユーザー名の表示を修正
+  const getUserName = (entry: any): string => {
+    // ユーザー情報がある場合はそれを使用
+    if (entry.user && entry.user.line_username) {
+      return entry.user.line_username;
+    }
+    
+    // ローカルストレージから現在のユーザー名を取得
+    const currentUsername = localStorage.getItem('line-username') || 'Unknown User';
+    
+    return currentUsername;
+  };
+
   // 詳細表示モーダル
   const renderEntryModal = () => {
     if (!selectedEntry) return null;
@@ -483,8 +496,8 @@ const AdminPanel: React.FC = () => {
                   {selectedEntry.user && (
                     <div className="flex items-center space-x-2">
                       <User className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-700 font-jp-medium">
-                        {selectedEntry.user.line_username}
+                      <span className="text-gray-700 font-jp-medium whitespace-nowrap">
+                        {getUserName(selectedEntry)}
                       </span>
                     </div>
                   )}
