@@ -893,9 +893,9 @@ const AdminPanel: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="chat">
-                      )}
-                      <span className="font-jp-medium">{backupStatus}</span>
-                    </div>
+            <CounselorChat />
+          </TabsContent>
+
           <TabsContent value="backup" className="space-y-6">
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
@@ -997,11 +997,6 @@ const AdminPanel: React.FC = () => {
                       <span className="font-jp-medium">{backupStatus}</span>
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-                  </TabsContent>
                 )}
               </div>
             </div>
