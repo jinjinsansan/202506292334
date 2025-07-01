@@ -63,8 +63,6 @@ const AdminPanel: React.FC = () => {
       alert(`保存に失敗しました: ${errorMessage}`);
     } finally {
       setSaving(false);
-    } finally {
-      setSaving(false);
     }
   };
 
