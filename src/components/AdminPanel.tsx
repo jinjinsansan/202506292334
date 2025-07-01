@@ -44,18 +44,6 @@ const AdminPanel: React.FC = () => {
       }
     }
   }, []);
-  
-  // 初期化時にactiveTabを設定
-  useEffect(() => {
-    // URLのハッシュからタブを設定
-    const hash = window.location.hash;
-    if (hash) {
-      const tabName = hash.substring(1); // #を除去
-      if (['diary', 'search', 'calendar', 'stats', 'counselors', 'chat', 'backup', 'device-auth', 'security', 'settings', 'data-cleanup'].includes(tabName)) {
-        setActiveTab(tabName);
-      }
-    }
-  }, []);
 
   const loadEntries = async () => {
     setLoading(true);
@@ -289,6 +277,11 @@ const AdminPanel: React.FC = () => {
     setFilteredEntries(filtered);
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // フォーム送信処理
+  };
+
   // ユーザー名を取得する関数
   const getUserName = (entry: any): string => {
     // ユーザー情報がある場合はそれを使用
@@ -297,11 +290,6 @@ const AdminPanel: React.FC = () => {
     }
     // ローカルデータの場合
     return 'ユーザー';
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // フォーム送信処理
   };
 
   // バックアップファイルの選択
