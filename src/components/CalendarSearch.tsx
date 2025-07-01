@@ -47,6 +47,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
   const loadEntries = async () => {
     setLoading(true);
     try {
+      console.log('カレンダー検索: データを読み込みます');
       // Supabaseから直接日記データを取得
       if (supabase) {
         try {
@@ -62,6 +63,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
           
           if (error) {
             console.error('Supabaseからの日記データ取得エラー:', error);
+            throw error;
           } else if (diaryData && diaryData.length > 0) {
             console.log('Supabaseから日記データを取得しました:', diaryData.length, '件');
             
@@ -70,9 +72,9 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
               return {
                 id: item.id,
                 date: item.date,
-                emotion: item.emotion,
-                event: item.event || '',
-                realization: item.realization || '',
+                emotion: item.emotion || '不明',
+                event: item.event || '内容なし',
+                realization: item.realization || '内容なし',
                 selfEsteemScore: item.self_esteem_score || 0,
                 worthlessnessScore: item.worthlessness_score || 0,
                 created_at: item.created_at,
@@ -89,6 +91,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
             setEntries(formattedEntries);
             
             // カレンダーデータを生成
+            console.log('カレンダーデータを生成します');
             generateCalendarData(formattedEntries);
             return;
           }
@@ -100,6 +103,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
       // ローカルストレージからデータを取得
       const savedEntries = localStorage.getItem('journalEntries');
       if (savedEntries) {
+        console.log('ローカルストレージから日記データを取得します');
         try {
           const parsedEntries = JSON.parse(savedEntries);
           
@@ -112,6 +116,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
           setEntries(localEntries);
           
           // カレンダーデータを生成
+          console.log('カレンダーデータを生成します (ローカル)');
           generateCalendarData(localEntries);
         } catch (error) {
           console.error('ローカルデータの解析エラー:', error);
@@ -127,6 +132,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
   const generateCalendarData = (entries: JournalEntry[]) => {
     const data: {[key: string]: number} = {};
     
+    console.log(`カレンダーデータ生成: ${entries.length}件のエントリーを処理`);
     entries.forEach(entry => {
       if (entry.date) {
         if (data[entry.date]) {
@@ -138,6 +144,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
     });
     
     setCalendarData(data);
+    console.log('カレンダーデータを設定しました:', Object.keys(data).length, '日分');
   };
 
   const filterEntriesByDate = (date: string) => {
@@ -362,19 +369,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center space-x-2 flex-wrap">
                         <span className={`px-2 py-1 rounded-full text-xs font-jp-medium border ${
-                          entry.emotion === '恐怖' ? 'bg-purple-100 text-purple-800 border-purple-200' :
-                          entry.emotion === '悲しみ' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                          entry.emotion === '怒り' ? 'bg-red-100 text-red-800 border-red-200' :
-                          entry.emotion === '悔しい' ? 'bg-green-100 text-green-800 border-green-200' :
-                          entry.emotion === '無価値感' ? 'bg-gray-100 text-gray-800 border-gray-300' :
-                          entry.emotion === '罪悪感' ? 'bg-orange-100 text-orange-800 border-orange-200' :
-                          entry.emotion === '寂しさ' ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
-                          entry.emotion === '恥ずかしさ' ? 'bg-pink-100 text-pink-800 border-pink-200' :
-                          entry.emotion === '嬉しい' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
-                          entry.emotion === '感謝' ? 'bg-teal-100 text-teal-800 border-teal-200' :
-                          entry.emotion === '達成感' ? 'bg-lime-100 text-lime-800 border-lime-200' :
-                          entry.emotion === '幸せ' ? 'bg-amber-100 text-amber-800 border-amber-200' :
-                          'bg-gray-100 text-gray-800 border-gray-200'
+                        getEmotionColor(entry.emotion)
                         }`}>
                           {entry.emotion}
                         </span>

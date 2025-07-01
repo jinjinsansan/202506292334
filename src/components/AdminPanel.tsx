@@ -28,6 +28,18 @@ const AdminPanel: React.FC = () => {
   useEffect(() => {
     loadEntries();
   }, []);
+  
+  // 初期化時にactiveTabを設定
+  useEffect(() => {
+    // URLのハッシュからタブを設定
+    const hash = window.location.hash;
+    if (hash) {
+      const tabName = hash.substring(1); // #を除去
+      if (['diary', 'search', 'calendar', 'stats', 'counselors', 'chat', 'backup', 'device-auth', 'security', 'settings', 'data-cleanup'].includes(tabName)) {
+        setActiveTab(tabName);
+      }
+    }
+  }, []);
 
   const loadEntries = async () => {
     setLoading(true);
@@ -35,6 +47,7 @@ const AdminPanel: React.FC = () => {
       // Supabaseから直接日記データを取得
       if (supabase) {
         try {
+          console.log('Supabaseから日記データを取得します');
           const { data: diaryData, error } = await supabase
             .from('diary_entries')
             .select(`
@@ -47,6 +60,7 @@ const AdminPanel: React.FC = () => {
           
           if (error) {
             console.error('Supabaseからの日記データ取得エラー:', error);
+            throw error;
           } else if (diaryData && diaryData.length > 0) {
             console.log('Supabaseから日記データを取得しました:', diaryData.length, '件');
             
@@ -58,9 +72,9 @@ const AdminPanel: React.FC = () => {
               return {
                 id: item.id,
                 date: item.date,
-                emotion: item.emotion,
-                event: item.event || '',
-                realization: item.realization || '',
+                emotion: item.emotion || '不明',
+                event: item.event || '内容なし',
+                realization: item.realization || '内容なし',
                 selfEsteemScore: item.self_esteem_score || 0,
                 worthlessnessScore: item.worthlessness_score || 0,
                 created_at: item.created_at,
@@ -90,6 +104,7 @@ const AdminPanel: React.FC = () => {
             
             setEntries(uniqueEntries);
             setFilteredEntries(uniqueEntries);
+            console.log('日記データを設定しました:', formattedEntries.length, '件');
             return;
           }
         } catch (supabaseError) {
@@ -100,6 +115,7 @@ const AdminPanel: React.FC = () => {
       // ローカルストレージからデータを取得
       const savedEntries = localStorage.getItem('journalEntries');
       if (savedEntries) {
+        console.log('ローカルストレージから日記データを取得します');
         try {
           const parsedEntries = JSON.parse(savedEntries);
           
@@ -111,9 +127,12 @@ const AdminPanel: React.FC = () => {
           
           setEntries(localEntries);
           setFilteredEntries(localEntries);
+          console.log('ローカルデータを設定しました:', localEntries.length, '件');
         } catch (error) {
           console.error('ローカルデータの解析エラー:', error);
         }
+      } else {
+        console.log('ローカルストレージに日記データがありません');
       }
     } catch (error) {
       console.error('データ読み込みエラー:', error);
@@ -142,7 +161,7 @@ const AdminPanel: React.FC = () => {
   const handleSaveEdit = async () => {
     if (!selectedEntry) return;
 
-    console.log('保存前のデータ:', editFormData);
+    console.log('日記を保存します:', editFormData);
     setSaving(true);
     
     try {
@@ -169,10 +188,12 @@ const AdminPanel: React.FC = () => {
 
       setEntries(updatedEntries);
       setFilteredEntries(updatedEntries);
+      console.log('ローカルストレージを更新しました');
       localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
 
       // 自動同期機能を使用してSupabaseに同期
       if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
+        console.log('自動同期を実行します');
         await window.autoSync.triggerManualSync();
         console.log('自動同期を実行しました');
       }
@@ -181,8 +202,9 @@ const AdminPanel: React.FC = () => {
       setEditMode(false);
       alert('変更を保存しました！');
     } catch (error) {
-      console.error('保存エラー:', error);
-      alert(`保存に失敗しました: ${error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('保存エラー:', errorMessage);
+      alert(`保存に失敗しました: ${errorMessage}`);
     } finally {
       setSaving(false);
     }
@@ -193,6 +215,7 @@ const AdminPanel: React.FC = () => {
       return;
     }
 
+    console.log('日記を削除します:', entryId);
     setSaving(true);
     
     try {
@@ -205,14 +228,15 @@ const AdminPanel: React.FC = () => {
       // Supabaseからの削除（自動同期機能を使用）
       if (window.autoSync && typeof window.autoSync.syncDeleteDiary === 'function') {
         const syncResult = await window.autoSync.syncDeleteDiary(entryId);
-        console.log('削除同期結果:', syncResult);
+        console.log('削除同期結果:', syncResult ? '成功' : '失敗');
       }
 
       setSelectedEntry(null);
       alert('日記を削除しました！');
     } catch (error) {
-      console.error('削除エラー:', error);
-      alert('削除に失敗しました。もう一度お試しください。');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('削除エラー:', errorMessage);
+      alert(`削除に失敗しました: ${errorMessage}`);
     } finally {
       setSaving(false);
     }
@@ -516,10 +540,20 @@ const AdminPanel: React.FC = () => {
                     </button>
                     <button
                       onClick={handleSaveEdit}
-                      className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-jp-medium transition-colors"
+                      disabled={saving}
+                      className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-jp-medium transition-colors"
                     >
-                      <CheckCircle className="w-4 h-4" />
-                      <span>保存</span>
+                      {saving ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>保存中...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          <span>保存</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 )}
@@ -556,11 +590,11 @@ const AdminPanel: React.FC = () => {
         <Tabs defaultValue="search" className="w-full">
           <TabsList className="w-full mb-6 overflow-x-auto flex-nowrap bg-gray-100">
             <TabsTrigger value="diary" onClick={() => setActiveTab('diary')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              <BookOpen className="w-4 h-4 mr-2" />
+              <BookOpen className="w-4 h-4 mr-2" aria-hidden="true" />
               日記
             </TabsTrigger>
             <TabsTrigger value="search" onClick={() => setActiveTab('search')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              <Search className="w-4 h-4 mr-2" />
+              <Search className="w-4 h-4 mr-2" aria-hidden="true" />
               詳細検索
             </TabsTrigger>
             <TabsTrigger value="calendar" onClick={() => setActiveTab('calendar')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
@@ -604,7 +638,7 @@ const AdminPanel: React.FC = () => {
           <TabsContent value="diary" className="space-y-6">
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
-                <BookOpen className="w-5 h-5 text-blue-600 mr-2" />
+                <BookOpen className="w-5 h-5 text-blue-600 mr-2" aria-hidden="true" />
                 日記一覧
               </h2>
               <AdvancedSearchFilter 
@@ -619,7 +653,7 @@ const AdminPanel: React.FC = () => {
           <TabsContent value="search" className="space-y-6">
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
-                <Search className="w-5 h-5 text-blue-600 mr-2" />
+                <Search className="w-5 h-5 text-blue-600 mr-2" aria-hidden="true" />
                 詳細検索
               </h2>
               <AdvancedSearchFilter 
