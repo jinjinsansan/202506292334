@@ -71,6 +71,12 @@ const AdminPanel: React.FC = () => {
           </div>
         </div>
       </div>
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('保存エラー:', errorMessage);
+      alert(`保存に失敗しました: ${errorMessage}`);
+    } finally {
+      setSaving(false);
     );
   };
 
