@@ -102,16 +102,7 @@ const AdminPanel: React.FC = () => {
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4" />
-                      <span>保存</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
+                      <span>{saving ? '保存中...' : '保存'}</span>
                     </>
                   )}
                 </button>
@@ -152,7 +143,7 @@ const AdminPanel: React.FC = () => {
               日記
             </TabsTrigger>
             <TabsTrigger value="search" onClick={() => setActiveTab('search')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-            <Search className="w-4 h-4 mr-2" />
+              <Search className="w-4 h-4 mr-2" />
               詳細検索
             </TabsTrigger>
             <TabsTrigger value="calendar" onClick={() => setActiveTab('calendar')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
