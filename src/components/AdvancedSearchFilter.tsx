@@ -407,19 +407,6 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
     return currentUsername;
   };
 
-  // ユーザー名の表示を修正
-  const getUserName = (entry: any): string => {
-    // ユーザー情報がある場合はそれを使用
-    if (entry.user && entry.user.line_username) {
-      return entry.user.line_username;
-    }
-    
-    // ローカルストレージから現在のユーザー名を取得
-    const currentUsername = localStorage.getItem('line-username') || 'Unknown User';
-    
-    return currentUsername;
-  };
-
   return (
     <div className="space-y-6">
       {/* 検索フィルター */}
@@ -779,12 +766,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 
                 <div className="flex justify-between items-center mt-3 pt-3 border-t">
                   <div className="flex items-center space-x-2">
-                    {entry.user?.line_username && (
-                      <span className="text-xs text-gray-500 font-jp-normal">
-                        {getUserName(entry)}
-                      </span>
-                    )}
-                    {entry.user?.line_username && (
+                    {entry.user && (
                       <span className="text-xs text-gray-500 font-jp-normal">
                         {getUserName(entry)}
                       </span>

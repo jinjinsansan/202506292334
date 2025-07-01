@@ -257,19 +257,6 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
     return currentUsername;
   };
 
-  // ユーザー名の表示を修正
-  const getUserName = (entry: any): string => {
-    // ユーザー情報がある場合はそれを使用
-    if (entry.user && entry.user.line_username) {
-      return entry.user.line_username;
-    }
-    
-    // ローカルストレージから現在のユーザー名を取得
-    const currentUsername = localStorage.getItem('line-username') || 'Unknown User';
-    
-    return currentUsername;
-  };
-
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-lg p-6">
