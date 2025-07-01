@@ -42,7 +42,7 @@
   
   /* グラフ用スタイル */
   .graph-line {
-    stroke-width: 1.2;
+    stroke-width: 1;
     stroke-linecap: round;
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
@@ -50,15 +50,15 @@
   
   /* SVGグラフ用スタイル */
   .graph-svg [stroke] { 
-    vector-effect: non-scaling-stroke;
+    vector-effect: non-scaling-stroke; 
   }
   .graph-svg circle { 
-    vector-effect: non-scaling-stroke;
-    r: 1.2;
+    vector-effect: non-scaling-stroke; 
+    r: 1;
   }
   .graph-svg text { 
     font-family: system-ui, sans-serif; 
-    font-size: 7px;
+    font-size: 2px;
   }
   
   /* タブコンポーネントのスタイル修正 */
