@@ -354,7 +354,7 @@ export const diaryService = {
               // 所有者列(user_id, username)を送らないようにサニタイズ
               const { user_id, username, ...sanitizedDiary } = diary;
               const { error: singleError } = await supabase
-                .from('diary_entries').upsert([diary], {
+                .from('diary_entries').upsert([sanitizedDiary], {
                 onConflict: 'id',
                 ignoreDuplicates: false,
                 returning: 'minimal'
