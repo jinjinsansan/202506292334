@@ -36,9 +36,19 @@ export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
   
   // urgency_levelフィールドが存在する場合のみ追加
   if (diaryEntry.urgency_level !== undefined || diaryEntry.urgencyLevel !== undefined) {
-    formattedEntry.urgency_level = diaryEntry.urgency_level !== undefined ? 
-                                   diaryEntry.urgency_level : 
-                                   diaryEntry.urgencyLevel;
+    // 緊急度の値を検証して、許可された値のみを設定
+    const urgencyValue = diaryEntry.urgency_level !== undefined ? 
+                        diaryEntry.urgency_level : 
+                        diaryEntry.urgencyLevel || '';
+    
+    // 許可された値のみを設定（high, medium, low, または空文字列）
+    if (urgencyValue === 'high' || urgencyValue === 'medium' || urgencyValue === 'low' || urgencyValue === '') {
+      formattedEntry.urgency_level = urgencyValue;
+    } else {
+      // 無効な値の場合は空文字列に設定
+      console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
+      formattedEntry.urgency_level = '';
+    }
   }
   
   // is_visible_to_userフィールドが存在する場合のみ追加

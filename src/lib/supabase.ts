@@ -277,9 +277,19 @@ export const diaryService = {
           }
           
           // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
-          if (formattedEntry.urgency_level === null) {
-            formattedEntry.urgency_level = '';
-          }
+            // 緊急度の値を検証して、許可された値のみを設定
+            const urgencyValue = entry.urgency_level !== undefined ? 
+                                entry.urgency_level : 
+                                entry.urgencyLevel || '';
+            
+            // 許可された値のみを設定（high, medium, low, または空文字列）
+            if (urgencyValue === 'high' || urgencyValue === 'medium' || urgencyValue === 'low' || urgencyValue === '') {
+              formattedEntry.urgency_level = urgencyValue;
+            } else {
+              // 無効な値の場合は空文字列に設定
+              console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
+              formattedEntry.urgency_level = '';
+            }
           
           
           return formattedEntry;
