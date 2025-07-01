@@ -15,6 +15,7 @@ const AdminPanel: React.FC = () => {
   // ... rest of the code ...
 
   const handleSaveEdit = async () => {
+    if (!selectedEntry) return;
     setSaving(true);
     
     try {
@@ -22,7 +23,8 @@ const AdminPanel: React.FC = () => {
       const updatedEntries = entries.map(entry => {
         if (entry.id === selectedEntry.id) {
           return {
-            ...entry,
+            ...entry, // 元のエントリーのプロパティをすべて保持
+            user_id: entry.user_id || selectedEntry.user_id, // ユーザーIDを保持
             syncStatus: entry.syncStatus || 'local', // 同期状態を保持
             counselorMemo: editFormData.counselorMemo,
             isVisibleToUser: editFormData.isVisibleToUser,
@@ -48,25 +50,18 @@ const AdminPanel: React.FC = () => {
       if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
         console.log('自動同期を実行します');
         await window.autoSync.triggerManualSync();
-        console.log('自動同期を実行しました');
+        console.log('自動同期を実行しました'); 
       }
 
-      setSelectedEntry(null);
+      // 初期タブを設定
       setEditMode(false);
-      alert('変更を保存しました！');
+      setActiveTab('search');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error('保存エラー:', errorMessage);
-      alert(`保存に失敗しました: ${errorMessage}`);
-    } finally {
-      setSaving(false);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error('保存エラー:', errorMessage);
-      alert(`保存に失敗しました: ${errorMessage}`);
+      console.error('Error saving edit:', error);
     } finally {
       setSaving(false);
     }
+  };
 
   const renderEntryModal = () => {
     if (!selectedEntry) return null;
@@ -95,7 +90,7 @@ const AdminPanel: React.FC = () => {
                 <button
                   onClick={handleSaveEdit}
                   disabled={saving}
-                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-jp-medium transition-colors" 
+                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-jp-medium transition-colors"
                 >
                   {saving ? (
                     <>
