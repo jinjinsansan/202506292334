@@ -177,8 +177,8 @@ export const diaryService = {
             user_id: userId,
             date: diary.date || new Date().toISOString().split('T')[0],
             emotion: diary.emotion || '無価値感',
-            event: diary.event || 'イベントなし',
-            realization: diary.realization || '気づきなし',
+            event: diary.event || '',
+            realization: diary.realization || '',
             self_esteem_score: typeof diary.selfEsteemScore === 'number' ? diary.selfEsteemScore : 
                               (typeof diary.selfEsteemScore === 'string' ? parseInt(diary.selfEsteemScore) : 
                                (typeof diary.self_esteem_score === 'number' ? diary.self_esteem_score : 
@@ -228,13 +228,13 @@ export const diaryService = {
           if (diary.counselor_memo !== undefined) {
             formattedEntry.counselor_memo = diary.counselor_memo;
           } else if (diary.counselorMemo !== undefined) {
-            formattedEntry.counselor_memo = diary.counselorMemo;
+            formattedEntry.counselor_memo = diary.counselorMemo || '';
           }
-         
-         // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
-         if (formattedEntry.counselor_memo === null) {
-           formattedEntry.counselor_memo = '';
-         }
+          
+          // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
+          if (formattedEntry.counselor_memo === null) {
+            formattedEntry.counselor_memo = '';
+          }
           
           // 表示設定の処理
           if (diary.is_visible_to_user !== undefined) {
@@ -249,48 +249,48 @@ export const diaryService = {
           if (diary.counselor_name !== undefined) {
             formattedEntry.counselor_name = diary.counselor_name;
           } else if (diary.counselorName !== undefined) {
-            formattedEntry.counselor_name = diary.counselorName;
+            formattedEntry.counselor_name = diary.counselorName || '';
           }
-         
-         // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
-         if (formattedEntry.counselor_name === null) {
-           formattedEntry.counselor_name = '';
-         }
+          
+          // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
+          if (formattedEntry.counselor_name === null) {
+            formattedEntry.counselor_name = '';
+          }
           
           // 担当カウンセラーの処理
           if (diary.assigned_counselor !== undefined) {
             formattedEntry.assigned_counselor = diary.assigned_counselor;
           } else if (diary.assignedCounselor !== undefined) {
-            formattedEntry.assigned_counselor = diary.assignedCounselor;
+            formattedEntry.assigned_counselor = diary.assignedCounselor || '';
           }
-         
-         // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
-         if (formattedEntry.assigned_counselor === null) {
-           formattedEntry.assigned_counselor = '';
-         }
+          
+          // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
+          if (formattedEntry.assigned_counselor === null) {
+            formattedEntry.assigned_counselor = '';
+          }
           
           // 緊急度の処理
           if (diary.urgency_level !== undefined) {
             formattedEntry.urgency_level = diary.urgency_level;
           } else if (diary.urgencyLevel !== undefined) {
-            formattedEntry.urgency_level = diary.urgencyLevel;
+            formattedEntry.urgency_level = diary.urgencyLevel || '';
           }
-         
-         // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
-         if (formattedEntry.urgency_level === null) {
-           formattedEntry.urgency_level = '';
-         }
+          
+          // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
+          if (formattedEntry.urgency_level === null) {
+            formattedEntry.urgency_level = '';
+          }
           
           
           return formattedEntry;
         });
       
       console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
-     
-     // デバッグ用：最初の数件のデータを表示
-     if (formattedDiaries.length > 0) {
-       console.log('同期データサンプル:', formattedDiaries.slice(0, 2));
-     }
+      
+      // デバッグ用：最初の数件のデータを表示
+      if (formattedDiaries.length > 0) {
+        console.log('同期データサンプル:', formattedDiaries.slice(0, 2));
+      }
       
       if (formattedDiaries.length === 0) {
         return { success: true, message: '有効な同期データがありません' };
@@ -309,40 +309,40 @@ export const diaryService = {
         );
       
       if (error) {
-       console.error('日記同期エラー:', error, 'データ件数:', formattedDiaries.length, 'エラー詳細:', error.details);
-       
-       // エラーが発生した場合、1件ずつ同期を試みる
-       if (formattedDiaries.length > 1) {
-         console.log('1件ずつ同期を試みます...');
-         let successCount = 0;
-         
-         for (const diary of formattedDiaries) {
-           try {
-             const { error: singleError } = await supabase
-               .from('diary_entries')
-               .upsert([diary], {
-                 onConflict: 'id',
-                 ignoreDuplicates: false,
-                 returning: 'minimal'
-               });
-             
-             if (!singleError) {
-               successCount++;
-             } else {
-               console.error('個別同期エラー:', singleError, 'ID:', diary.id);
-             }
-           } catch (err) {
-             console.error('個別同期例外:', err);
-           }
-         }
-         
-         console.log(`個別同期結果: ${successCount}/${formattedDiaries.length}件成功`);
-         
-         if (successCount > 0) {
-           return { success: true, message: `${successCount}/${formattedDiaries.length}件の同期に成功しました` };
-         }
-       }
-       
+        console.error('日記同期エラー:', error, 'データ件数:', formattedDiaries.length, 'エラー詳細:', error.details);
+        
+        // エラーが発生した場合、1件ずつ同期を試みる
+        if (formattedDiaries.length > 1) {
+          console.log('1件ずつ同期を試みます...');
+          let successCount = 0;
+          
+          for (const diary of formattedDiaries) {
+            try {
+              const { error: singleError } = await supabase
+                .from('diary_entries')
+                .upsert([diary], {
+                  onConflict: 'id',
+                  ignoreDuplicates: false,
+                  returning: 'minimal'
+                });
+              
+              if (!singleError) {
+                successCount++;
+              } else {
+                console.error('個別同期エラー:', singleError, 'ID:', diary.id);
+              }
+            } catch (err) {
+              console.error('個別同期例外:', err);
+            }
+          }
+          
+          console.log(`個別同期結果: ${successCount}/${formattedDiaries.length}件成功`);
+          
+          if (successCount > 0) {
+            return { success: true, message: `${successCount}/${formattedDiaries.length}件の同期に成功しました` };
+          }
+        }
+        
         return { success: false, error: error.message };
       }
       
