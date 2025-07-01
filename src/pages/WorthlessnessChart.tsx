@@ -299,6 +299,13 @@ const WorthlessnessChart: React.FC = () => {
   const toX = (i: number, total: number) => (i / Math.max(1, total - 1)) * 100;
   const toY = (val: number) => ((max - val) / span) * 100;
 
+  // 日付表示を整形する関数
+  const formatDateLabel = (index: number, total: number) => {
+    // 表示する日付の間隔を調整（データ量に応じて）
+    const interval = total <= 7 ? 1 : total <= 14 ? 2 : 3;
+    return index % interval === 0;
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 px-2">
       <div className="bg-white rounded-xl shadow-lg p-6">
@@ -386,11 +393,13 @@ const WorthlessnessChart: React.FC = () => {
           <div className="space-y-6">
             {/* グラフ */}
             <div className="bg-white rounded-lg p-4 border border-gray-200 overflow-hidden relative">
-              {initialScore && period === 'all' && (
-                <div className="absolute top-2 left-2 bg-blue-50 rounded-lg p-2 border border-blue-200 text-xs z-10">
-                  <span className="font-jp-medium text-blue-800">初期スコア表示中</span>
-                </div>
-              )}
+              <div className="absolute top-2 left-2 bg-blue-50 rounded-lg p-2 border border-blue-200 text-xs z-10">
+                <span className="font-jp-medium text-blue-800">
+                  {initialScore && period === 'all' ? '初期スコア表示中' : 
+                   period === 'week' ? '過去7日間' : 
+                   period === 'month' ? '過去30日間' : '全期間'}
+                </span>
+              </div>
               
               <div className="w-full" style={{ height: '300px' }}>
                 <div className="flex justify-between items-center mb-4">
@@ -404,13 +413,10 @@ const WorthlessnessChart: React.FC = () => {
                       <span className="text-sm font-jp-medium text-gray-700">無価値感</span>
                     </div>
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {period === 'week' ? '過去7日間' : period === 'month' ? '過去30日間' : '全期間'}
-                  </div>
                 </div>
                 
                 {/* グラフ本体 */}
-                <div className="relative w-full h-60 overflow-hidden">
+                <div className="relative w-full h-64 overflow-hidden">
                   <svg
                     viewBox="0 0 100 100"
                     preserveAspectRatio="none"
@@ -418,7 +424,7 @@ const WorthlessnessChart: React.FC = () => {
                     shapeRendering="geometricPrecision"
                   >
                     {/* グリッド */}
-                    <g stroke="#e5e7eb" strokeWidth="0.4" vectorEffect="non-scaling-stroke">
+                    <g stroke="#e5e7eb" strokeWidth="0.5" vectorEffect="non-scaling-stroke">
                       {[0, 25, 50, 75, 100].map(tick => (
                         <g key={tick}>
                           <line x1="0" y1={toY(tick)} x2="100" y2={toY(tick)} />
@@ -436,56 +442,75 @@ const WorthlessnessChart: React.FC = () => {
                     </g>
 
                     {/* 折れ線 */}
-                    {[
-                      { key: 'selfEsteemScore', color: '#3b82f6' },
-                      { key: 'worthlessnessScore', color: '#ef4444' },
-                    ].map(({ key, color }) => (
-                      <polyline
-                        key={key}
-                        points={displayedData
-                          .map((d, i) =>
-                            `${toX(i, displayedData.length)},${toY(Number(d[key as keyof ScoreEntry] as number))}`
-                          )
-                          .join(' ')}
-                        fill="none"
-                        stroke={color}
-                        strokeWidth="1"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        vectorEffect="non-scaling-stroke"
-                      />
-                    ))}
+                    <polyline
+                      points={displayedData
+                        .map((d, i) =>
+                          `${toX(i, displayedData.length)},${toY(Number(d.selfEsteemScore))}`
+                        )
+                        .join(' ')}
+                      fill="none"
+                      stroke="#3b82f6"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                    <polyline
+                      points={displayedData
+                        .map((d, i) =>
+                          `${toX(i, displayedData.length)},${toY(Number(d.worthlessnessScore))}`
+                        )
+                        .join(' ')}
+                      fill="none"
+                      stroke="#ef4444"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      vectorEffect="non-scaling-stroke"
+                    />
 
                     {/* 点 */}
                     {displayedData.map((d, i) => {
                       const x = toX(i, displayedData.length);
-                      return ['selfEsteemScore', 'worthlessnessScore'].map((k, idx) => (
-                        <circle
-                          key={`${k}-${i}`}
-                          cx={x}
-                          cy={toY(Number(d[k as keyof ScoreEntry] as number))}
-                          r="2"
-                          fill={idx ? '#ef4444' : '#3b82f6'}
-                          stroke="#fff"
-                          strokeWidth="0.3"
-                          vectorEffect="non-scaling-stroke"
-                        >
-                          <title>
-                            {`${d.date} ${idx ? '無価値感' : '自己肯定感'} ${
-                              d[k as keyof ScoreEntry]
-                            }`}
-                          </title>
-                        </circle>
-                      ));
+                      return (
+                        <React.Fragment key={`points-${i}`}>
+                          <circle
+                            cx={x}
+                            cy={toY(Number(d.selfEsteemScore))}
+                            r="3"
+                            fill="#3b82f6"
+                            stroke="#fff"
+                            strokeWidth="1"
+                            vectorEffect="non-scaling-stroke"
+                          >
+                            <title>
+                              {`${d.date} 自己肯定感: ${d.selfEsteemScore}`}
+                            </title>
+                          </circle>
+                          <circle
+                            cx={x}
+                            cy={toY(Number(d.worthlessnessScore))}
+                            r="3"
+                            fill="#ef4444"
+                            stroke="#fff"
+                            strokeWidth="1"
+                            vectorEffect="non-scaling-stroke"
+                          >
+                            <title>
+                              {`${d.date} 無価値感: ${d.worthlessnessScore}`}
+                            </title>
+                          </circle>
+                        </React.Fragment>
+                      );
                     })}
                     
                     {/* X軸ラベル */}
-                    {displayedData.map((data, index) => (
+                    {displayedData.map((data, index) => formatDateLabel(index, displayedData.length) && (
                       <text
                         key={`x-label-${index}`}
                         x={toX(index, displayedData.length)}
                         y="98"
-                        fontSize="3"
+                        fontSize="2.5"
                         textAnchor="middle"
                         fill="#6b7280"
                       >
@@ -511,16 +536,16 @@ const WorthlessnessChart: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-white rounded-lg p-4 border border-blue-200">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-700 font-jp-medium text-lg">自己肯定感スコア</span>
-                      <span className="text-3xl font-jp-bold text-blue-600">
+                      <span className="text-gray-700 font-jp-medium">自己肯定感スコア</span>
+                      <span className="text-3xl font-jp-bold text-blue-600 ml-2">
                         {displayedData[displayedData.length - 1].selfEsteemScore}
                       </span>
                     </div>
                   </div>
                   <div className="bg-white rounded-lg p-4 border border-red-200">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-700 font-jp-medium text-lg">無価値感スコア</span>
-                      <span className="text-3xl font-jp-bold text-red-600">
+                      <span className="text-gray-700 font-jp-medium">無価値感スコア</span>
+                      <span className="text-3xl font-jp-bold text-red-600 ml-2">
                         {displayedData[displayedData.length - 1].worthlessnessScore}
                       </span>
                     </div>
@@ -538,16 +563,16 @@ const WorthlessnessChart: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="bg-white rounded-lg p-3 border border-blue-100">
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-jp-medium text-base">自己肯定感スコア</span>
-                          <span className="text-2xl font-jp-bold text-blue-600">
+                          <span className="text-gray-700 font-jp-medium text-sm">自己肯定感スコア</span>
+                          <span className="text-2xl font-jp-bold text-blue-600 ml-2">
                             {initialScore.selfEsteemScore}
                           </span>
                         </div>
                       </div>
                       <div className="bg-white rounded-lg p-3 border border-red-100">
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-jp-medium text-base">無価値感スコア</span>
-                          <span className="text-2xl font-jp-bold text-red-600">
+                          <span className="text-gray-700 font-jp-medium text-sm">無価値感スコア</span>
+                          <span className="text-2xl font-jp-bold text-red-600 ml-2">
                             {initialScore.worthlessnessScore}
                           </span>
                         </div>
@@ -573,17 +598,17 @@ const WorthlessnessChart: React.FC = () => {
             {emotionCounts.length > 0 && (
               <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-jp-bold text-gray-900 text-lg">感情の出現頻度</h3>
+                  <h3 className="font-jp-bold text-gray-900">感情の出現頻度</h3>
                   <div className="text-sm font-medium text-gray-700">
                     {period === 'week' ? '過去7日間' : period === 'month' ? '過去30日間' : '全期間'}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {emotionCounts.map((item, index) => (
                     <div key={index} className="bg-white rounded-lg p-3 border border-gray-200">
                       <div className="text-center">
-                        <div className="text-lg font-jp-bold text-gray-900 mb-1">{item.emotion}</div>
-                        <div className="text-base font-medium text-gray-600">{item.count}回</div>
+                        <div className="text-base font-jp-bold text-gray-900 mb-1">{item.emotion}</div>
+                        <div className="text-sm font-medium text-gray-600">{item.count}回</div>
                       </div>
                     </div>
                   ))}

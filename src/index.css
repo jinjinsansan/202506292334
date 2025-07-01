@@ -42,21 +42,23 @@
   
   /* グラフ用スタイル */
   .graph-line {
-    stroke-width: 1;
+    stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
   }
   
   /* SVGグラフ用スタイル */
-  .graph-svg [stroke] { 
-    vector-effect: non-scaling-stroke; 
+  .graph-svg [stroke] {
+    vector-effect: non-scaling-stroke;
   }
-  .graph-svg circle { 
-    vector-effect: non-scaling-stroke; 
+  .graph-svg circle {
+    vector-effect: non-scaling-stroke;
+    r: 3;
   }
-  .graph-svg text { 
-    font-family: system-ui, sans-serif; 
+  .graph-svg text {
+    font-family: system-ui, sans-serif;
+    font-size: 10px;
   }
   
   /* タブコンポーネントのスタイル修正 */
