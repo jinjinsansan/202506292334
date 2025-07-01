@@ -449,6 +449,19 @@ const AdminPanel: React.FC = () => {
     return currentUsername;
   };
 
+  // ユーザー名の表示を修正
+  const getUserName = (entry: any): string => {
+    // ユーザー情報がある場合はそれを使用
+    if (entry.user && entry.user.line_username) {
+      return entry.user.line_username;
+    }
+    
+    // ローカルストレージから現在のユーザー名を取得
+    const currentUsername = localStorage.getItem('line-username') || 'Unknown User';
+    
+    return currentUsername;
+  };
+
   // 詳細表示モーダル
   const renderEntryModal = () => {
     if (!selectedEntry) return null;
@@ -584,7 +597,7 @@ const AdminPanel: React.FC = () => {
                       <select
                         value={editFormData.assignedCounselor}
                         onChange={(e) => setEditFormData({...editFormData, assignedCounselor: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal text-sm"
                       >
                         <option value="">未割り当て</option>
                         <option value="心理カウンセラー仁">心理カウンセラー仁</option>
