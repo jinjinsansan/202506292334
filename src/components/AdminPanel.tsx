@@ -194,7 +194,7 @@ Here's the fixed version with added closing brackets and braces:
                       </p>
                       <button
                         onClick={handleCreateBackup}
-                        className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-jp-medium transition-colors w-full sm:w-auto"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal text-sm"
                       >
                         <Download className="w-5 h-5" />
                         <span>バックアップを作成</span>
@@ -270,11 +270,21 @@ Here's the fixed version with added closing brackets and braces:
                   }`}>
                     <div className="flex items-center space-x-2">
                       {backupStatus.includes('失敗') ? (
-                        <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                      ) : (
+                      <span className="text-gray-700 font-jp-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
+                        {selectedEntry.user?.line_username || 'Unknown User'}
                         <CheckCircle className="w-5 h-5 flex-shrink-0" />
                       )}
                       <span className="font-jp-medium">{backupStatus}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
                     </div>
                   </div>
                 )}

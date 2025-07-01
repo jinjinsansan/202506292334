@@ -720,7 +720,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                   <div className="flex items-center space-x-2">
                     {entry.user?.line_username && (
                       <span className="text-xs text-gray-500 font-jp-normal flex items-center">
-                        <User className="w-3 h-3 mr-1" />
+                        {entry.user?.line_username}
                         {entry.user?.line_username}
                       </span>
                     )}
