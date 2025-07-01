@@ -139,7 +139,7 @@ const AdminPanel: React.FC = () => {
                   </button>
                 </div>
                 {backupStatus && (
-                  <div className={`p-4 rounded-lg ${backupStatus.includes('失敗') ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                  <div className={\`p-4 rounded-lg ${backupStatus.includes('失敗') ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
                     {backupStatus}
                   </div>
                 )}
