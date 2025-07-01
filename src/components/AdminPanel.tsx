@@ -41,10 +41,28 @@ const AdminPanel: React.FC = () => {
         }
         return entry;
       });
+
+      setEntries(updatedEntries);
+      setFilteredEntries(updatedEntries);
+      console.log('ローカルストレージを更新しました');
+      localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+
+      // 自動同期機能を使用してSupabaseに同期
+      if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
+        console.log('自動同期を実行します');
+        await window.autoSync.triggerManualSync();
+        console.log('自動同期を実行しました');
+      }
+
+      setSelectedEntry(null);
+      setEditMode(false);
+      alert('変更を保存しました！');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('保存エラー:', errorMessage);
       alert(`保存に失敗しました: ${errorMessage}`);
+    } finally {
+      setSaving(false);
     } finally {
       setSaving(false);
     }
