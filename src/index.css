@@ -54,13 +54,18 @@
   }
   .graph-svg circle { 
     vector-effect: non-scaling-stroke; 
-    r: 1;
   }
   .graph-svg text { 
     font-family: system-ui, sans-serif; 
-    font-size: 2px;
   }
   
+  /* グラフ線の設定 */
+  .graph-line {
+    stroke-width: 1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
   /* タブコンポーネントのスタイル修正 */
   .tabs-list-wrapper {
     overflow-x: auto;
