@@ -140,10 +140,9 @@ const DataMigration: React.FC = () => {
       setMigrationProgress(70);
       
       // 日記データをSupabase形式に変換
-      const formattedEntries = entries
-        .filter((entry: any) => {
-          if (!entry || !entry.id || !entry.date || !entry.emotion) {
-            console.warn('無効なエントリーをスキップ:', entry);
+      const formattedEntries = entries.filter((entry: any) => {
+        if (!entry || !entry.id || !entry.date || !entry.emotion) {
+          console.warn('無効なエントリーをスキップ:', entry);
             return false;
           }
           return true;
@@ -187,6 +186,9 @@ const DataMigration: React.FC = () => {
           
           return formattedEntry;
         });
+      
+      // 所有者列(user_id, username)を送らないようにサニタイズ
+      const sanitized = formattedEntries.map(({ user_id, username, ...rest }) => rest);
       
       // 所有者列(user_id, username)を送らないようにサニタイズ
       const sanitized = formattedEntries.map(({ user_id, username, ...rest }) => rest);
