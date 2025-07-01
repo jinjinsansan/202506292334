@@ -319,6 +319,8 @@ export const diaryService = {
           return formattedEntry;
         });
       
+      // 所有者列(user_id, username)を送らないようにサニタイズ
+      const sanitized = formattedDiaries.map(({ user_id, username, ...rest }) => rest);
       console.log('Supabaseに同期するデータ:', formattedDiaries.length, '件', 'ユーザーID:', userId);
       
       // デバッグ用：最初の数件のデータを表示
@@ -351,6 +353,8 @@ export const diaryService = {
           
           for (const diary of formattedDiaries) {
             try {
+              // 所有者列(user_id, username)を送らないようにサニタイズ
+              const { user_id, username, ...sanitizedDiary } = diary;
               // 所有者列(user_id, username)を送らないようにサニタイズ
               const { user_id, username, ...sanitizedDiary } = diary;
               const { error: singleError } = await supabase
