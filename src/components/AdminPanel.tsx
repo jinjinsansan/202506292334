@@ -140,10 +140,13 @@ const AdminPanel: React.FC = () => {
   };
 
   const handleSaveEdit = async () => {
+    if (!selectedEntry) return;
 
     console.log('保存前のデータ:', editFormData);
+    setSaving(true);
+    
+    try {
       // ローカルストレージのデータを更新
-    console.log('保存前のデータ:', editFormData);
       const updatedEntries = entries.map(entry => {
         if (entry.id === selectedEntry.id) {
           return {
@@ -161,19 +164,7 @@ const AdminPanel: React.FC = () => {
             counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
           };
         }
-          entry.id === editingEntry.id ? {
-            ...entry,
-            counselorMemo: editFormData.counselorMemo,
-            isVisibleToUser: editFormData.isVisibleToUser,
-            counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
-            is_visible_to_user: editFormData.isVisibleToUser, // Supabase形式のフィールドも更新
-            assignedCounselor: editFormData.assignedCounselor,
-            assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
-            urgencyLevel: editFormData.urgencyLevel,
-            urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
-            counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
-            counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
-          } : entry
+        return entry;
       });
 
       setEntries(updatedEntries);
@@ -183,6 +174,7 @@ const AdminPanel: React.FC = () => {
       // 自動同期機能を使用してSupabaseに同期
       if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
         await window.autoSync.triggerManualSync();
+        console.log('自動同期を実行しました');
       }
 
       setSelectedEntry(null);
@@ -202,7 +194,7 @@ const AdminPanel: React.FC = () => {
     }
 
     setSaving(true);
-
+    
     try {
       // ローカルストレージからの削除
       const updatedEntries = entries.filter(entry => entry.id !== entryId);
@@ -212,11 +204,13 @@ const AdminPanel: React.FC = () => {
 
       // Supabaseからの削除（自動同期機能を使用）
       if (window.autoSync && typeof window.autoSync.syncDeleteDiary === 'function') {
-        await window.autoSync.syncDeleteDiary(id);
+        const syncResult = await window.autoSync.syncDeleteDiary(entryId);
+        console.log('削除同期結果:', syncResult);
       }
 
       setSelectedEntry(null);
-      alert(`更新に失敗しました: ${error}`);
+      alert('日記を削除しました！');
+    } catch (error) {
       console.error('削除エラー:', error);
       alert('削除に失敗しました。もう一度お試しください。');
     } finally {

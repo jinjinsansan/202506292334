@@ -400,35 +400,52 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                           {entry.realization.length > 100 ? `${entry.realization.substring(0, 100)}...` : entry.realization}
                         </p>
                       </div>
-                      {(entry.assignedCounselor || entry.assigned_counselor) ? 
-                        `担当: ${entry.assignedCounselor || entry.assigned_counselor}` : 
-                        '未割り当て'}
+                    </div>
 
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => onViewEntry(entry)}
-                        className="text-blue-600 hover:text-blue-700 p-1 cursor-pointer"
-                        title="詳細を見る"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      {onDeleteEntry && (
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        {(entry.assignedCounselor || entry.assigned_counselor) ? 
+                          `担当: ${entry.assignedCounselor || entry.assigned_counselor}` : 
+                          '未割り当て'}
+                      </p>
+
+                      <div className="flex space-x-2">
                         <button
-                          onClick={() => onDeleteEntry(entry.id)}
-                          className="text-red-600 hover:text-red-700 p-1 cursor-pointer"
-                          title="削除"
+                          onClick={() => onViewEntry(entry)}
+                          className="text-blue-600 hover:text-blue-700 p-1 cursor-pointer"
+                          title="詳細を見る"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Eye className="w-4 h-4" />
                         </button>
-                      )}
+                        {onDeleteEntry && (
+                          <button
+                            onClick={() => onDeleteEntry(entry.id)}
+                            className="text-red-600 hover:text-red-700 p-1 cursor-pointer"
+                            title="削除"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-gray-500">
+                          {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
+                        </p>
+                        {((entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo)) && (
+                          <p className="text-gray-600 text-sm mt-1">
+                            {entry.counselor_memo || entry.counselorMemo}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
-                          {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
-                  {((entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo)) && (
+              </div>
+            )}
           </div>
         )}
-                        {entry.counselor_memo || entry.counselorMemo}
+      </div>
     </div>
   );
 };
