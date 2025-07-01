@@ -333,14 +333,11 @@ export const diaryService = {
       // 一括挿入（競合時は更新）
       const { data, error } = await supabase
         .from('diary_entries')
-        .upsert(
-          formattedDiaries, 
-          {
-            onConflict: 'id',
-            ignoreDuplicates: false,
-            returning: 'minimal'
-          }
-        );
+        .upsert(formattedDiaries, {
+          onConflict: 'id',
+          ignoreDuplicates: false,
+          returning: 'minimal'
+        });
       
       if (error) {
         console.error('日記同期エラー:', error, 'データ件数:', formattedDiaries.length, 'エラー詳細:', error.details);
@@ -353,19 +350,18 @@ export const diaryService = {
           for (const diary of formattedDiaries) {
             try {
               const { error: singleError } = await supabase
-                .from('diary_entries')
-                .upsert([diary], {
-                  onConflict: 'id',
-                  ignoreDuplicates: false,
-                  returning: 'minimal'
-                });
+                .from('diary_entries').upsert([diary], {
+                onConflict: 'id',
+                ignoreDuplicates: false,
+                returning: 'minimal'
+              });
               
               if (!singleError) {
                 successCount++;
               } else {
                 console.error('個別同期エラー:', singleError, 'ID:', diary.id);
-              }
-            } catch (err) {
+              } 
+            } catch (err) { 
               console.error('個別同期例外:', err);
             }
           }
@@ -483,7 +479,7 @@ export const chatService = {
   // 全ての日記を取得
   async getAllDiaries() {
     if (!supabase) return [];
-    
+
     try {
       const { data, error } = await supabase
         .from('diary_entries')
@@ -498,7 +494,7 @@ export const chatService = {
       
       if (error) {
         console.error('全日記取得エラー:', error);
-        return [];
+        throw error;
       }
       
       // ユーザー情報を含めて返す
@@ -508,7 +504,7 @@ export const chatService = {
       })) || [];
     } catch (error) {
       console.error('全日記取得サービスエラー:', error);
-      return [];
+      throw error;
     }
   },
   

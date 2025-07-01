@@ -18,6 +18,7 @@ const AdminPanel: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
     counselorMemo: '',
     isVisibleToUser: false,
@@ -30,6 +31,18 @@ const AdminPanel: React.FC = () => {
 
   useEffect(() => {
     loadEntries();
+  }, []);
+
+  // 初期化時にactiveTabを設定
+  useEffect(() => {
+    // URLのハッシュからタブを設定
+    const hash = window.location.hash;
+    if (hash) {
+      const tabName = hash.substring(1); // #を除去
+      if (['diary', 'search', 'calendar', 'stats', 'counselors', 'chat', 'backup', 'device-auth', 'security', 'settings', 'data-cleanup'].includes(tabName)) {
+        setActiveTab(tabName);
+      }
+    }
   }, []);
   
   // 初期化時にactiveTabを設定
@@ -46,7 +59,11 @@ const AdminPanel: React.FC = () => {
 
   const loadEntries = async () => {
     setLoading(true);
+    setLoadingError(null);
+    
     try {
+      console.log('管理画面: 日記データを読み込みます');
+      
       console.log('管理画面: 日記データを読み込みます');
       
       // Supabaseから日記データを取得
@@ -64,13 +81,14 @@ const AdminPanel: React.FC = () => {
             .order('created_at', { ascending: false });
           
           if (error) {
-            console.error('Supabaseからの日記データ取得エラー:', error);
+            console.error('Supabaseからの日記データ取得エラー:', error.message);
+            setLoadingError(`Supabaseからのデータ取得エラー: ${error.message}`);
             throw error;
           } else if (diaryData) {
-            console.log('Supabaseから日記データを取得しました:', diaryData.length, '件');
+            console.log('Supabaseから日記データを取得しました:', diaryData.length || 0, '件');
             
             // データをフォーマット
-            const formattedEntries = diaryData.map(item => {
+            const formattedEntries = diaryData?.map(item => {
               // 重複チェック用のキーを作成
               const key = `${item.date}_${item.emotion}_${item.event?.substring(0, 50)}`;
 
@@ -111,10 +129,12 @@ const AdminPanel: React.FC = () => {
             setFilteredEntries(uniqueEntries);
             console.log('日記データを設定しました:', formattedEntries.length, '件');
             setLoading(false);
+            setLoading(false);
             return; // Supabaseからデータを取得できたので終了
           }
         } catch (supabaseError) {
-          console.error('Supabase接続エラー:', supabaseError);
+          console.error('Supabase接続エラー:', supabaseError.message || supabaseError);
+          setLoadingError(`Supabase接続エラー: ${supabaseError.message || 'Unknown error'}`);
         }
       }
       
@@ -135,13 +155,18 @@ const AdminPanel: React.FC = () => {
           setFilteredEntries(localEntries);
           console.log('ローカルデータを設定しました:', localEntries.length, '件');
         } catch (error) {
-          console.error('ローカルデータの解析エラー:', error);
+          console.error('ローカルデータの解析エラー:', error.message || error);
+          setLoadingError(`ローカルデータの解析エラー: ${error.message || 'Unknown error'}`);
         }
       } else {
         console.log('ローカルストレージに日記データがありません', localStorage);
+        // 空の配列を設定
+        setEntries([]);
+        setFilteredEntries([]);
       }
     } catch (error) {
-      console.error('データ読み込みエラー:', error);
+      console.error('データ読み込みエラー:', error.message || error);
+      setLoadingError(`データ読み込みエラー: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -177,6 +202,12 @@ const AdminPanel: React.FC = () => {
           return {
             ...entry,
             syncStatus: entry.syncStatus || 'local',
+            date: editFormData.date,
+            emotion: editFormData.emotion,
+            event: editFormData.event,
+            realization: editFormData.realization,
+            selfEsteemScore: editFormData.selfEsteemScore,
+            worthlessnessScore: editFormData.worthlessnessScore,
             date: editFormData.date,
             emotion: editFormData.emotion,
             event: editFormData.event,
@@ -408,6 +439,16 @@ const AdminPanel: React.FC = () => {
       setBackupStatus('バックアップの復元に失敗しました。');
       setRestoring(false);
     }
+  };
+
+  // ユーザー名を取得する関数
+  const getUserName = (entry: any): string => {
+    // ユーザー情報がある場合はそれを使用
+    if (entry.user && entry.user.line_username) {
+      return entry.user.line_username;
+    }
+    // ローカルデータの場合
+    return 'ユーザー';
   };
 
   const formatDate = (dateString: string) => {
@@ -800,11 +841,23 @@ const AdminPanel: React.FC = () => {
           </TabsList>
 
           <TabsContent value="diary" className="space-y-6">
-            <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="bg-white rounded-xl shadow-lg p-6" key="diary-tab-content">
               <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
                 <BookOpen className="w-5 h-5 text-blue-600 mr-2" aria-hidden="true" />
                 日記一覧
               </h2>
+              
+              {loadingError && (
+                <div className="bg-red-50 rounded-lg p-4 border border-red-200 mb-4">
+                  <div className="flex items-start space-x-3">
+                    <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-red-800 font-jp-medium">{loadingError}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <AdvancedSearchFilter 
                 entries={entries} 
                 onFilteredResults={handleFilteredResults} 
@@ -820,6 +873,19 @@ const AdminPanel: React.FC = () => {
                 <Search className="w-5 h-5 text-blue-600 mr-2" aria-hidden="true" />
                 詳細検索
               </h2>
+              
+              {loadingError && (
+                <div className="bg-red-50 rounded-lg p-4 border border-red-200 mb-4">
+                  <div className="flex items-start space-x-3">
+                    <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-red-800 font-jp-medium">{loadingError}</p>
+                      <p className="text-red-700 text-sm">データの読み込みに失敗しました。再読み込みボタンを試してください。</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <AdvancedSearchFilter 
                 entries={entries} 
                 onFilteredResults={handleFilteredResults} 
