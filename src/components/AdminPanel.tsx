@@ -15,6 +15,8 @@ const AdminPanel: React.FC = () => {
   // ... rest of the code ...
 
   const handleSaveEdit = async () => {
+    if (!selectedEntry) return;
+    console.log('日記を保存します:', editFormData);
     setSaving(true);
     
     try {
@@ -23,7 +25,7 @@ const AdminPanel: React.FC = () => {
         if (entry.id === selectedEntry.id) {
           return {
             ...entry,
-            syncStatus: entry.syncStatus || 'local', // 同期状態を保持
+            syncStatus: entry.syncStatus || 'local',
             counselorMemo: editFormData.counselorMemo,
             isVisibleToUser: editFormData.isVisibleToUser,
             counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
@@ -44,7 +46,7 @@ const AdminPanel: React.FC = () => {
       console.log('ローカルストレージを更新しました');
       localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
 
-      // 自動同期機能を使用してSupabaseに同期
+      // 自動同期機能を使用してSupabaseに同期 
       if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
         console.log('自動同期を実行します');
         await window.autoSync.triggerManualSync();
@@ -80,7 +82,7 @@ const AdminPanel: React.FC = () => {
               <span>削除</span>
             </button>
             {editMode && (
-              <div className="flex space-x-3">
+              <div className="flex space-x-3"> 
                 <button
                   onClick={() => setEditMode(false)}
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-jp-medium transition-colors"
@@ -90,19 +92,19 @@ const AdminPanel: React.FC = () => {
                 <button
                   onClick={handleSaveEdit}
                   disabled={saving}
-                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-jp-medium transition-colors" 
-                >
-                  {saving ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>保存中...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4" />
-                      <span>保存</span>
-                    </>
-                  )}
+                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-jp-medium transition-colors"
+                > 
+                  {saving ? ( 
+                    <> 
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> 
+                      <span>保存中...</span> 
+                    </> 
+                  ) : ( 
+                    <> 
+                      <CheckCircle className="w-4 h-4" /> 
+                      <span>保存</span> 
+                    </> 
+                  )} 
                 </button>
               </div>
             )}
@@ -397,11 +399,9 @@ const AdminPanel: React.FC = () => {
               </h2>
               <div className="text-center py-8">
                 <Settings className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-jp-medium text-gray-500 mb-2">
-                  <h3 className="font-jp-bold text-green-900">バックアップ成功</h3>
-                </h3>
+                <h3 className="text-lg font-jp-medium text-gray-500 mb-2">システム設定</h3>
                 <p className="text-gray-400 font-jp-normal">
-                  バックアップが正常に作成されました。安全な場所に保存してください。
+                  アプリケーションの設定を管理します
                 </p>
               </div>
             </div>
