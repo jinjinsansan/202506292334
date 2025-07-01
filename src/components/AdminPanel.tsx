@@ -172,8 +172,10 @@ const AdminPanel: React.FC = () => {
       // ローカルストレージのデータを更新
       const updatedEntries = entries.map(entry => {
         if (entry.id === selectedEntry.id) {          
+          // 元のuser_idを保持
           return {
             ...entry,
+            user_id: entry.user_id || editingEntry.user_id, // user_idを保持
             // 重要: user_idを保持する
             user_id: entry.user_id || selectedEntry.user_id,
             syncStatus: entry.syncStatus || 'local', // 同期状態を保持
