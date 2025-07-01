@@ -12,6 +12,429 @@ import CalendarSearch from './CalendarSearch';
 
 const AdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState('search');
+  const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
+  const [entries, setEntries] = useState<any[]>([]);
+  const [filteredEntries, setFilteredEntries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    counselorMemo: '',
+    isVisibleToUser: false,
+    assignedCounselor: '', 
+    urgencyLevel: '' 
+  });
+  const [backupData, setBackupData] = useState<File | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const [backupStatus, setBackupStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadEntries();
+  }, []);
+  
+  // 初期化時にactiveTabを設定
+  useEffect(() => {
+    // URLのハッシュからタブを設定
+    const hash = window.location.hash;
+    if (hash) {
+      const tabName = hash.substring(1); // #を除去
+      if (['diary', 'search', 'calendar', 'stats', 'counselors', 'chat', 'backup', 'device-auth', 'security', 'settings', 'data-cleanup'].includes(tabName)) {
+        setActiveTab(tabName);
+      }
+    }
+  }, []);
+
+  const loadEntries = async () => {
+    setLoading(true);
+    try {
+      // Supabaseから直接日記データを取得
+      if (supabase) {
+        try {
+          console.log('Supabaseから日記データを取得します');
+          const { data: diaryData, error } = await supabase
+            .from('diary_entries')
+            .select(`
+              *,
+              users (
+                line_username
+              )
+            `)
+            .order('created_at', { ascending: false });
+          
+          if (error) {
+            console.error('Supabaseからの日記データ取得エラー:', error);
+            throw error;
+          } else if (diaryData && diaryData.length > 0) {
+            console.log('Supabaseから日記データを取得しました:', diaryData.length, '件');
+            
+            // データをフォーマット
+            const formattedEntries = diaryData.map(item => {
+              // 重複チェック用のキーを作成
+              const key = `${item.date}_${item.emotion}_${item.event?.substring(0, 50)}`;
+
+              return {
+                id: item.id,
+                date: item.date,
+                emotion: item.emotion || '不明',
+                event: item.event || '内容なし',
+                realization: item.realization || '内容なし',
+                selfEsteemScore: item.self_esteem_score || 0,
+                worthlessnessScore: item.worthlessness_score || 0,
+                created_at: item.created_at,
+                user: item.users,
+                counselorMemo: item.counselor_memo || '',
+                isVisibleToUser: item.is_visible_to_user || false,
+                counselorName: item.counselor_name || '',
+                assignedCounselor: item.assigned_counselor || '',
+                urgencyLevel: item.urgency_level || '',
+                syncStatus: 'supabase', // Supabaseから取得したデータ
+                _key: key // 重複チェック用のキー
+              };
+            });
+            
+            // 重複を除外
+            const uniqueMap = new Map();
+            const uniqueEntries = [];
+            
+            for (const entry of formattedEntries) {
+              if (!uniqueMap.has(entry._key)) {
+                uniqueMap.set(entry._key, entry);
+                uniqueEntries.push(entry);
+              }
+            }
+            
+            console.log(`重複を除外: ${formattedEntries.length} → ${uniqueEntries.length}`);
+            
+            setEntries(uniqueEntries);
+            setFilteredEntries(uniqueEntries);
+            console.log('日記データを設定しました:', formattedEntries.length, '件');
+            return;
+          }
+        } catch (supabaseError) {
+          console.error('Supabase接続エラー:', supabaseError);
+        }
+      }
+      
+      // ローカルストレージからデータを取得
+      const savedEntries = localStorage.getItem('journalEntries');
+      if (savedEntries) {
+        console.log('ローカルストレージから日記データを取得します');
+        try {
+          const parsedEntries = JSON.parse(savedEntries);
+          
+          // ローカルデータにsyncStatusを追加
+          const localEntries = parsedEntries.map((entry: any) => ({
+            ...entry,
+            syncStatus: 'local' // ローカルストレージから取得したデータ
+          }));
+          
+          setEntries(localEntries);
+          setFilteredEntries(localEntries);
+          console.log('ローカルデータを設定しました:', localEntries.length, '件');
+        } catch (error) {
+          console.error('ローカルデータの解析エラー:', error);
+        }
+      } else {
+        console.log('ローカルストレージに日記データがありません');
+      }
+    } catch (error) {
+      console.error('データ読み込みエラー:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewEntry = (entry: any) => {
+    setSelectedEntry(entry);
+    setEditMode(false);
+    
+    // 編集モードをリセットして詳細表示モードに
+    setEditFormData({
+      counselorMemo: entry.counselorMemo || entry.counselor_memo || '',
+      isVisibleToUser: entry.isVisibleToUser || entry.is_visible_to_user || false,
+      assignedCounselor: entry.assignedCounselor || entry.assigned_counselor || '',
+      urgencyLevel: entry.urgencyLevel || entry.urgency_level || ''
+    });
+  };
+
+  const handleEditEntry = () => {
+    setEditMode(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedEntry) return;
+
+    console.log('日記を保存します:', editFormData);
+    setSaving(true);
+    
+    try {
+      // ローカルストレージのデータを更新
+      const updatedEntries = entries.map(entry => {
+        if (entry.id === selectedEntry.id) {
+          return {
+            ...entry,
+            syncStatus: entry.syncStatus || 'local', // 同期状態を保持
+            counselorMemo: editFormData.counselorMemo,
+            isVisibleToUser: editFormData.isVisibleToUser,
+            counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
+            is_visible_to_user: editFormData.isVisibleToUser, // Supabase形式のフィールドも更新
+            assignedCounselor: editFormData.assignedCounselor,
+            assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
+            urgencyLevel: editFormData.urgencyLevel,
+            urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
+            counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
+            counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
+          };
+        }
+        return entry;
+      });
+
+      setEntries(updatedEntries);
+      setFilteredEntries(updatedEntries);
+      console.log('ローカルストレージを更新しました');
+      localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+
+      // 自動同期機能を使用してSupabaseに同期
+      if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
+        console.log('自動同期を実行します');
+        await window.autoSync.triggerManualSync();
+        console.log('自動同期を実行しました');
+      }
+
+      setSelectedEntry(null);
+      setEditMode(false);
+      alert('変更を保存しました！');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('保存エラー:', errorMessage);
+      alert(`保存に失敗しました: ${errorMessage}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteEntry = async (entryId: string) => {
+    if (!window.confirm('この日記を削除しますか？この操作は元に戻せません。')) {
+      return;
+    }
+
+    console.log('日記を削除します:', entryId);
+    setSaving(true);
+    
+    try {
+      // ローカルストレージからの削除
+      const updatedEntries = entries.filter(entry => entry.id !== entryId);
+      setEntries(updatedEntries);
+      setFilteredEntries(updatedEntries);
+      localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
+
+      // Supabaseからの削除（自動同期機能を使用）
+      if (window.autoSync && typeof window.autoSync.syncDeleteDiary === 'function') {
+        const syncResult = await window.autoSync.syncDeleteDiary(entryId);
+        console.log('削除同期結果:', syncResult ? '成功' : '失敗');
+      }
+
+      setSelectedEntry(null);
+      alert('日記を削除しました！');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('削除エラー:', errorMessage);
+      alert(`削除に失敗しました: ${errorMessage}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFilteredResults = (filtered: any[]) => {
+    setFilteredEntries(filtered);
+  };
+
+  // バックアップファイルの選択
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setBackupData(e.target.files[0]);
+      setBackupStatus(null);
+    }
+  };
+
+  // バックアップデータの作成
+  const handleCreateBackup = () => {
+    try {
+      // ローカルストレージからデータを収集
+      const backupObject = {
+        journalEntries: localStorage.getItem('journalEntries') ? JSON.parse(localStorage.getItem('journalEntries')!) : [],
+        initialScores: localStorage.getItem('initialScores') ? JSON.parse(localStorage.getItem('initialScores')!) : null,
+        consentHistories: localStorage.getItem('consent_histories') ? JSON.parse(localStorage.getItem('consent_histories')!) : [],
+        lineUsername: localStorage.getItem('line-username'),
+        privacyConsentGiven: localStorage.getItem('privacyConsentGiven'),
+        privacyConsentDate: localStorage.getItem('privacyConsentDate'),
+        backupDate: new Date().toISOString(),
+        version: '1.0'
+      };
+      
+      // JSONに変換してダウンロード
+      const dataStr = JSON.stringify(backupObject, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      
+      // ファイル名にカウンセラー名と日付を含める
+      const counselorName = localStorage.getItem('current_counselor') || 'admin';
+      const date = new Date().toISOString().split('T')[0];
+      const fileName = `kanjou-nikki-backup-${counselorName}-${date}.json`;
+      
+      // ダウンロードリンクを作成して自動クリック
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(dataBlob);
+      downloadLink.download = fileName;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      setBackupStatus('バックアップが正常に作成されました！');
+    } catch (error) {
+      console.error('バックアップ作成エラー:', error);
+      setBackupStatus('バックアップの作成に失敗しました。');
+    }
+  };
+
+  // バックアップからの復元
+  const handleRestoreBackup = async () => {
+    if (!backupData) {
+      setBackupStatus('バックアップファイルを選択してください。');
+      return;
+    }
+    
+    if (!window.confirm('バックアップからデータを復元すると、現在のデータが上書きされます。続行しますか？')) {
+      return;
+    }
+    
+    setRestoring(true);
+    setBackupStatus(null);
+    
+    try {
+      // ファイルを読み込み
+      const fileReader = new FileReader();
+      
+      fileReader.onload = (event) => {
+        try {
+          if (!event.target || typeof event.target.result !== 'string') {
+            throw new Error('ファイルの読み込みに失敗しました。');
+          }
+          
+          const backupObject = JSON.parse(event.target.result);
+          
+          // バージョンチェック
+          if (!backupObject.version) {
+            throw new Error('無効なバックアップファイルです。');
+          }
+          
+          // データの復元
+          if (backupObject.journalEntries) {
+            localStorage.setItem('journalEntries', JSON.stringify(backupObject.journalEntries));
+          }
+          
+          if (backupObject.initialScores) {
+            localStorage.setItem('initialScores', JSON.stringify(backupObject.initialScores));
+          }
+          
+          if (backupObject.consentHistories) {
+            localStorage.setItem('consent_histories', JSON.stringify(backupObject.consentHistories));
+          }
+          
+          if (backupObject.lineUsername) {
+            localStorage.setItem('line-username', backupObject.lineUsername);
+          }
+          
+          if (backupObject.privacyConsentGiven) {
+            localStorage.setItem('privacyConsentGiven', backupObject.privacyConsentGiven);
+          }
+          
+          if (backupObject.privacyConsentDate) {
+            localStorage.setItem('privacyConsentDate', backupObject.privacyConsentDate);
+          }
+          
+          setBackupStatus('データが正常に復元されました！');
+          
+          // データを再読み込み
+          loadEntries();
+          
+          // 自動同期を実行
+          if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
+            window.autoSync.triggerManualSync().catch(error => {
+              console.error('復元後の同期エラー:', error);
+            });
+          }
+          
+        } catch (error) {
+          console.error('データ復元エラー:', error);
+          setBackupStatus('データの復元に失敗しました。有効なバックアップファイルか確認してください。');
+        } finally {
+          setRestoring(false);
+        }
+      };
+      
+      fileReader.onerror = () => {
+        setBackupStatus('ファイルの読み込みに失敗しました。');
+        setRestoring(false);
+      };
+      
+      fileReader.readAsText(backupData);
+      
+    } catch (error) {
+      console.error('バックアップ復元エラー:', error);
+      setBackupStatus('バックアップの復元に失敗しました。');
+      setRestoring(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime()) || !dateString) {
+      return dateString || '日付なし';
+    }
+    return date.toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getEmotionColor = (emotion: string) => {
+    const colorMap: { [key: string]: string } = {
+      // ネガティブな感情
+      '恐怖': 'bg-purple-100 text-purple-800 border-purple-200',
+      '悲しみ': 'bg-blue-100 text-blue-800 border-blue-200',
+      '怒り': 'bg-red-100 text-red-800 border-red-200',
+      '悔しい': 'bg-green-100 text-green-800 border-green-200',
+      '無価値感': 'bg-gray-100 text-gray-800 border-gray-300',
+      '罪悪感': 'bg-orange-100 text-orange-800 border-orange-200',
+      '寂しさ': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+      '恥ずかしさ': 'bg-pink-100 text-pink-800 border-pink-200',
+      // ポジティブな感情
+      '嬉しい': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      '感謝': 'bg-teal-100 text-teal-800 border-teal-200',
+      '達成感': 'bg-lime-100 text-lime-800 border-lime-200',
+      '幸せ': 'bg-amber-100 text-amber-800 border-amber-200'
+    };
+    return colorMap[emotion] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  const getUrgencyLevelColor = (level: string) => {
+    const colorMap: { [key: string]: string } = {
+      'high': 'bg-red-100 text-red-800 border-red-200',
+      'medium': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'low': 'bg-green-100 text-green-800 border-green-200'
+    };
+    return colorMap[level] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  const getUrgencyLevelText = (level: string) => {
+    const textMap: { [key: string]: string } = {
+      'high': '高',
+      'medium': '中',
+      'low': '低'
+    };
+    return textMap[level] || '未設定';
+  };
   // ... rest of the code ...
 
   const handleSaveEdit = async () => {
@@ -392,17 +815,12 @@ const AdminPanel: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
-                <Settings className="w-5 h-5 text-blue-600 mr-2" />
-                設定
+                <Settings className="w-5 h-5 text-blue-600 mr-2" />設定
               </h2>
               <div className="text-center py-8">
                 <Settings className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-jp-medium text-gray-500 mb-2">システム設定</h3>
-                <p className="text-gray-400 font-jp-normal">
-                  アプリケーションの設定を管理します
-                </p>
+                <p className="text-gray-400 font-jp-normal">アプリケーションの設定を管理します</p>
               </div>
             </div>
           </TabsContent>
