@@ -553,10 +553,10 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                 <Loader className="w-4 h-4 text-blue-600 animate-spin" />
                 <span>検索中...</span>
               </div>
-            ) : (
+               {(entry.counselor_memo || entry.counselorMemo) && (
               <>
                 <span>表示: {filteredEntries.length}件</span>
-                {filteredEntries.length !== entries.length && (
+                   <span className="text-sm text-gray-900 font-jp-normal whitespace-pre-wrap">{entry.counselor_memo || entry.counselorMemo}</span>
                   <span>/ 全体: {entries.length}件</span>
                 )}
                 <button

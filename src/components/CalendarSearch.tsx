@@ -321,7 +321,9 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                       <div className="flex items-center justify-center">
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-500 text-white text-xs rounded-full">
                           {entryCount}
-                        </span>
+                       {(entry.counselorMemo || entry.counselor_memo || '').length > 100 
+                         ? `${(entry.counselorMemo || entry.counselor_memo).substring(0, 100)}...` 
+                         : (entry.counselorMemo || entry.counselor_memo)}
                       </div>
                     </div>
                   )}
@@ -437,7 +439,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                   </div>
                 ))}
               </div>
-            )}
+                 {(entry.counselorMemo || entry.counselor_memo) && (
           </div>
         )}
       </div>

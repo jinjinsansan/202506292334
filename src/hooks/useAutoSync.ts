@@ -356,7 +356,7 @@ export const useAutoSync = (): AutoSyncState => {
       const { success, error } = await diaryService.syncDiaries(userId, formattedEntries);
       
       // 同期結果をログに出力
-      console.log('同期結果:', success ? '成功' : '失敗', error || '');
+     console.log('同期結果:', success ? '成功' : '失敗', error || '', 'データ件数:', formattedEntries.length);
       
       if (!success) {
         console.error('同期エラー:', error);
@@ -379,7 +379,7 @@ export const useAutoSync = (): AutoSyncState => {
       setLastSyncTime(now);
       localStorage.setItem('last_sync_time', now);
       
-     console.log('データ同期完了:', newEntries.length, '件', 'ユーザーID:', userId, '時刻:', now);
+    console.log('データ同期完了:', newEntries.length, '件', 'ユーザーID:', userId, '時刻:', now, '同期されたデータ:', formattedEntries.slice(0, 1));
       return true;
     } catch (err) {
       console.error('データ同期エラー:', err);
