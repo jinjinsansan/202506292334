@@ -389,7 +389,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                         )}
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-gray-500 font-jp-medium">自己肯定感:</span>
+                        {entry.user?.line_username && (
                           <span className="text-xs text-gray-500 font-jp-normal">
                             {entry.user.line_username}
                           </span>
@@ -428,8 +428,8 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
 
                     <div className="flex justify-between items-center">
                       <div className="text-xs text-gray-500">
-                        {(entry.assignedCounselor || entry.assigned_counselor) ? 
-                          `担当: ${entry.assignedCounselor || entry.assigned_counselor}` : 
+                        {(entry.assignedCounselor || entry.assigned_counselor) ?
+                          `担当: ${entry.assignedCounselor || entry.assigned_counselor}` :
                           '未割り当て'}
                       </div>
                       <div className="flex space-x-2">
