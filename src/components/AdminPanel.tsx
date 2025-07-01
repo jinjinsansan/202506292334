@@ -483,7 +483,7 @@ const AdminPanel: React.FC = () => {
                   {selectedEntry.user && (
                     <div className="flex items-center space-x-2">
                       <User className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-700 font-jp-medium whitespace-nowrap">
+                      <span className="text-gray-700 font-jp-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
                         {selectedEntry.user?.line_username || 'Unknown User'}
                       </span>
                     </div>
@@ -694,17 +694,6 @@ const AdminPanel: React.FC = () => {
                           <span>保存</span>
                         </>
                       )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-lg p-6">
