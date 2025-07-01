@@ -13,6 +13,35 @@ import CalendarSearch from './CalendarSearch';
 const AdminPanel: React.FC = () => {
   // ... rest of the code ...
 
+  const handleSaveEdit = async () => {
+    if (!selectedEntry) return;
+
+    console.log('日記を保存します:', editFormData);
+    setSaving(true);
+    
+    try {
+      // ローカルストレージのデータを更新
+      const updatedEntries = entries.map(entry => {
+        if (entry.id === selectedEntry.id) {
+          return {
+            ...entry, // 元のエントリーのプロパティをすべて保持
+            user_id: entry.user_id || selectedEntry.user_id, // ユーザーIDを保持
+            syncStatus: entry.syncStatus || 'local', // 同期状態を保持
+            counselorMemo: editFormData.counselorMemo,
+            isVisibleToUser: editFormData.isVisibleToUser,
+            counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
+            is_visible_to_user: editFormData.isVisibleToUser, // Supabase形式のフィールドも更新
+            assignedCounselor: editFormData.assignedCounselor,
+            assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
+            urgencyLevel: editFormData.urgencyLevel,
+            urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
+            counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
+            counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
+          };
+        }
+        return entry;
+      });
+
   const renderEntryModal = () => {
     if (!selectedEntry) return null;
     
