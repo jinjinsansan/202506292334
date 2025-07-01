@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, Trash2, Eye, Edit3, AlertTriangle, CheckCircle, Clock, MessageCircle, Users, BookOpen, BarChart2, Settings, Save, FileText, Layers, Upload } from 'lucide-react';
 import AdvancedSearchFilter from './AdvancedSearchFilter';
 import CounselorManagement from './CounselorManagement';
 import CounselorChat from './CounselorChat';
@@ -171,21 +170,21 @@ const AdminPanel: React.FC = () => {
       // ローカルストレージのデータを更新
       const updatedEntries = entries.map(entry => {
         if (entry.id === selectedEntry.id) {          
-          ...entry, // 元のエントリーのプロパティをすべて保持
-          user_id: entry.user_id || selectedEntry.user_id, // ユーザーIDを保持
-          syncStatus: entry.syncStatus || 'local', // 同期状態を保持
-          counselorMemo: editFormData.counselorMemo,
-          isVisibleToUser: editFormData.isVisibleToUser,
-          counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
-          is_visible_to_user: editFormData.isVisibleToUser, // Supabase形式のフィールドも更新
-          assignedCounselor: editFormData.assignedCounselor,
-          assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
-          urgencyLevel: editFormData.urgencyLevel,
-          urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
-          counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
-          counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
+          return {
+            ...entry, // 元のエントリーのプロパティをすべて保持
+            user_id: entry.user_id || selectedEntry.user_id, // ユーザーIDを保持
+            syncStatus: entry.syncStatus || 'local', // 同期状態を保持
+            counselorMemo: editFormData.counselorMemo,
+            isVisibleToUser: editFormData.isVisibleToUser,
+            counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
+            is_visible_to_user: editFormData.isVisibleToUser, // Supabase形式のフィールドも更新
+            assignedCounselor: editFormData.assignedCounselor,
+            assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
+            urgencyLevel: editFormData.urgencyLevel,
+            urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
             counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
             counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
+          };
           };
         }
         return entry;
