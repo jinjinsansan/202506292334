@@ -15,7 +15,6 @@ const AdminPanel: React.FC = () => {
   // ... rest of the code ...
 
   const handleSaveEdit = async () => {
-    if (!selectedEntry) return;
     setSaving(true);
     
     try {
@@ -61,8 +60,13 @@ const AdminPanel: React.FC = () => {
       alert(`保存に失敗しました: ${errorMessage}`);
     } finally {
       setSaving(false);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('保存エラー:', errorMessage);
+      alert(`保存に失敗しました: ${errorMessage}`);
+    } finally {
+      setSaving(false);
     }
-  };
 
   const renderEntryModal = () => {
     if (!selectedEntry) return null;
