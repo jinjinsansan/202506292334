@@ -365,8 +365,14 @@ export const useAutoSync = (): AutoSyncState => {
       // 日記データを同期
       const { success, error } = await diaryService.syncDiaries(userId, formattedEntries);
       
-      // 同期結果をログに出力
-      console.log('同期結果:', success ? '成功' : '失敗', error || '', 'データ件数:', formattedEntries.length);
+      // 同期結果の詳細をログに出力
+      console.log('同期結果:', success ? '成功' : '失敗', error || '', 'データ件数:', formattedEntries.length, 'ユーザーID:', userId);
+      
+      // 同期エラーのデバッグ情報
+      if (!success) {
+        console.error('同期エラーの詳細:', error);
+        console.log('同期に失敗したデータの一部:', formattedEntries.slice(0, 2));
+      }
       
       if (!success) {
         console.error('同期エラー:', error);
@@ -418,12 +424,11 @@ export const useAutoSync = (): AutoSyncState => {
     try {
       // Supabaseから日記を削除
       const { error } = await supabase
-        .from('diary_entries')
-        .delete()
-        .eq('id', diaryId);
+        .from('diary_entries').delete().eq('id', diaryId);
       
       if (error) {
         console.error('Supabase日記削除エラー:', error, 'ID:', diaryId);
+        setError(`日記削除エラー: ${error.message}`);
         return false;
       }
       
