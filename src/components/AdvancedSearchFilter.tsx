@@ -102,7 +102,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
   const urgencyLevels = [
     { value: 'high', label: '高', color: 'text-red-600' },
     { value: 'medium', label: '中', color: 'text-yellow-600' },
-    { value: 'low', label: '低', color: 'text-green-600' }
+    { value: 'low', label: '低', color: 'text-green-600' },
   ];
 
   // Get unique values for filter options
@@ -137,17 +137,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
     }));
   };
 
-  // 管理者モードの場合はSupabaseから検索
-  const handleSearch = async () => {
-    if (isAdminMode) {
-      setSearchLoading(true);
-      await searchAllDiaries();
-    } else {
-      filterEntries();
-    }
-  };
-
-  // Supabaseから全ての日記を検索
+  // Supabaseから全ての日記を検索する関数
   const searchAllDiaries = async () => {
     try {
       let query = supabase
@@ -296,6 +286,16 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 
     setFilteredEntries(filtered);
     onFilteredResults(filtered);
+  };
+
+  // 管理者モードの場合はSupabaseから検索
+  const handleSearch = async () => {
+    if (isAdminMode) {
+      setSearchLoading(true);
+      await searchAllDiaries();
+    } else {
+      filterEntries();
+    }
   };
 
   // フィルターリセット
@@ -452,6 +452,24 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
             <Search className="w-5 h-5" />
             <span>高度検索・フィルター</span>
           </h3>
+          <div className="flex items-center space-x-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={isAdminMode}
+                onChange={(e) => setIsAdminMode(e.target.checked)}
+                className="rounded"
+              />
+              <span className="font-jp-medium">管理者モード</span>
+            </label>
+            <button
+              onClick={handleSearch}
+              className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-jp-medium"
+            >
+              <Search className="w-4 h-4" />
+              <span>検索</span>
+            </button>
+          </div>
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
             className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 transition-colors"
