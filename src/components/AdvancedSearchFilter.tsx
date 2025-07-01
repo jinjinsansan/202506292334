@@ -696,7 +696,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
             entry.emotion === '嬉しい' ? 'bg-yellow-50' :
             entry.emotion === '感謝' ? 'bg-teal-50' :
             entry.emotion === '達成感' ? 'bg-lime-50' :
-            entry.emotion === '恥ずかしさ' ? 'bg-pink-50' :
+            entry.emotion === '幸せ' ? 'bg-amber-50' :
             'bg-white'
           }`}>
             <div className="flex items-start justify-between mb-3">
