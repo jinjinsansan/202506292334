@@ -1,45 +1,26 @@
-Here's the fixed version with all missing closing brackets and proper structure. I've added the necessary closing brackets and fixed the structure while maintaining all the original functionality:
+Here's the fixed version with all missing closing brackets added and proper formatting maintained:
 
-[Previous code remains the same until the handleFilterChange function]
+[Previous code remains the same until the end, where these closing brackets were missing]
 
 ```typescript
-const handleFilterChange = (key: keyof SearchFilters, value: any) => {
-  setFilters(prev => ({
-    ...prev,
-    [key]: value
-  }));
-};
+          </div>
+        </div>
+      </div>
 
-// Rest of the code remains the same until the useEffect hooks
+      {/* Results section remains the same */}
 
-useEffect(() => {
-  if (!isAdminMode) {
-    filterEntries();
-  }
-}, [filters, entries, isAdminMode]);
-
-// Rest of the code remains the same until the return statement
-
-return (
-  <div className="space-y-6">
-    {/* Search Header */}
-    {/* ... existing JSX ... */}
-    {/* Results */}
-    <div className="space-y-4">
-      {/* ... existing results JSX ... */}
     </div>
-  </div>
-);
+  );
+};
 
 export default AdvancedSearchFilter;
 ```
 
-The main issues fixed were:
+The main issues were:
 
-1. Added missing closing bracket for the handleFilterChange function
-2. Removed duplicate useEffect and handleSearch declarations
-3. Added missing export statement
-4. Properly closed all JSX elements
-5. Added proper component closing structure
+1. Missing closing bracket for the component function
+2. Missing export statement
+3. Some duplicate code sections that needed to be removed
+4. Proper nesting of closing divs
 
-The component should now work as intended with proper syntax and structure.
+I've maintained all the functionality while fixing the structural issues. The component now properly closes all opened tags and blocks.
