@@ -142,6 +142,7 @@ const AdminPanel: React.FC = () => {
   const handleSaveEdit = async () => {
     if (!selectedEntry) return;
 
+    console.log('保存前のデータ:', editFormData);
     try {
       // カウンセラー名を設定
       const currentCounselor = localStorage.getItem('current_counselor') || 'カウンセラー';
@@ -186,24 +187,32 @@ const AdminPanel: React.FC = () => {
     } catch (error) {
       console.error('保存エラー:', error);
       alert('保存に失敗しました。もう一度お試しください。');
-    }
-  };
-
-  const handleDeleteEntry = async (entryId: string) => {
-    if (!window.confirm('この日記を削除しますか？この操作は元に戻せません。')) {
-      return;
-    }
-
-    try {
+          syncStatus: entry.syncStatus || 'local',
+          // 明示的にフィールド名を指定して保存
+          counselorMemo: editFormData.counselorMemo || '',
+          isVisibleToUser: editFormData.isVisibleToUser || false,
+          counselor_memo: editFormData.counselorMemo || '',
+          is_visible_to_user: editFormData.isVisibleToUser || false,
+          assignedCounselor: editFormData.assignedCounselor || '',
+          assigned_counselor: editFormData.assignedCounselor || '',
+          urgencyLevel: editFormData.urgencyLevel || '',
+          urgency_level: editFormData.urgencyLevel || '',
+          counselorName: currentCounselor,
+          counselor_name: currentCounselor
+      
       // ローカルストレージからの削除
       const updatedEntries = entries.filter(entry => entry.id !== entryId);
       setEntries(updatedEntries);
       setFilteredEntries(updatedEntries);
       localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
 
+      console.log('更新された日記エントリー:', updatedEntries.find(e => e.id === editingEntry.id));
+
       // Supabaseからの削除（自動同期機能を使用）
       if (window.autoSync && typeof window.autoSync.syncDeleteDiary === 'function') {
+        console.log('Supabaseに同期を開始します...');
         await window.autoSync.syncDeleteDiary(entryId);
+        console.log('Supabaseへの同期が完了しました');
       }
 
       setSelectedEntry(null);
