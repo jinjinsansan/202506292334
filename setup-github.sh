@@ -3,6 +3,7 @@
 # かんじょうにっき GitHub セットアップスクリプト
 
 echo "かんじょうにっき GitHub セットアップを開始します..."
+echo ""
 
 # .gitignoreが存在するか確認
 if [ ! -f .gitignore ]; then

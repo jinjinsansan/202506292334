@@ -216,48 +216,6 @@ test: 不足しているテストの追加や既存のテストの修正
 chore: ビルドプロセスやドキュメント生成などの変更
 ```
 
-## 📊 プロジェクト管理
-
-### GitHub Projects の設定
-1. リポジトリの「Projects」タブ
-2. 「Create a project」をクリック
-3. 以下のカラムを設定:
-   - To do
-   - In progress
-   - Review
-   - Done
-
-### ラベルの設定
-1. リポジトリの「Issues」→「Labels」
-2. 以下のラベルを追加:
-   - `bug`: バグ
-   - `enhancement`: 機能追加・改善
-   - `documentation`: ドキュメント
-   - `good first issue`: 初心者向け
-   - `help wanted`: 助けが必要
-   - `question`: 質問
-   - `wontfix`: 修正予定なし
-
-## 🔒 セキュリティ設定
-
-### Dependabot の設定
-`.github/dependabot.yml`:
-
-```yaml
-version: 2
-updates:
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-```
-
-### CodeQL の設定
-1. リポジトリの「Security」→「Code scanning」→「Set up code scanning」
-2. 「GitHub Actions (CodeQL Analysis)」を選択
-3. 「Configure CodeQL Analysis」をクリック
-
 ## 🚀 最終確認
 
 - [ ] リポジトリが正しく作成されている
@@ -274,4 +232,4 @@ updates:
 **一般社団法人NAMIDAサポート協会**  
 テープ式心理学による心の健康サポート
 
-**最終更新日**: 2025年1月25日
+**最終更新日**: 2025年7月1日
