@@ -43,12 +43,10 @@ const CounselorMemoModal: React.FC<CounselorMemoModalProps> = ({
         counselor_name: counselorName
       };
       
-      // Supabaseに保存
+      // Supabaseに保存（updateを使用してuser_idを変更しないようにする）
       const { error } = await supabase
         .from('diary_entries')
-        .update(payload)          // ★ upsert は使わない
-        .eq('id', diaryId);
-        .update(payload)          // ★ upsert は使わない
+        .update(payload)
         .eq('id', diaryId);
         
       if (error) {
