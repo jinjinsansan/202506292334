@@ -53,9 +53,14 @@ const AdminPanel: React.FC = () => {
         console.log('自動同期を実行しました'); 
       }
 
-    // 初期タブを設定
+      // 初期タブを設定
       setEditMode(false);
-    setActiveTab('search');
+      setActiveTab('search');
+    } catch (error) {
+      console.error('Error saving edit:', error);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const renderEntryModal = () => {
