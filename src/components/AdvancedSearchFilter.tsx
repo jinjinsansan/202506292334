@@ -112,11 +112,6 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
     setFilteredEntries(entries);
   }, [entries]);
 
-  // 初期化時にエントリーを設定
-  useEffect(() => {
-    setFilteredEntries(entries);
-  }, [entries]);
-
   // 管理者モードの場合はSupabaseから検索
   const handleSearch = () => {
     if (isAdminMode) {
