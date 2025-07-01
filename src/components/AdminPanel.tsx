@@ -11,12 +11,11 @@ import DataCleanup from './DataCleanup';
 import CalendarSearch from './CalendarSearch';
 
 const AdminPanel: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('search');
+  const [activeTab, setActiveTab] = useState('search');
   // ... rest of the code ...
 
   const handleSaveEdit = async () => {
     if (!selectedEntry) return;
-
     setSaving(true);
     
     try {
@@ -54,15 +53,9 @@ const AdminPanel: React.FC = () => {
         console.log('自動同期を実行しました'); 
       }
 
-      setSelectedEntry(null);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error('保存エラー:', errorMessage);
-      alert(`保存に失敗しました: ${errorMessage}`);
-    } finally {
-      setSaving(false);
-    }
-    setEditMode(false);
+    // 初期タブを設定
+      setEditMode(false);
+    setActiveTab('search');
   };
 
   const renderEntryModal = () => {
@@ -97,12 +90,12 @@ const AdminPanel: React.FC = () => {
                   {saving ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>保存中...</span>
+                      <span>保存中</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4" />
-                      <span>{saving ? '保存中...' : '保存'}</span>
+                      <span>保存</span>
                     </>
                   )}
                 </button>
@@ -143,7 +136,7 @@ const AdminPanel: React.FC = () => {
               日記
             </TabsTrigger>
             <TabsTrigger value="search" onClick={() => setActiveTab('search')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              <Search className="w-4 h-4 mr-2" />
+            <Search className="w-4 h-4 mr-2" />
               詳細検索
             </TabsTrigger>
             <TabsTrigger value="calendar" onClick={() => setActiveTab('calendar')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
