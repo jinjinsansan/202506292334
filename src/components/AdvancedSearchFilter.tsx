@@ -727,7 +727,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                     {(entry.self_esteem_score || entry.selfEsteemScore || entry.worthlessness_score || entry.worthlessnessScore) && (
                       <div className="flex items-center space-x-1 text-xs text-gray-500">
                         <Tag className="w-3 h-3" />
-                        <span>自尊心: {entry.self_esteem_score || entry.selfEsteemScore || 'N/A'}</span>
+                        <span>自己肯定感: {entry.self_esteem_score || entry.selfEsteemScore || 'N/A'}</span>
                         <span>無価値感: {entry.worthlessness_score || entry.worthlessnessScore || 'N/A'}</span>
                       </div>
                     )}

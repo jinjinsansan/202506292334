@@ -389,7 +389,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                         )}
                       </div>
                       <div className="flex items-center space-x-2">
-                        {entry.user?.line_username && (
+                        <span className="text-gray-500 font-jp-medium">自己肯定感:</span>
                           <span className="text-xs text-gray-500 font-jp-normal">
                             {entry.user.line_username}
                           </span>
