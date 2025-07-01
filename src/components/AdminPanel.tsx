@@ -19,6 +19,7 @@ const AdminPanel: React.FC = () => {
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState({
     counselorMemo: '',
     isVisibleToUser: false, 
     assignedCounselor: '', 

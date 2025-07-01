@@ -1,27 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
  
-/**
- * Combines class names using clsx and tailwind-merge
- */
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
-
-/**
- * 日記データをSupabase形式に変換する関数
- * @param diaryEntry ローカルの日記データ
- * @param userId ユーザーID
- * @returns Supabase形式の日記データ
- */
-export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
-  const formattedEntry = {
-    id: diaryEntry.id,
-    user_id: diaryEntry.user_id || userId,
-    date: diaryEntry.date,
-    emotion: diaryEntry.emotion,
-    event: diaryEntry.event,
-    realization: diaryEntry.realization,
     self_esteem_score: diaryEntry.selfEsteemScore || diaryEntry.self_esteem_score || 0,
     worthlessness_score: diaryEntry.worthlessnessScore || diaryEntry.worthlessness_score || 0,
     created_at: diaryEntry.created_at || new Date().toISOString()
@@ -125,26 +104,6 @@ export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
   // counselor_nameフィールドが存在する場合のみ追加
   if (diaryEntry.counselor_name !== undefined || diaryEntry.counselorName !== undefined) {
     formattedEntry.counselor_name = diaryEntry.counselor_name !== undefined ? 
-                                    diaryEntry.counselor_name : 
-                                    diaryEntry.counselorName;
-  }
-  
-  // counselor_memoフィールドが存在する場合のみ追加
-  if (diaryEntry.counselor_memo !== undefined || diaryEntry.counselorMemo !== undefined) {
-    formattedEntry.counselor_memo = diaryEntry.counselor_memo !== undefined ? 
-                                    diaryEntry.counselor_memo : 
-                                    diaryEntry.counselorMemo;
-  }
-  
-  return formattedEntry;
-}
-
-/**
- * Supabaseデータをローカル形式に変換する関数
- * @param supabaseEntry Supabaseの日記データ
- * @returns ローカル形式の日記データ
- */
-export function formatDiaryForLocal(supabaseEntry: any) {
   return {
     id: supabaseEntry.id,
     user_id: supabaseEntry.user_id,
