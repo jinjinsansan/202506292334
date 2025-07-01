@@ -315,38 +315,38 @@ export const useAutoSync = (): AutoSyncState => {
           }
           
           // カウンセラーメモの処理
-         if (entry.counselor_memo !== undefined || entry.counselorMemo !== undefined) {
-           formattedEntry.counselor_memo = entry.counselor_memo !== undefined ? 
-                                          entry.counselor_memo : 
-                                          entry.counselorMemo;
+          if (entry.counselor_memo !== undefined || entry.counselorMemo !== undefined) {
+            formattedEntry.counselor_memo = entry.counselor_memo !== undefined ? 
+                                           entry.counselor_memo : 
+                                           entry.counselorMemo || '';
           }
           
           // 表示設定の処理
-         if (entry.is_visible_to_user !== undefined || entry.isVisibleToUser !== undefined) {
-           formattedEntry.is_visible_to_user = entry.is_visible_to_user !== undefined ? 
-                                              entry.is_visible_to_user : 
-                                              entry.isVisibleToUser;
+          if (entry.is_visible_to_user !== undefined || entry.isVisibleToUser !== undefined) {
+            formattedEntry.is_visible_to_user = entry.is_visible_to_user !== undefined ? 
+                                               entry.is_visible_to_user : 
+                                               entry.isVisibleToUser || false;
           }
           
           // カウンセラー名の処理
-         if (entry.counselor_name !== undefined || entry.counselorName !== undefined) {
-           formattedEntry.counselor_name = entry.counselor_name !== undefined ? 
-                                          entry.counselor_name : 
-                                          entry.counselorName;
+          if (entry.counselor_name !== undefined || entry.counselorName !== undefined) {
+            formattedEntry.counselor_name = entry.counselor_name !== undefined ? 
+                                           entry.counselor_name : 
+                                           entry.counselorName || '';
           }
           
           // 担当カウンセラーの処理
-         if (entry.assigned_counselor !== undefined || entry.assignedCounselor !== undefined) {
-           formattedEntry.assigned_counselor = entry.assigned_counselor !== undefined ? 
-                                              entry.assigned_counselor : 
-                                              entry.assignedCounselor;
+          if (entry.assigned_counselor !== undefined || entry.assignedCounselor !== undefined) {
+            formattedEntry.assigned_counselor = entry.assigned_counselor !== undefined ? 
+                                               entry.assigned_counselor : 
+                                               entry.assignedCounselor || '';
           }
           
           // 緊急度の処理
-         if (entry.urgency_level !== undefined || entry.urgencyLevel !== undefined) {
-           formattedEntry.urgency_level = entry.urgency_level !== undefined ? 
-                                         entry.urgency_level : 
-                                         entry.urgencyLevel;
+          if (entry.urgency_level !== undefined || entry.urgencyLevel !== undefined) {
+            formattedEntry.urgency_level = entry.urgency_level !== undefined ? 
+                                          entry.urgency_level : 
+                                          entry.urgencyLevel || '';
           }
           
           return formattedEntry;
@@ -356,7 +356,7 @@ export const useAutoSync = (): AutoSyncState => {
       const { success, error } = await diaryService.syncDiaries(userId, formattedEntries);
       
       // 同期結果をログに出力
-     console.log('同期結果:', success ? '成功' : '失敗', error || '', 'データ件数:', formattedEntries.length);
+      console.log('同期結果:', success ? '成功' : '失敗', error || '', 'データ件数:', formattedEntries.length);
       
       if (!success) {
         console.error('同期エラー:', error);
@@ -379,7 +379,7 @@ export const useAutoSync = (): AutoSyncState => {
       setLastSyncTime(now);
       localStorage.setItem('last_sync_time', now);
       
-    console.log('データ同期完了:', newEntries.length, '件', 'ユーザーID:', userId, '時刻:', now, '同期されたデータ:', formattedEntries.slice(0, 1));
+      console.log('データ同期完了:', newEntries.length, '件', 'ユーザーID:', userId, '時刻:', now, '同期されたデータ:', formattedEntries.slice(0, 1));
       return true;
     } catch (err) {
       console.error('データ同期エラー:', err);

@@ -317,11 +317,11 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                   </div>
                   
                   {entryCount > 0 && (
-                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
+                  {(entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo) && (
                       <div className="flex items-center justify-center">
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-500 text-white text-xs rounded-full">
-                          {entryCount}
-                        </span>
+                          {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
+                        {entry.counselor_memo || entry.counselorMemo}
                       </div>
                     </div>
                   )}

@@ -749,15 +749,15 @@ const DiarySearchPage: React.FC = () => {
                   </div>
                   
                   {/* カウンセラーコメント表示（表示設定がtrueの場合のみ） */}
-                 {(entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo) && (
+                  {(entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo) && (
                     <div className="mt-3 bg-blue-50 rounded-lg p-3 border border-blue-200">
                       <div className="flex items-center space-x-2 mb-1">
                         <span className="text-xs font-jp-medium text-blue-700 break-words">
-                         {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
+                          {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
                         </span>
                       </div>
                       <p className="text-blue-800 text-sm font-jp-normal leading-relaxed break-words">
-                       {entry.counselor_memo || entry.counselorMemo}
+                        {entry.counselor_memo || entry.counselorMemo}
                       </p>
                     </div>
                   )}
@@ -857,15 +857,15 @@ const DiarySearchPage: React.FC = () => {
               </div>
               
               {/* カウンセラーコメント表示（表示設定がtrueの場合のみ） */}
-             {(entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo) && (
+              {(entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo) && (
                 <div className="mt-4 bg-blue-50 rounded-lg p-4 border border-blue-200">
                   <div className="flex items-start space-x-2 mb-2">
                     <span className="text-sm font-jp-bold text-blue-700">
-                     {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
+                      {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
                     </span>
                   </div>
                   <p className="text-blue-800 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap">
-                   {entry.counselor_memo || entry.counselorMemo}
+                    {entry.counselor_memo || entry.counselorMemo}
                   </p>
                 </div>
               )}
