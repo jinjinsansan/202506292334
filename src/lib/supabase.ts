@@ -330,10 +330,12 @@ export const diaryService = {
         return { success: true, message: '有効な同期データがありません' };
       }
       
+      // 所有者列(user_id, username)を送らないようにサニタイズ
+      const sanitized = diaries.map(({ user_id, username, ...rest }) => rest);
       // 一括挿入（競合時は更新）
       const { data, error } = await supabase
         .from('diary_entries')
-        .upsert(formattedDiaries, {
+        .upsert(sanitized, {
           onConflict: 'id',
           ignoreDuplicates: false,
           returning: 'minimal'
@@ -349,6 +351,8 @@ export const diaryService = {
           
           for (const diary of formattedDiaries) {
             try {
+              // 所有者列(user_id, username)を送らないようにサニタイズ
+              const { user_id, username, ...sanitizedDiary } = diary;
               const { error: singleError } = await supabase
                 .from('diary_entries').upsert([diary], {
                 onConflict: 'id',

@@ -189,7 +189,9 @@ const DataMigration: React.FC = () => {
         });
       
       // 日記データを同期
-      const { success, error } = await diaryService.syncDiaries(userId, formattedEntries);
+      // 所有者列(user_id, username)を送らないようにサニタイズ
+      const sanitized = formattedEntries.map(({ user_id, username, ...safe }) => safe);
+      const { success, error } = await diaryService.syncDiaries(userId, sanitized);
       console.log('同期結果:', success ? '成功' : '失敗', error || '', 'データ件数:', formattedEntries.length);
       
       if (!success) {

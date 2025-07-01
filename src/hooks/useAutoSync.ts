@@ -309,7 +309,9 @@ export const useAutoSync = (): AutoSyncState => {
               formattedEntry.worthlessness_score = entry.worthlessness_score;
             } else if (typeof entry.worthlessness_score === 'string') {
               formattedEntry.worthlessness_score = parseInt(entry.worthlessness_score) || 50;
-            } else {
+      // 所有者列(user_id, username)を送らないようにサニタイズ
+      const sanitized = formattedEntries.map(({ user_id, username, ...safe }) => safe);
+      const { success, error } = await diaryService.syncDiaries(userId, sanitized);
               formattedEntry.worthlessness_score = 50;
             }
           }
