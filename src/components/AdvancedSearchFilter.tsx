@@ -394,19 +394,6 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
     return colorMap[emotion] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
-  // ユーザー名の表示を修正
-  const getUserName = (entry: any): string => {
-    // ユーザー情報がある場合はそれを使用
-    if (entry.user && entry.user.line_username) {
-      return entry.user.line_username;
-    }
-    
-    // ローカルストレージから現在のユーザー名を取得
-    const currentUsername = localStorage.getItem('line-username') || 'Unknown User';
-    
-    return currentUsername;
-  };
-
   return (
     <div className="space-y-6">
       {/* 検索フィルター */}
@@ -734,7 +721,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                     {entry.user?.line_username && (
                       <span className="text-xs text-gray-500 font-jp-normal flex items-center">
                         <User className="w-3 h-3 mr-1" />
-                        {getUserName(entry)}
+                        {entry.user?.line_username || 'Unknown User'}
                       </span>
                     )}
                     {(entry.self_esteem_score || entry.selfEsteemScore || entry.worthlessness_score || entry.worthlessnessScore) && (
@@ -766,11 +753,6 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
 
                 <div className="flex justify-between items-center mt-3 pt-3 border-t">
                   <div className="flex items-center space-x-2">
-                    {entry.user && (
-                      <span className="text-xs text-gray-500 font-jp-normal">
-                        {getUserName(entry)}
-                      </span>
-                    )}
                     <span className="text-xs text-gray-500 font-jp-normal">
                       {entry.assigned_counselor || entry.assignedCounselor || '未割り当て'}
                     </span>
