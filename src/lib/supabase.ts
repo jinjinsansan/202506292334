@@ -271,12 +271,10 @@ export const diaryService = {
           
           // 緊急度の処理
           if (diary.urgency_level !== undefined) {
-            // 緊急度の値を検証して、許可された値のみを設定
-            const urgencyValue = diary.urgency_level !== undefined ? 
-                                diary.urgency_level : 
-                                diary.urgencyLevel || '';
+            // 緊急度の値を検証
+            const urgencyValue = diary.urgency_level || '';
             
-            // 許可された値のみを設定（high, medium, low, または空文字列）
+            // 許可された値のみを設定（high, medium, low、または空文字列）
             if (urgencyValue === 'high' || urgencyValue === 'medium' || urgencyValue === 'low' || urgencyValue === '') {
               formattedEntry.urgency_level = urgencyValue;
             } else {
@@ -284,9 +282,11 @@ export const diaryService = {
               console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
               formattedEntry.urgency_level = '';
             }
-                                diary.urgencyLevel || '';
+          } else if (diary.urgencyLevel !== undefined) {
+            // 緊急度の値を検証
+            const urgencyValue = diary.urgencyLevel || '';
             
-            // 許可された値のみを設定（high, medium, low, または空文字列）
+            // 許可された値のみを設定（high, medium, low、または空文字列）
             if (urgencyValue === 'high' || urgencyValue === 'medium' || urgencyValue === 'low' || urgencyValue === '') {
               formattedEntry.urgency_level = urgencyValue;
             } else {
@@ -297,15 +297,9 @@ export const diaryService = {
           }
           
           // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）
-          formattedEntry.urgency_level = formattedEntry.urgency_level || '';
-            // 許可された値のみを設定（high, medium, low, または空文字列）
-            if (urgencyValue === 'high' || urgencyValue === 'medium' || urgencyValue === 'low' || urgencyValue === '') {
-              formattedEntry.urgency_level = urgencyValue;
-            } else {
-              // 無効な値の場合は空文字列に設定
-              console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
-              formattedEntry.urgency_level = '';
-            }
+          if (formattedEntry.urgency_level === null) {
+            formattedEntry.urgency_level = '';
+          }
           
           
           return formattedEntry;

@@ -322,61 +322,9 @@ export const useAutoSync = (): AutoSyncState => {
           }
           
           // 表示設定の処理
-          if (entry.is_visible_to_user !== undefined || entry.isVisibleToUser !== undefined) {
-            formattedEntry.is_visible_to_user = entry.is_visible_to_user !== undefined ? 
-                                               entry.is_visible_to_user : 
-                                               entry.isVisibleToUser || false;
-          }
-          
-          // カウンセラー名の処理
-          if (entry.counselor_name !== undefined || entry.counselorName !== undefined) {
-            formattedEntry.counselor_name = entry.counselor_name !== undefined ? 
-                                           entry.counselor_name : 
-                                           entry.counselorName || '';
-          }
-          
-          // 担当カウンセラーの処理
-          if (entry.assigned_counselor !== undefined || entry.assignedCounselor !== undefined) {
-            formattedEntry.assigned_counselor = entry.assigned_counselor !== undefined ? 
-                                               entry.assigned_counselor : 
-                                               entry.assignedCounselor || '';
-          }
-          
-          // 緊急度の処理
           if (entry.urgency_level !== undefined || entry.urgencyLevel !== undefined) {
-            // 緊急度の値を検証して、許可された値のみを設定
             const urgencyValue = entry.urgency_level !== undefined ? 
-                                entry.urgency_level : 
-                                entry.urgencyLevel || '';
-            
-            // 許可された値のみを設定（high, medium, low, または空文字列）
-            if (urgencyValue === 'high' || urgencyValue === 'medium' || urgencyValue === 'low' || urgencyValue === '') {
-              formattedEntry.urgency_level = urgencyValue;
-            } else {
-              // 無効な値の場合は空文字列に設定
-              console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
-              formattedEntry.urgency_level = '';
-            }
-            // 許可された値のみを設定（high, medium, low, または空文字列）
-            if (urgencyValue === 'high' || urgencyValue === 'medium' || urgencyValue === 'low' || urgencyValue === '') {
-              formattedEntry.urgency_level = urgencyValue;
-            } else {
-              // 無効な値の場合は空文字列に設定
-              console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
-              formattedEntry.urgency_level = '';
-            // 緊急度の値を検証して、許可された値のみを設定
-            const urgencyValue = entry.urgency_level !== undefined ? 
-                                entry.urgency_level : 
-                                entry.urgencyLevel || '';
-            
-            // 許可された値のみを設定（high, medium, low, または空文字列）
-            if (urgencyValue === 'high' || urgencyValue === 'medium' || urgencyValue === 'low' || urgencyValue === '') {
-              formattedEntry.urgency_level = urgencyValue;
-            } else {
-              // 無効な値の場合は空文字列に設定
-              console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
-              formattedEntry.urgency_level = '';
-            }
+            // エラーがあっても処理を続行
           }
           
           return formattedEntry;
@@ -507,17 +455,7 @@ export const useAutoSync = (): AutoSyncState => {
           
           if (error) {
             console.error(`日記の一括削除エラー (${i}~${i+chunk.length})`, error, 'IDs:', chunk);
-            // 緊急度の値を検証して、許可された値のみを設定
-            const urgencyValue = diary.urgencyLevel || '';
-            
-            // 許可された値のみを設定（high, medium, low, または空文字列）
-            if (urgencyValue === 'high' || urgencyValue === 'medium' || urgencyValue === 'low' || urgencyValue === '') {
-              formattedEntry.urgency_level = urgencyValue;
-            } else {
-              // 無効な値の場合は空文字列に設定
-              console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
-              formattedEntry.urgency_level = '';
-            }
+            success = false;
           } else {
             deletedCount += chunk.length;
           }
