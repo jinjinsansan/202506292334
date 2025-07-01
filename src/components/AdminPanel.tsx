@@ -19,12 +19,6 @@ const AdminPanel: React.FC = () => {
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editFormData, setEditFormData] = useState({
-    date: '',
-    emotion: '', 
-    event: '',
-    realization: '',
-    selfEsteemScore: 50,
-    worthlessnessScore: 50,
     counselorMemo: '',
     isVisibleToUser: false,
     assignedCounselor: '', 
@@ -156,12 +150,6 @@ const AdminPanel: React.FC = () => {
     
     // 編集モードをリセットして詳細表示モードに
     setEditFormData({
-      date: entry.date,
-      emotion: entry.emotion,
-      event: entry.event,
-      realization: entry.realization,
-      selfEsteemScore: entry.selfEsteemScore || entry.self_esteem_score || 50,
-      worthlessnessScore: entry.worthlessnessScore || entry.worthlessness_score || 50,
       counselorMemo: entry.counselorMemo || entry.counselor_memo || '',
       isVisibleToUser: entry.isVisibleToUser || entry.is_visible_to_user || false,
       assignedCounselor: entry.assignedCounselor || entry.assigned_counselor || '',
@@ -275,6 +263,11 @@ const AdminPanel: React.FC = () => {
     }
     // ローカルデータの場合
     return 'ユーザー';
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // フォーム送信処理
   };
 
   // バックアップファイルの選択
