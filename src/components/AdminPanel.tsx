@@ -28,11 +28,113 @@ const AdminPanel: React.FC = () => {
   const [restoring, setRestoring] = useState(false);
   const [backupStatus, setBackupStatus] = useState<string | null>(null);
   const [supabase, setSupabase] = useState<any>(window.supabase);
+  const [supabase, setSupabase] = useState<any>(window.supabase);
 
   useEffect(() => {
     loadEntries();
   }, []);
   
+  // 日記データの読み込み
+  const loadEntries = async () => {
+    setSyncing(true);
+    
+    try {
+      // Supabaseから直接日記データを取得
+      if (supabase) {
+        try {
+          console.log('Supabaseから日記データを取得します');
+          const { data: diaryData, error } = await supabase
+            .from('diary_entries')
+            .select(`
+              *,
+              users (
+                line_username
+              )
+            `)
+            .order('created_at', { ascending: false });
+          
+          if (error) {
+            console.error('Supabaseからの日記データ取得エラー:', error);
+            throw error;
+          } else if (diaryData && diaryData.length > 0) {
+            console.log('Supabaseから日記データを取得しました:', diaryData.length, '件');
+            
+            // データをフォーマット
+            const formattedEntries = diaryData.map(item => {
+              // 重複チェック用のキーを作成
+              const key = `${item.date}_${item.emotion}_${item.event?.substring(0, 50)}`;
+
+              return {
+                id: item.id,
+                date: item.date,
+                emotion: item.emotion || '不明',
+                event: item.event || '内容なし',
+                realization: item.realization || '内容なし',
+                selfEsteemScore: item.self_esteem_score || 0,
+                worthlessnessScore: item.worthlessness_score || 0,
+                created_at: item.created_at,
+                user: item.users,
+                counselorMemo: item.counselor_memo || '',
+                isVisibleToUser: item.is_visible_to_user || false,
+                counselorName: item.counselor_name || '',
+                assignedCounselor: item.assigned_counselor || '',
+                urgencyLevel: item.urgency_level || '',
+                syncStatus: 'supabase', // Supabaseから取得したデータ
+                _key: key // 重複チェック用のキー
+              };
+            });
+            
+            // 重複を除外
+            const uniqueMap = new Map();
+            const uniqueEntries = [];
+            
+            for (const entry of formattedEntries) {
+              if (!uniqueMap.has(entry._key)) {
+                uniqueMap.set(entry._key, entry);
+                uniqueEntries.push(entry);
+              }
+            }
+            
+            console.log(`重複を除外: ${formattedEntries.length} → ${uniqueEntries.length}`);
+            
+            setEntries(uniqueEntries);
+            setFilteredEntries(uniqueEntries);
+            console.log('日記データを設定しました:', formattedEntries.length, '件');
+            return;
+          }
+        } catch (supabaseError) {
+          console.error('Supabase接続エラー:', supabaseError);
+        }
+      }
+      
+      // ローカルストレージからデータを取得
+      const savedEntries = localStorage.getItem('journalEntries');
+      if (savedEntries) {
+        console.log('ローカルストレージから日記データを取得します');
+        try {
+          const parsedEntries = JSON.parse(savedEntries);
+          
+          // ローカルデータにsyncStatusを追加
+          const localEntries = parsedEntries.map((entry: any) => ({
+            ...entry,
+            syncStatus: 'local' // ローカルストレージから取得したデータ
+          }));
+          
+          setEntries(localEntries);
+          setFilteredEntries(localEntries);
+          console.log('ローカルデータを設定しました:', localEntries.length, '件');
+        } catch (error) {
+          console.error('ローカルデータの解析エラー:', error);
+        }
+      } else {
+        console.log('ローカルストレージに日記データがありません');
+      }
+    } catch (error) {
+      console.error('データ読み込みエラー:', error);
+    } finally {
+      setSyncing(false);
+    }
+  };
   // 初期化時にactiveTabを設定
   useEffect(() => {
     // URLのハッシュからタブを設定
