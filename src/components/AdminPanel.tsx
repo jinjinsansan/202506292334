@@ -22,8 +22,8 @@ const AdminPanel: React.FC = () => {
   const [editFormData, setEditFormData] = useState({
     counselorMemo: '',
     isVisibleToUser: false,
-    assignedCounselor: '', 
-    urgencyLevel: '' 
+    assignedCounselor: '',
+    urgencyLevel: ''
   });
   const [backupData, setBackupData] = useState<File | null>(null);
   const [restoring, setRestoring] = useState(false);
@@ -171,9 +171,11 @@ const AdminPanel: React.FC = () => {
     try {
       // ローカルストレージのデータを更新
       const updatedEntries = entries.map(entry => {
-        if (entry.id === selectedEntry.id) {
+        if (entry.id === selectedEntry.id) {          
           return {
             ...entry,
+            // 重要: user_idを保持する
+            user_id: entry.user_id || selectedEntry.user_id,
             syncStatus: entry.syncStatus || 'local', // 同期状態を保持
             counselorMemo: editFormData.counselorMemo,
             isVisibleToUser: editFormData.isVisibleToUser,
