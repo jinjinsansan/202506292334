@@ -43,15 +43,17 @@ const CounselorMemoModal: React.FC<CounselorMemoModalProps> = ({
         counselor_name: counselorName
       };
       
+      // 保存するデータを準備（user_idは含めない）
+      const payload = {
+        counselor_memo: memoText,
+        is_visible_to_user: isVisibleToUser,
+        counselor_name: counselorName
+      };
+      
       // Supabaseに保存
       const { error } = await supabase
         .from('diary_entries')
         .update(payload)          // ★ upsert は使わない
-        .eq('id', diaryId);
-      
-      if (error) {
-        console.error('メモ保存エラー:', error);
-        alert(`メモの保存に失敗しました: ${error.message}`);
       } else {
         console.log('メモを保存しました');
         if (onSave) onSave();
