@@ -271,48 +271,26 @@ export const diaryService = {
           
           // 緊急度の処理
           if (diary.urgency_level !== undefined) {
-            // 緊急度の値を取得
-            const urgencyValue1 = diary.urgency_level || '';
+            const urgencyValue = diary.urgency_level || '';
             
             // 許可された値のみを設定（high, medium, low、または空文字列）
-            if (urgencyValue1 !== 'high' && urgencyValue1 !== 'medium' && urgencyValue1 !== 'low' && urgencyValue1 !== '') {
+            if (urgencyValue !== 'high' && urgencyValue !== 'medium' && urgencyValue !== 'low' && urgencyValue !== '') {
               // 無効な値の場合は空文字列に設定
-              console.warn(`無効な緊急度の値: ${urgencyValue1}、空に設定します`);
+              console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
               formattedEntry.urgency_level = '';
             } else {
-              formattedEntry.urgency_level = urgencyValue1;
-            }
-            const urgencyLevelValue1 = diary.urgency_level || '';
-            
-            // 許可された値のみを設定（high, medium, low、または空文字列）
-            if (urgencyLevelValue1 !== 'high' && urgencyLevelValue1 !== 'medium' && urgencyLevelValue1 !== 'low' && urgencyLevelValue1 !== '') {
-              // 無効な値の場合は空文字列に設定
-              console.warn(`無効な緊急度の値: ${urgencyLevelValue1}、空に設定します`);
-              formattedEntry.urgency_level = '';
-            } else {
-              formattedEntry.urgency_level = urgencyLevelValue1;
+              formattedEntry.urgency_level = urgencyValue;
             }
           } else if (diary.urgencyLevel !== undefined) {
-            // 緊急度の値を取得
-            const urgencyValue2 = diary.urgencyLevel || '';
+            const urgencyValue = diary.urgencyLevel || '';
             
             // 許可された値のみを設定（high, medium, low、または空文字列）
-            if (urgencyValue2 !== 'high' && urgencyValue2 !== 'medium' && urgencyValue2 !== 'low' && urgencyValue2 !== '') {
+            if (urgencyValue !== 'high' && urgencyValue !== 'medium' && urgencyValue !== 'low' && urgencyValue !== '') {
               // 無効な値の場合は空文字列に設定
-              console.warn(`無効な緊急度の値: ${urgencyValue2}、空に設定します`);
+              console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
               formattedEntry.urgency_level = '';
             } else {
-              formattedEntry.urgency_level = urgencyValue2;
-            }
-            const urgencyLevelValue2 = diary.urgencyLevel || '';
-            
-            // 許可された値のみを設定（high, medium, low、または空文字列）
-            if (urgencyLevelValue2 !== 'high' && urgencyLevelValue2 !== 'medium' && urgencyLevelValue2 !== 'low' && urgencyLevelValue2 !== '') {
-              // 無効な値の場合は空文字列に設定
-              console.warn(`無効な緊急度の値: ${urgencyLevelValue2}、空に設定します`);
-              formattedEntry.urgency_level = '';
-            } else {
-              formattedEntry.urgency_level = urgencyLevelValue2;
+              formattedEntry.urgency_level = urgencyValue;
             }
           }
           
