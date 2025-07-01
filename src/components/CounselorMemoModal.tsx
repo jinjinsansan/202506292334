@@ -36,14 +36,16 @@ const CounselorMemoModal: React.FC<CounselorMemoModalProps> = ({
     setSaving(true);
     
     try {
-      // 保存するデータを準備（user_idは含めない）
+      // 所有者列を除去してメモ関連だけ送る
       const payload = {
         counselor_memo: memoText,
         is_visible_to_user: isVisibleToUser,
-        counselor_name: counselorName
+        counselor_name: counselorName,
+        counselor_id: null, // 現在のセッションIDがあれば設定
+        counselor_updated_at: new Date().toISOString()
       };
       
-      // Supabaseに保存（updateを使用してuser_idを変更しないようにする）
+      // Supabaseに保存（updateを使用）
       const { error } = await supabase
         .from('diary_entries')
         .update(payload)
