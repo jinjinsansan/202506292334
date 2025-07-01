@@ -123,7 +123,7 @@ const AdminPanel: React.FC = () => {
   const handleViewEntry = (entry: any) => {
     setSelectedEntry(entry);
     setEditMode(false);
-    // 編集モードをリセットして詳細表示モードに
+    
     // 編集モードをリセットして詳細表示モードに
     setEditFormData({
       counselorMemo: entry.counselorMemo || entry.counselor_memo || '',
@@ -434,15 +434,15 @@ const AdminPanel: React.FC = () => {
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="font-jp-bold text-gray-900">カウンセラーメモ</h3>
                       <button
-                        onClick={handleEditEntry}
-                        className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm font-jp-medium transition-colors"
+                        className="text-green-600 hover:text-green-700 p-1 cursor-pointer"
+                        className="text-blue-600 hover:text-blue-700 p-1 cursor-pointer"
                       >
                         <Edit3 className="w-4 h-4" />
                         <span>編集</span>
                       </button>
                     </div>
                     <div className="space-y-4">
-                      <div className="bg-white rounded-lg p-3 border border-gray-200">
+                        className="text-red-600 hover:text-red-700 p-1 cursor-pointer"
                         <h4 className="text-sm font-jp-medium text-gray-700 mb-2">メモ内容</h4>
                         <p className="text-gray-700 font-jp-normal whitespace-pre-wrap">
                           {selectedEntry.counselorMemo || selectedEntry.counselor_memo || '（メモはありません）'}
