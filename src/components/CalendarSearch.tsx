@@ -201,6 +201,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
 
   const getEmotionColor = (emotion: string) => {
     const colorMap: { [key: string]: string } = {
+      // ネガティブな感情
       '恐怖': 'bg-purple-100 text-purple-800 border-purple-200',
       '悲しみ': 'bg-blue-100 text-blue-800 border-blue-200',
       '怒り': 'bg-red-100 text-red-800 border-red-200',
@@ -209,6 +210,7 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
       '罪悪感': 'bg-orange-100 text-orange-800 border-orange-200',
       '寂しさ': 'bg-indigo-100 text-indigo-800 border-indigo-200',
       '恥ずかしさ': 'bg-pink-100 text-pink-800 border-pink-200',
+      // ポジティブな感情
       '嬉しい': 'bg-yellow-100 text-yellow-800 border-yellow-200',
       '感謝': 'bg-teal-100 text-teal-800 border-teal-200',
       '達成感': 'bg-lime-100 text-lime-800 border-lime-200',
@@ -359,7 +361,21 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                   <div key={entry.id} className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center space-x-2 flex-wrap">
-                        <span className={`px-2 py-1 rounded-full text-xs font-jp-medium border ${getEmotionColor(entry.emotion)}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-jp-medium border ${
+                          entry.emotion === '恐怖' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                          entry.emotion === '悲しみ' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                          entry.emotion === '怒り' ? 'bg-red-100 text-red-800 border-red-200' :
+                          entry.emotion === '悔しい' ? 'bg-green-100 text-green-800 border-green-200' :
+                          entry.emotion === '無価値感' ? 'bg-gray-100 text-gray-800 border-gray-300' :
+                          entry.emotion === '罪悪感' ? 'bg-orange-100 text-orange-800 border-orange-200' :
+                          entry.emotion === '寂しさ' ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
+                          entry.emotion === '恥ずかしさ' ? 'bg-pink-100 text-pink-800 border-pink-200' :
+                          entry.emotion === '嬉しい' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                          entry.emotion === '感謝' ? 'bg-teal-100 text-teal-800 border-teal-200' :
+                          entry.emotion === '達成感' ? 'bg-lime-100 text-lime-800 border-lime-200' :
+                          entry.emotion === '幸せ' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                          'bg-gray-100 text-gray-800 border-gray-200'
+                        }`}>
                           {entry.emotion}
                         </span>
                         {entry.syncStatus && (
