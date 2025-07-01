@@ -271,29 +271,29 @@ export const diaryService = {
           
           // 緊急度の処理
           if (diary.urgency_level !== undefined) {
-            // 緊急度の値を取得（変数名の重複を避けるため命名変更）
-            const urgencyLevelValue = diary.urgency_level || '';
+            // 緊急度の値を取得
+            let urgencyLevelValue = diary.urgency_level || '';
             
             // 許可された値のみを設定（high, medium, low、または空文字列）
             if (urgencyLevelValue !== 'high' && urgencyLevelValue !== 'medium' && urgencyLevelValue !== 'low' && urgencyLevelValue !== '') {
               // 無効な値の場合は空文字列に設定
               console.warn(`無効な緊急度の値: ${urgencyLevelValue}、空に設定します`);
-              formattedEntry.urgency_level = '';
-            } else {
-              formattedEntry.urgency_level = urgencyLevelValue;
+              urgencyLevelValue = '';
             }
+            
+            formattedEntry.urgency_level = urgencyLevelValue;
           } else if (diary.urgencyLevel !== undefined) {
-            // 緊急度の値を取得（変数名の重複を避けるため命名変更）
-            const urgencyLevelValue = diary.urgencyLevel || '';
+            // 緊急度の値を取得
+            let urgencyLevelValue = diary.urgencyLevel || '';
             
             // 許可された値のみを設定（high, medium, low、または空文字列）
             if (urgencyLevelValue !== 'high' && urgencyLevelValue !== 'medium' && urgencyLevelValue !== 'low' && urgencyLevelValue !== '') {
               // 無効な値の場合は空文字列に設定
               console.warn(`無効な緊急度の値: ${urgencyLevelValue}、空に設定します`);
-              formattedEntry.urgency_level = '';
-            } else {
-              formattedEntry.urgency_level = urgencyLevelValue;
+              urgencyLevelValue = '';
             }
+            
+            formattedEntry.urgency_level = urgencyLevelValue;
           }
           
           // 明示的にnullの場合は空文字列に変換（PostgreSQLのNULL制約対策）

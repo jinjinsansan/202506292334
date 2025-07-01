@@ -345,7 +345,7 @@ export const useAutoSync = (): AutoSyncState => {
           // 緊急度の処理
           if (entry.urgency_level !== undefined || entry.urgencyLevel !== undefined) {
             // 緊急度の値を取得
-            const urgencyValue = entry.urgency_level !== undefined ? 
+            let urgencyValue = entry.urgency_level !== undefined ? 
                               entry.urgency_level : 
                               entry.urgencyLevel || '';
 
@@ -353,10 +353,10 @@ export const useAutoSync = (): AutoSyncState => {
             if (urgencyValue !== 'high' && urgencyValue !== 'medium' && urgencyValue !== 'low' && urgencyValue !== '') {
               // 無効な値の場合は空文字列に設定
               console.warn(`無効な緊急度の値: ${urgencyValue}、空に設定します`);
-              formattedEntry.urgency_level = '';
-            } else {
-              formattedEntry.urgency_level = urgencyValue;
+              urgencyValue = '';
             }
+            
+            formattedEntry.urgency_level = urgencyValue;
           }
           
           return formattedEntry;
