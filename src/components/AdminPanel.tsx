@@ -27,8 +27,6 @@ const AdminPanel: React.FC = () => {
   const [backupData, setBackupData] = useState<File | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [backupStatus, setBackupStatus] = useState<string | null>(null);
-  const [supabase, setSupabase] = useState<any>(window.supabase);
-  const [supabase, setSupabase] = useState<any>(window.supabase);
 
   useEffect(() => {
     loadEntries();
