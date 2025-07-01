@@ -323,6 +323,27 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
     return colorMap[emotion] || 'bg-white';
   };
 
+  // 感情に対応する背景色を取得
+  const getEmotionBgColor = (emotion: string) => {
+    const colorMap: { [key: string]: string } = {
+      // ネガティブな感情
+      '恐怖': 'bg-purple-50',
+      '悲しみ': 'bg-blue-50',
+      '怒り': 'bg-red-50',
+      '悔しい': 'bg-green-50',
+      '無価値感': 'bg-gray-50',
+      '罪悪感': 'bg-orange-50',
+      '寂しさ': 'bg-indigo-50',
+      '恥ずかしさ': 'bg-pink-50',
+      // ポジティブな感情
+      '嬉しい': 'bg-yellow-50',
+      '感謝': 'bg-teal-50',
+      '達成感': 'bg-lime-50',
+      '幸せ': 'bg-amber-50'
+    };
+    return colorMap[emotion] || 'bg-white';
+  };
+
   return (
     <div className="space-y-6">
       {/* 検索フィルター */}
@@ -603,17 +624,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                 entry.emotion === '恐怖' ? 'bg-purple-50' :
                 entry.emotion === '悲しみ' ? 'bg-blue-50' :
                 entry.emotion === '怒り' ? 'bg-red-50' :
-                entry.emotion === '悔しい' ? 'bg-green-50' :
-                entry.emotion === '無価値感' ? 'bg-gray-50' :
-                entry.emotion === '罪悪感' ? 'bg-orange-50' :
-                entry.emotion === '寂しさ' ? 'bg-indigo-50' :
-                entry.emotion === '恥ずかしさ' ? 'bg-pink-50' :
-                entry.emotion === '嬉しい' ? 'bg-yellow-50' :
-                entry.emotion === '感謝' ? 'bg-teal-50' :
-                entry.emotion === '達成感' ? 'bg-lime-50' :
-                entry.emotion === '幸せ' ? 'bg-amber-50' :
-                'bg-white'
-              }`}>
+              <div key={entry.id} className={`border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow ${getEmotionBgColor(entry.emotion)}`}>
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center space-x-3">
                     <span className="text-sm font-jp-medium text-gray-900">{entry.date}</span>
