@@ -17,6 +17,7 @@ const AdminPanel: React.FC = () => {
   const [filteredEntries, setFilteredEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [editFormData, setEditFormData] = useState({
     counselorMemo: '',
     isVisibleToUser: false,
@@ -136,7 +137,6 @@ const AdminPanel: React.FC = () => {
 
   const handleEditEntry = () => {
     setEditMode(true);
-    // 既に選択されているエントリーを編集モードに切り替え
   };
 
   const handleSaveEdit = async () => {
@@ -579,7 +579,7 @@ const AdminPanel: React.FC = () => {
               バックアップ
             </TabsTrigger>
             <TabsTrigger value="device-auth" onClick={() => setActiveTab('device-auth')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              <Shield className="w-4 h-4 mr-2" />
+              <Shield className="w-4 h-4 mr-2"  />
               デバイス認証
             </TabsTrigger>
             <TabsTrigger value="security" onClick={() => setActiveTab('security')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">

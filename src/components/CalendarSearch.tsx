@@ -316,7 +316,6 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                     </span>
                   </div>
                   
-                  {/* エントリー数表示 */}
                   {calendarData[dateString] > 0 && (
                     <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
                       <div className="flex items-center justify-center">
@@ -397,18 +396,31 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                       <div>
                         <h4 className="font-jp-semibold text-gray-700 mb-1 text-sm">気づき</h4>
                         <p className="text-gray-600 text-xs sm:text-sm font-jp-normal leading-relaxed break-words">
-                          {entry.realization.length > 100 ? `${entry.realization.substring(0, 100)}...` : entry.realization}
+                          {entry.realization && entry.realization.length > 100 ? `${entry.realization.substring(0, 100)}...` : entry.realization}
                         </p>
                       </div>
                     </div>
 
-                    <div>
-                      <p className="text-sm text-gray-500">
+                    {/* カウンセラーメモ */}
+                    {((entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo)) && (
+                      <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 mb-3">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-xs font-jp-medium text-blue-700 break-words">
+                            {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
+                          </span>
+                        </div>
+                        <p className="text-blue-800 text-sm font-jp-normal leading-relaxed break-words">
+                          {entry.counselor_memo || entry.counselorMemo}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-center">
+                      <div className="text-xs text-gray-500">
                         {(entry.assignedCounselor || entry.assigned_counselor) ? 
                           `担当: ${entry.assignedCounselor || entry.assigned_counselor}` : 
                           '未割り当て'}
-                      </p>
-
+                      </div>
                       <div className="flex space-x-2">
                         <button
                           onClick={() => onViewEntry(entry)}
@@ -425,17 +437,6 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
-                        )}
-                      </div>
-
-                      <div>
-                        <p className="text-sm text-gray-500">
-                          {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
-                        </p>
-                        {((entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo)) && (
-                          <p className="text-gray-600 text-sm mt-1">
-                            {entry.counselor_memo || entry.counselorMemo}
-                          </p>
                         )}
                       </div>
                     </div>
