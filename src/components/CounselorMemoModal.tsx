@@ -54,6 +54,10 @@ const CounselorMemoModal: React.FC<CounselorMemoModalProps> = ({
       const { error } = await supabase
         .from('diary_entries')
         .update(payload)          // ★ upsert は使わない
+        .eq('id', diaryId);
+        
+      if (error) {
+        throw error;
       } else {
         console.log('メモを保存しました');
         if (onSave) onSave();
