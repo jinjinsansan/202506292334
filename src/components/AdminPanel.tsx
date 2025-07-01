@@ -21,9 +21,12 @@ const AdminPanel: React.FC = () => {
   const [editFormData, setEditFormData] = useState({
     counselorMemo: '',
     isVisibleToUser: false,
-    assignedCounselor: '',
-    urgencyLevel: ''
+    assignedCounselor: '', 
+    urgencyLevel: '' 
   });
+  const [backupData, setBackupData] = useState<File | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const [backupStatus, setBackupStatus] = useState<string | null>(null);
 
   useEffect(() => {
     loadEntries();
@@ -244,6 +247,145 @@ const AdminPanel: React.FC = () => {
 
   const handleFilteredResults = (filtered: any[]) => {
     setFilteredEntries(filtered);
+  };
+
+  // バックアップファイルの選択
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setBackupData(e.target.files[0]);
+      setBackupStatus(null);
+    }
+  };
+
+  // バックアップデータの作成
+  const handleCreateBackup = () => {
+    try {
+      setBackupStatus(null);
+      
+      // ローカルストレージからデータを収集
+      const backupObject = {
+        journalEntries: localStorage.getItem('journalEntries') ? JSON.parse(localStorage.getItem('journalEntries')!) : [],
+        initialScores: localStorage.getItem('initialScores') ? JSON.parse(localStorage.getItem('initialScores')!) : null,
+        consentHistories: localStorage.getItem('consent_histories') ? JSON.parse(localStorage.getItem('consent_histories')!) : [],
+        lineUsername: localStorage.getItem('line-username'),
+        privacyConsentGiven: localStorage.getItem('privacyConsentGiven'),
+        privacyConsentDate: localStorage.getItem('privacyConsentDate'),
+        backupDate: new Date().toISOString(),
+        version: '1.0'
+      };
+      
+      // JSONに変換してダウンロード
+      const dataStr = JSON.stringify(backupObject, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      
+      // ファイル名にユーザー名と日付を含める
+      const username = localStorage.getItem('current_counselor') || 'admin';
+      const date = new Date().toISOString().split('T')[0];
+      const fileName = `kanjou-nikki-backup-${username}-${date}.json`;
+      
+      // ダウンロードリンクを作成して自動クリック
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(dataBlob);
+      downloadLink.download = fileName;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      setBackupStatus('バックアップが正常に作成されました！');
+    } catch (error) {
+      console.error('バックアップ作成エラー:', error);
+      setBackupStatus('バックアップの作成に失敗しました。');
+    }
+  };
+
+  // バックアップからの復元
+  const handleRestoreBackup = async () => {
+    if (!backupData) {
+      setBackupStatus('バックアップファイルを選択してください。');
+      return;
+    }
+    
+    if (!window.confirm('バックアップからデータを復元すると、現在のデータが上書きされます。続行しますか？')) {
+      return;
+    }
+    
+    setRestoring(true);
+    setBackupStatus(null);
+    
+    try {
+      // ファイルを読み込み
+      const fileReader = new FileReader();
+      
+      fileReader.onload = (event) => {
+        try {
+          if (!event.target || typeof event.target.result !== 'string') {
+            throw new Error('ファイルの読み込みに失敗しました。');
+          }
+          
+          const backupObject = JSON.parse(event.target.result);
+          
+          // バージョンチェック
+          if (!backupObject.version) {
+            throw new Error('無効なバックアップファイルです。');
+          }
+          
+          // データの復元
+          if (backupObject.journalEntries) {
+            localStorage.setItem('journalEntries', JSON.stringify(backupObject.journalEntries));
+          }
+          
+          if (backupObject.initialScores) {
+            localStorage.setItem('initialScores', JSON.stringify(backupObject.initialScores));
+          }
+          
+          if (backupObject.consentHistories) {
+            localStorage.setItem('consent_histories', JSON.stringify(backupObject.consentHistories));
+          }
+          
+          if (backupObject.lineUsername) {
+            localStorage.setItem('line-username', backupObject.lineUsername);
+          }
+          
+          if (backupObject.privacyConsentGiven) {
+            localStorage.setItem('privacyConsentGiven', backupObject.privacyConsentGiven);
+          }
+          
+          if (backupObject.privacyConsentDate) {
+            localStorage.setItem('privacyConsentDate', backupObject.privacyConsentDate);
+          }
+          
+          setBackupStatus('データが正常に復元されました！ページを再読み込みしてください。');
+          
+          // データを再読み込み
+          loadEntries();
+          
+          // 自動同期を実行
+          if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
+            window.autoSync.triggerManualSync().catch(error => {
+              console.error('復元後の同期エラー:', error);
+            });
+          }
+          
+        } catch (error) {
+          console.error('データ復元エラー:', error);
+          setBackupStatus('データの復元に失敗しました。有効なバックアップファイルか確認してください。');
+        } finally {
+          setRestoring(false);
+        }
+      };
+      
+      fileReader.onerror = () => {
+        setBackupStatus('ファイルの読み込みに失敗しました。');
+        setRestoring(false);
+      };
+      
+      fileReader.readAsText(backupData);
+      
+    } catch (error) {
+      console.error('バックアップ復元エラー:', error);
+      setBackupStatus('バックアップの復元に失敗しました。');
+      setRestoring(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -731,17 +873,107 @@ const AdminPanel: React.FC = () => {
           <TabsContent value="backup" className="space-y-6">
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-xl font-jp-bold text-gray-900 mb-6 flex items-center">
-                <Save className="w-5 h-5 text-blue-600 mr-2" />
+                <Save className="w-5 h-5 text-blue-600 mr-2" aria-hidden="true" />
                 バックアップ管理
               </h2>
-              <div className="text-center py-8">
-                <Save className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-jp-medium text-gray-500 mb-2">
-                  バックアップ機能
-                </h3>
-                <p className="text-gray-400 font-jp-normal">
-                  データのバックアップと復元を管理します
-                </p>
+              
+              <div className="space-y-6">
+                {/* バックアップ作成セクション */}
+                <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+                  <div className="flex items-start space-x-4 mb-4">
+                    <Download className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="font-jp-bold text-gray-900 mb-2">バックアップファイルを作成</h3>
+                      <p className="text-gray-700 font-jp-normal mb-4">
+                        現在のデータをバックアップファイルとして保存します。このファイルは後でデータを復元する際に使用できます。
+                      </p>
+                      <button
+                        onClick={handleCreateBackup}
+                        className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-jp-medium transition-colors w-full sm:w-auto"
+                      >
+                        <Download className="w-5 h-5" />
+                        <span>バックアップを作成</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* バックアップ復元セクション */}
+                <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
+                  <div className="flex items-start space-x-4 mb-4">
+                    <Upload className="w-6 h-6 text-purple-600 mt-1 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="font-jp-bold text-gray-900 mb-2">バックアップから復元</h3>
+                      <p className="text-gray-700 font-jp-normal mb-4">
+                        以前作成したバックアップファイルからデータを復元します。現在のデータは上書きされます。
+                      </p>
+                      
+                      <div className="space-y-4">
+                        <div className="bg-white rounded-lg p-4 border border-gray-200">
+                          <input
+                            type="file"
+                            accept=".json"
+                            onChange={handleFileChange}
+                            className="block w-full text-sm text-gray-500
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-lg file:border-0
+                              file:text-sm file:font-jp-medium
+                              file:bg-purple-100 file:text-purple-700
+                              hover:file:bg-purple-200
+                              cursor-pointer"
+                          />
+                        </div>
+                        
+                        <button
+                          onClick={handleRestoreBackup}
+                          disabled={!backupData || restoring}
+                          className="flex items-center justify-center space-x-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-jp-medium transition-colors w-full sm:w-auto"
+                        >
+                          {restoring ? (
+                            <RefreshCw className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <Upload className="w-5 h-5" />
+                          )}
+                          <span>バックアップから復元</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 注意事項 */}
+                <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                  <div className="flex items-start space-x-3">
+                    <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-yellow-800 font-jp-normal">
+                      <p className="font-jp-medium mb-1">重要な注意事項</p>
+                      <ul className="list-disc list-inside space-y-1 ml-4">
+                        <li>バックアップファイルには個人情報が含まれています。安全に保管してください</li>
+                        <li>復元操作は元に戻せません。必要に応じて現在のデータもバックアップしてください</li>
+                        <li>端末を変更する場合は、必ずバックアップを作成してください</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 状態表示 */}
+                {backupStatus && (
+                  <div className={`rounded-lg p-4 border ${
+                    backupStatus.includes('失敗') 
+                      ? 'bg-red-50 border-red-200 text-red-800' 
+                      : 'bg-green-50 border-green-200 text-green-800'
+                  }`}>
+                    <div className="flex items-center space-x-2">
+                      {backupStatus.includes('失敗') ? (
+                        <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                      ) : (
+                        <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                      )}
+                      <span className="font-jp-medium">{backupStatus}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
               </div>
             </div>
           </TabsContent>
