@@ -161,7 +161,19 @@ const AdminPanel: React.FC = () => {
             counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
           };
         }
-        return entry;
+          entry.id === editingEntry.id ? {
+            ...entry,
+            counselorMemo: editFormData.counselorMemo,
+            isVisibleToUser: editFormData.isVisibleToUser,
+            counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
+            is_visible_to_user: editFormData.isVisibleToUser, // Supabase形式のフィールドも更新
+            assignedCounselor: editFormData.assignedCounselor,
+            assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
+            urgencyLevel: editFormData.urgencyLevel,
+            urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
+            counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
+            counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
+          } : entry
       });
 
       setEntries(updatedEntries);
@@ -171,6 +183,7 @@ const AdminPanel: React.FC = () => {
       // 自動同期機能を使用してSupabaseに同期
       if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
         await window.autoSync.triggerManualSync();
+        console.log('自動同期を実行しました');
       }
 
       setSelectedEntry(null);
@@ -178,7 +191,7 @@ const AdminPanel: React.FC = () => {
       alert('変更を保存しました！');
     } catch (error) {
       console.error('保存エラー:', error);
-      alert('保存に失敗しました。もう一度お試しください。');
+      alert(`保存に失敗しました: ${error}`);
     } finally {
       setSaving(false);
     }

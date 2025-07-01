@@ -315,14 +315,30 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                       {day.getDate()}
                     </span>
                   </div>
+                  {/* カウンセラーコメント表示 */}
                   {(entry.counselorMemo || entry.counselor_memo) && (entry.isVisibleToUser || entry.is_visible_to_user) && (
-                  {entryCount > 0 && (
-                    <div className="flex items-center justify-center">
-                      <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-500 text-white text-xs rounded-full">
+                    <div className="mt-3 bg-blue-50 rounded-lg p-3 border border-blue-200">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-xs font-jp-medium text-blue-700">
+                          {entry.counselorName || entry.counselor_name || 'カウンセラー'}からのコメント
+                        </span>
+                      </div>
+                      <p className="text-blue-800 text-sm font-jp-normal leading-relaxed break-words">
                         {(entry.counselorMemo || entry.counselor_memo || '').length > 100 
                           ? `${(entry.counselorMemo || entry.counselor_memo || '').substring(0, 100)}...` 
                           : (entry.counselorMemo || entry.counselor_memo || '')}
-                      </span>
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* エントリー数表示 */}
+                  {entryCount > 0 && (
+                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
+                      <div className="flex items-center justify-center">
+                        <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-500 text-white text-xs rounded-full">
+                          {entryCount}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </button>
@@ -436,6 +452,16 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                     </div>
                   </div>
                 ))}
+                  {/* カウンセラーコメント表示 */}
+                  {(entry.counselorMemo || entry.counselor_memo) && (entry.isVisibleToUser || entry.is_visible_to_user) && (
+                    <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 mb-3">
+                      <h4 className="font-jp-semibold text-gray-700 mb-1 text-xs">カウンセラーコメント</h4>
+                      <p className="text-gray-600 text-xs font-jp-normal">
+                        {entry.counselorMemo || entry.counselor_memo}
+                      </p>
+                    </div>
+                  )}
+
               </div>
             )}
           </div>
