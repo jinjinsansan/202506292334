@@ -298,7 +298,7 @@ const AdminPanel: React.FC = () => {
                   </div>
                   {selectedEntry.syncStatus && (
                     <div className="flex items-center space-x-2 mt-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-jp-medium ${
+                      <span className={\`px-2 py-1 rounded-full text-xs font-jp-medium ${
                         selectedEntry.syncStatus === 'supabase' 
                           ? 'bg-green-100 text-green-800 border border-green-200' 
                           : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
@@ -473,7 +473,7 @@ const AdminPanel: React.FC = () => {
                         <div className="bg-white rounded-lg p-3 border border-gray-200">
                           <h4 className="text-sm font-jp-medium text-gray-700 mb-2">緊急度</h4>
                           {selectedEntry.urgencyLevel || selectedEntry.urgency_level ? (
-                            <span className={`px-2 py-1 rounded-full text-xs font-jp-medium border ${
+                            <span className={\`px-2 py-1 rounded-full text-xs font-jp-medium border ${
                               getUrgencyLevelColor(selectedEntry.urgencyLevel || selectedEntry.urgency_level)
                             }`}>
                               {getUrgencyLevelText(selectedEntry.urgencyLevel || selectedEntry.urgency_level)}
