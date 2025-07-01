@@ -317,11 +317,11 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                   </div>
                   
                   {/* エントリー数表示 */}
-                  {entryCount > 0 && (
+                  {calendarData[dateString] > 0 && (
                     <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
                       <div className="flex items-center justify-center">
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-500 text-white text-xs rounded-full">
-                          {entryCount}
+                          {calendarData[dateString]}
                         </span>
                       </div>
                     </div>
@@ -400,7 +400,9 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                           {entry.realization.length > 100 ? `${entry.realization.substring(0, 100)}...` : entry.realization}
                         </p>
                       </div>
-                    </div>
+                      {(entry.assignedCounselor || entry.assigned_counselor) ? 
+                        `担当: ${entry.assignedCounselor || entry.assigned_counselor}` : 
+                        '未割り当て'}
 
                     <div className="flex space-x-2">
                       <button
@@ -422,11 +424,11 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
+                          {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
+                  {((entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo)) && (
           </div>
         )}
-      </div>
+                        {entry.counselor_memo || entry.counselorMemo}
     </div>
   );
 };
