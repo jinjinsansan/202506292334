@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, Trash2, Eye, Edit3, AlertTriangle, CheckCircle, Clock, MessageCircle, Users, BookOpen, BarChart2, Settings, Save, FileText, Layers } from 'lucide-react';
+import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, Trash2, Eye, Edit3, AlertTriangle, CheckCircle, Clock, MessageCircle, Users, BookOpen, BarChart2, Settings, Save, FileText, Layers, Upload } from 'lucide-react';
 import AdvancedSearchFilter from './AdvancedSearchFilter';
 import CounselorManagement from './CounselorManagement';
 import CounselorChat from './CounselorChat';
@@ -21,9 +21,12 @@ const AdminPanel: React.FC = () => {
   const [editFormData, setEditFormData] = useState({
     counselorMemo: '',
     isVisibleToUser: false,
-    assignedCounselor: '',
-    urgencyLevel: ''
+    assignedCounselor: '', 
+    urgencyLevel: '' 
   });
+  const [backupData, setBackupData] = useState<File | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const [backupStatus, setBackupStatus] = useState<string | null>(null);
 
   useEffect(() => {
     loadEntries();
@@ -244,6 +247,143 @@ const AdminPanel: React.FC = () => {
 
   const handleFilteredResults = (filtered: any[]) => {
     setFilteredEntries(filtered);
+  };
+
+  // バックアップファイルの選択
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setBackupData(e.target.files[0]);
+      setBackupStatus(null);
+    }
+  };
+
+  // バックアップデータの作成
+  const handleCreateBackup = () => {
+    try {
+      // ローカルストレージからデータを収集
+      const backupObject = {
+        journalEntries: localStorage.getItem('journalEntries') ? JSON.parse(localStorage.getItem('journalEntries')!) : [],
+        initialScores: localStorage.getItem('initialScores') ? JSON.parse(localStorage.getItem('initialScores')!) : null,
+        consentHistories: localStorage.getItem('consent_histories') ? JSON.parse(localStorage.getItem('consent_histories')!) : [],
+        lineUsername: localStorage.getItem('line-username'),
+        privacyConsentGiven: localStorage.getItem('privacyConsentGiven'),
+        privacyConsentDate: localStorage.getItem('privacyConsentDate'),
+        backupDate: new Date().toISOString(),
+        version: '1.0'
+      };
+      
+      // JSONに変換してダウンロード
+      const dataStr = JSON.stringify(backupObject, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      
+      // ファイル名にカウンセラー名と日付を含める
+      const counselorName = localStorage.getItem('current_counselor') || 'admin';
+      const date = new Date().toISOString().split('T')[0];
+      const fileName = `kanjou-nikki-backup-${counselorName}-${date}.json`;
+      
+      // ダウンロードリンクを作成して自動クリック
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(dataBlob);
+      downloadLink.download = fileName;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      setBackupStatus('バックアップが正常に作成されました！');
+    } catch (error) {
+      console.error('バックアップ作成エラー:', error);
+      setBackupStatus('バックアップの作成に失敗しました。');
+    }
+  };
+
+  // バックアップからの復元
+  const handleRestoreBackup = async () => {
+    if (!backupData) {
+      setBackupStatus('バックアップファイルを選択してください。');
+      return;
+    }
+    
+    if (!window.confirm('バックアップからデータを復元すると、現在のデータが上書きされます。続行しますか？')) {
+      return;
+    }
+    
+    setRestoring(true);
+    setBackupStatus(null);
+    
+    try {
+      // ファイルを読み込み
+      const fileReader = new FileReader();
+      
+      fileReader.onload = (event) => {
+        try {
+          if (!event.target || typeof event.target.result !== 'string') {
+            throw new Error('ファイルの読み込みに失敗しました。');
+          }
+          
+          const backupObject = JSON.parse(event.target.result);
+          
+          // バージョンチェック
+          if (!backupObject.version) {
+            throw new Error('無効なバックアップファイルです。');
+          }
+          
+          // データの復元
+          if (backupObject.journalEntries) {
+            localStorage.setItem('journalEntries', JSON.stringify(backupObject.journalEntries));
+          }
+          
+          if (backupObject.initialScores) {
+            localStorage.setItem('initialScores', JSON.stringify(backupObject.initialScores));
+          }
+          
+          if (backupObject.consentHistories) {
+            localStorage.setItem('consent_histories', JSON.stringify(backupObject.consentHistories));
+          }
+          
+          if (backupObject.lineUsername) {
+            localStorage.setItem('line-username', backupObject.lineUsername);
+          }
+          
+          if (backupObject.privacyConsentGiven) {
+            localStorage.setItem('privacyConsentGiven', backupObject.privacyConsentGiven);
+          }
+          
+          if (backupObject.privacyConsentDate) {
+            localStorage.setItem('privacyConsentDate', backupObject.privacyConsentDate);
+          }
+          
+          setBackupStatus('データが正常に復元されました！');
+          
+          // データを再読み込み
+          loadEntries();
+          
+          // 自動同期を実行
+          if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
+            window.autoSync.triggerManualSync().catch(error => {
+              console.error('復元後の同期エラー:', error);
+            });
+          }
+          
+        } catch (error) {
+          console.error('データ復元エラー:', error);
+          setBackupStatus('データの復元に失敗しました。有効なバックアップファイルか確認してください。');
+        } finally {
+          setRestoring(false);
+        }
+      };
+      
+      fileReader.onerror = () => {
+        setBackupStatus('ファイルの読み込みに失敗しました。');
+        setRestoring(false);
+      };
+      
+      fileReader.readAsText(backupData);
+      
+    } catch (error) {
+      console.error('バックアップ復元エラー:', error);
+      setBackupStatus('バックアップの復元に失敗しました。');
+      setRestoring(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -734,7 +874,6 @@ const AdminPanel: React.FC = () => {
                 <Save className="w-5 h-5 text-blue-600 mr-2" aria-hidden="true" />
                 バックアップ管理
               </h2>
-              
               <div className="space-y-6">
                 {/* バックアップ作成セクション */}
                 <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
@@ -831,7 +970,6 @@ const AdminPanel: React.FC = () => {
                     </div>
                   </div>
                 )}
-              </div>
               </div>
             </div>
           </TabsContent>
