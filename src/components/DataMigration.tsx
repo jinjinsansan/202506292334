@@ -140,11 +140,13 @@ const DataMigration: React.FC = () => {
       setMigrationProgress(70);
       
       // 日記データをSupabase形式に変換
-      // 所有者列(user_id, username)を送らないようにサニタイズ
-      const sanitized = formattedEntries.map(({ user_id, username, ...rest }) => rest);
-      const { success, error } = await diaryService.syncDiaries(userId, sanitized);
-        .filter((entry: any) => entry && entry.id && entry.date && entry.emotion)
-        .map((entry: any) => {
+      const formattedEntries = entries
+        .filter((entry: any) => {
+          if (!entry || !entry.id || !entry.date || !entry.emotion) {
+            console.warn('無効なエントリーをスキップ:', entry);
+            return false;
+          }
+          return true;
         }) // 無効なデータをフィルタリング
         .map((entry: any) => {
           // 必須フィールドのみを含める
@@ -184,27 +186,18 @@ const DataMigration: React.FC = () => {
           }
           
           return formattedEntry;
-        })
-      
-      // 所有者列(user_id, username)を送らないようにサニタイズ
+        });
       
       // 所有者列(user_id, username)を送らないようにサニタイズ
       const sanitized = formattedEntries.map(({ user_id, username, ...rest }) => rest);
-      // 所有者列(user_id, username)を送らないようにサニタイズ
-      const sanitized = formattedEntries.map(({ user_id, username, ...rest }) => rest);
+      
       // 日記データを同期
-      const { success, error } = await diaryService.syncDiaries(userId, sanitized);
-      const sanitized = formattedEntries.map(({ user_id, username, ...safe }) => safe);
       const { success, error } = await diaryService.syncDiaries(userId, sanitized);
       console.log('同期結果:', success ? '成功' : '失敗', error || '', 'データ件数:', formattedEntries.length);
       
       if (!success) {
         throw new Error(error || `日記の同期に失敗しました (${formattedEntries.length}件)`);
       }
-      
-      // 所有者列(user_id, username)を送らないようにサニタイズ
-      const sanitized = formattedEntries.map(({ user_id, username, ...rest }) => rest);
-      const { success, error } = await diaryService.syncDiaries(userId, sanitized);
       
       // 同期時間を更新
       const now = new Date().toISOString();

@@ -225,12 +225,7 @@ const AdminPanel: React.FC = () => {
       // 自動同期機能を使用してSupabaseに同期
       if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
         console.log('自動同期を実行します');
-        // 所有者列(user_id, username)を送らないようにサニタイズ
-        const sanitizeAndSync = async () => {
-          // 自動同期内部でサニタイズされるので、そのまま呼び出す
-          await window.autoSync.triggerManualSync();
-        };
-        await sanitizeAndSync();
+        await window.autoSync.triggerManualSync();
         console.log('自動同期を実行しました');
       }
 
