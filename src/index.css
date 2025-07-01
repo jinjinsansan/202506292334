@@ -80,8 +80,8 @@
   
   /* タブトリガーのスタイル改善 */
   [data-state="active"][class*="TabsTrigger"] {
-    background-color: white;
-    color: #1f2937;
+    background-color: #2563eb !important;
+    color: white !important;
     font-weight: 600;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }

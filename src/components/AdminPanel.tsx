@@ -517,7 +517,7 @@ const AdminPanel: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-100 rounded-xl shadow-lg p-6 border border-blue-200">
+      <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 mb-6">
           <h1 className="text-2xl font-jp-bold text-gray-900 flex items-center">
             <Shield className="w-7 h-7 text-blue-600 mr-3" />
@@ -538,48 +538,48 @@ const AdminPanel: React.FC = () => {
         </div>
 
         <Tabs defaultValue="search" className="w-full">
-          <TabsList className="w-full mb-6 overflow-x-auto flex-nowrap">
-            <TabsTrigger value="diary" onClick={() => setActiveTab('diary')} className="flex items-center">
+          <TabsList className="w-full mb-6 overflow-x-auto flex-nowrap bg-gray-100">
+            <TabsTrigger value="diary" onClick={() => setActiveTab('diary')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <BookOpen className="w-4 h-4 mr-2" />
               日記
             </TabsTrigger>
-            <TabsTrigger value="search" onClick={() => setActiveTab('search')} className="flex items-center">
+            <TabsTrigger value="search" onClick={() => setActiveTab('search')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Search className="w-4 h-4 mr-2" />
               詳細検索
             </TabsTrigger>
-            <TabsTrigger value="calendar" onClick={() => setActiveTab('calendar')} className="flex items-center">
+            <TabsTrigger value="calendar" onClick={() => setActiveTab('calendar')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Calendar className="w-4 h-4 mr-2" />
               カレンダー
             </TabsTrigger>
-            <TabsTrigger value="stats" onClick={() => setActiveTab('stats')} className="flex items-center">
+            <TabsTrigger value="stats" onClick={() => setActiveTab('stats')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <BarChart2 className="w-4 h-4 mr-2" />
               統計
             </TabsTrigger>
-            <TabsTrigger value="counselors" onClick={() => setActiveTab('counselors')} className="flex items-center">
+            <TabsTrigger value="counselors" onClick={() => setActiveTab('counselors')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Users className="w-4 h-4 mr-2" />
               カウンセラー
             </TabsTrigger>
-            <TabsTrigger value="chat" onClick={() => setActiveTab('chat')} className="flex items-center">
+            <TabsTrigger value="chat" onClick={() => setActiveTab('chat')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <MessageCircle className="w-4 h-4 mr-2" />
               チャット
             </TabsTrigger>
-            <TabsTrigger value="backup" onClick={() => setActiveTab('backup')} className="flex items-center">
+            <TabsTrigger value="backup" onClick={() => setActiveTab('backup')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Save className="w-4 h-4 mr-2" />
               バックアップ
             </TabsTrigger>
-            <TabsTrigger value="device-auth" onClick={() => setActiveTab('device-auth')} className="flex items-center">
+            <TabsTrigger value="device-auth" onClick={() => setActiveTab('device-auth')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Shield className="w-4 h-4 mr-2" />
               デバイス認証
             </TabsTrigger>
-            <TabsTrigger value="security" onClick={() => setActiveTab('security')} className="flex items-center">
+            <TabsTrigger value="security" onClick={() => setActiveTab('security')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Shield className="w-4 h-4 mr-2" />
               セキュリティ
             </TabsTrigger>
-            <TabsTrigger value="settings" onClick={() => setActiveTab('settings')} className="flex items-center">
+            <TabsTrigger value="settings" onClick={() => setActiveTab('settings')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Settings className="w-4 h-4 mr-2" />
               設定
             </TabsTrigger>
-            <TabsTrigger value="data-cleanup" onClick={() => setActiveTab('data-cleanup')} className="flex items-center">
+            <TabsTrigger value="data-cleanup" onClick={() => setActiveTab('data-cleanup')} className="flex items-center text-gray-700 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Database className="w-4 h-4 mr-2" />
               データ管理
             </TabsTrigger>
