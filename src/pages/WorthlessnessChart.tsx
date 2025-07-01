@@ -264,14 +264,6 @@ const WorthlessnessChart: React.FC = () => {
     
     if (validData.length === 0) return chartData;
     
-    // 0点のデータを除外
-    const validData = chartData.filter(d => 
-      (d.selfEsteemScore > 0 || d.worthlessnessScore > 0) && 
-      d.date // 日付が存在するデータのみ
-    );
-    
-    if (validData.length === 0) return chartData;
-    
     // データが持つ最新日を基準にする
     const latestDate = dayjs(
       validData.reduce((max, d) => (d.date > max ? d.date : max), validData[0].date)
@@ -298,14 +290,6 @@ const WorthlessnessChart: React.FC = () => {
     // 0点のデータを除外して計算
     const allScores = displayedData
       .flatMap(d => [
-        Number(d.selfEsteemScore || 0),
-        Number(d.worthlessnessScore || 0)
-      ])
-      .filter(score => score > 0);
-    
-    if (allScores.length === 0) {
-      return { min: 0, max: 100, span: 100 };
-    }
         Number(d.worthlessnessScore || 0)
       ])
       .filter(score => score > 0);
@@ -517,15 +501,6 @@ const WorthlessnessChart: React.FC = () => {
                     {/* X軸ラベル */}
                     {displayedData.map((data, index) => {
                       // 最大6つのラベルを表示するための間隔を計算
-                      const interval = Math.max(1, Math.floor(displayedData.length / 6));
-                      // 最初、最後、および間隔ごとのラベルを表示
-                      const shouldShow = index === 0 || 
-                                        index === displayedData.length - 1 || 
-                                        index % interval === 0;
-                      
-                      if (!shouldShow) return null;
-                      
-                      return (
                       // 最大6つのラベルを表示するための間隔を計算
                       const interval = Math.max(1, Math.floor(displayedData.length / 6));
                       // 最初、最後、および間隔ごとのラベルを表示
@@ -548,10 +523,8 @@ const WorthlessnessChart: React.FC = () => {
                           ? '初期' 
                           : formatDate(data.date)
                         }
-                        }
                       </text>
                       );
-                    })}
                     })}
                   </svg>
                 </div>
