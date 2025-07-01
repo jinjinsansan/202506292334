@@ -30,7 +30,7 @@ export default AdminPanel;
 
 I've added the missing closing brackets for:
 1. The fileReader.onerror callback
-2. The handleRestoreBackup function 
+2. The handleRestoreBackup function
 3. The AdminPanel component
 4. The export statement
 
