@@ -280,14 +280,6 @@ const AdminPanel: React.FC = () => {
                   <div className="flex items-center space-x-2 mb-1">
                     <Calendar className="w-4 h-4 text-gray-500" />
                     <span className="text-gray-700 font-jp-medium">
-                      {entry.syncStatus && (
-                        <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-                          entry.syncStatus === 'supabase' 
-                            ? 'bg-green-100 text-green-800 border border-green-200' 
-                            : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-                </div>
-              </>
-            )}
                       {formatDate(selectedEntry.date)}
                     </span>
                   </div>
@@ -299,8 +291,8 @@ const AdminPanel: React.FC = () => {
                   {selectedEntry.syncStatus && (
                     <div className="flex items-center space-x-2 mt-2">
                       <span className={\`px-2 py-1 rounded-full text-xs font-jp-medium ${
-                        selectedEntry.syncStatus === 'supabase' 
-                          ? 'bg-green-100 text-green-800 border border-green-200' 
+                        selectedEntry.syncStatus === 'supabase'
+                          ? 'bg-green-100 text-green-800 border border-green-200'
                           : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
                       }`}>
                         {selectedEntry.syncStatus === 'supabase' ? 'Supabase同期済み' : 'ローカルデータ'}
@@ -433,7 +425,7 @@ const AdminPanel: React.FC = () => {
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="font-jp-bold text-gray-900">カウンセラーメモ</h3>
                       <button
-                        className="text-green-600 hover:text-green-700 p-1 cursor-pointer"
+                        onClick={handleEditEntry}
                         className="text-blue-600 hover:text-blue-700 p-1 cursor-pointer"
                       >
                         <Edit3 className="w-4 h-4" />
@@ -441,7 +433,7 @@ const AdminPanel: React.FC = () => {
                       </button>
                     </div>
                     <div className="space-y-4">
-                        className="text-red-600 hover:text-red-700 p-1 cursor-pointer"
+                      <div className="bg-white rounded-lg p-3 border border-gray-200">
                         <h4 className="text-sm font-jp-medium text-gray-700 mb-2">メモ内容</h4>
                         <p className="text-gray-700 font-jp-normal whitespace-pre-wrap">
                           {selectedEntry.counselorMemo || selectedEntry.counselor_memo || '（メモはありません）'}
