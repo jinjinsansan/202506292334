@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, Trash2, Eye, Edit3, AlertTriangle, CheckCircle, Clock, MessageCircle, Users, BookOpen, BarChart2, Settings, Save, FileText, Layers, Upload } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { supabase } from '../lib/supabase';
 import AdvancedSearchFilter from './AdvancedSearchFilter';
 import CounselorManagement from './CounselorManagement';
 import CounselorChat from './CounselorChat';
@@ -173,13 +172,8 @@ const AdminPanel: React.FC = () => {
       // ローカルストレージのデータを更新
       const updatedEntries = entries.map(entry => {
         if (entry.id === selectedEntry.id) {          
-          // 元のuser_idを保持
-          // 元のuser_idを保持
           return {
             ...entry,
-            user_id: entry.user_id || selectedEntry.user_id, // user_idを保持
-            user_id: entry.user_id || editingEntry.user_id, // user_idを保持
-            // 重要: user_idを保持する
             user_id: entry.user_id || selectedEntry.user_id,
             syncStatus: entry.syncStatus || 'local', // 同期状態を保持
             counselorMemo: editFormData.counselorMemo,
