@@ -1,45 +1,21 @@
+/* スマホ: カードの重ね枠を無効化 */
+@media (max-width: 640px){
+  .diary-card::before,
+  .diary-card::after{
+    content:none!important;
+  }
+  
+  /* モバイル向け余白調整 */
+  .diary-card {
+    margin-bottom: 0.75rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* 基本スタイル - PC表示はそのまま */
 .diary-card {
   width: 100%;
-  max-width: 100%;
-  padding: 1rem;
-  box-sizing: border-box;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-@media (min-width: 768px) {
-  .diary-card {
-    max-width: 640px;
-  }
-}
-
-/* 長いテキストの折り返し設定 */
-.diary-card p {
   overflow-wrap: break-word;
   word-break: break-word;
-  hyphens: auto;
-}
-
-/* スコア表示の最適化 */
-.diary-card .flex-wrap {
-  flex-wrap: wrap;
-}
-
-/* モバイル向け余白調整 */
-@media (max-width: 640px) {
-  .diary-card {
-    padding: 0.75rem;
-  }
-  
-  .diary-card .mb-3 {
-    margin-bottom: 0.5rem;
-  }
-  
-  .diary-card .gap-4 {
-    gap: 0.5rem;
-  }
 }
