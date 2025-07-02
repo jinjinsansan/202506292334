@@ -331,7 +331,7 @@ export const diaryService = {
       }
       
        // 所有者列(username)を送らないようにサニタイズするが、user_idは保持する
-       const sanitized = formattedDiaries.map(({ username, ...rest }) => rest);
+      const sanitized = formattedDiaries.map(({ username, ...rest }) => rest);
       
       // 一括挿入（競合時は更新）
       const { data, error } = await supabase
@@ -352,8 +352,7 @@ export const diaryService = {
           
           for (const diary of formattedDiaries) {
             try {
-               const { username, ...sanitizedDiary } = diary;
-              const { user_id, username, ...sanitizedDiary } = diary;
+              const { username, ...sanitizedDiary } = diary;
               
               const { error: singleError } = await supabase
                 .from('diary_entries').upsert([sanitizedDiary], {

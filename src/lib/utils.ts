@@ -17,7 +17,7 @@ export function cn(...inputs: ClassValue[]) {
 export function formatDiaryForSupabase(diaryEntry: any, userId: string) {
   const formattedEntry = {
     id: diaryEntry.id,
-    user_id: userId, // 常に指定されたuserIdを使用
+    user_id: diaryEntry.user_id || userId, // user_idが存在する場合はそれを使用、ない場合はuserIdを使用
     date: diaryEntry.date,
     emotion: diaryEntry.emotion,
     event: diaryEntry.event,
