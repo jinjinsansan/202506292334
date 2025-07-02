@@ -271,7 +271,7 @@ export const useAutoSync = (): AutoSyncState => {
           
           // 既存のIDを保持し、必須フィールドを含める
           const formattedEntry: any = {
-            id: entryId, // 検証済みまたは新しく生成されたID
+            id: entryId,
             user_id: entry.user_id || userId, // 既存のuser_idを保持、なければ新しいIDを使用
             date: entry.date || new Date().toISOString().split('T')[0],
             emotion: entry.emotion || '不明',
