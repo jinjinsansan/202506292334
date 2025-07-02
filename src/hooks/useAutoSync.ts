@@ -213,9 +213,6 @@ export const useAutoSync = (): AutoSyncState => {
      // 重複チェック用のマップを作成
      const entryMap = new Map<string, boolean>();
      
-     // 重複IDを検出するためのセット
-     const usedIDs = new Set<string>();
-     
      // 重複チェックと無効なエントリーのフィルタリング
      const newEntries = entries.filter((entry: any) => {
        // 重複チェック用のキーを作成（日付+感情+内容の先頭50文字）
@@ -233,14 +230,14 @@ export const useAutoSync = (): AutoSyncState => {
        }
        
        // 重複IDをチェック
-       if (usedIDs.has(entry.id)) {
+       if (processedEntryIds.has(entry.id)) {
          console.log(`重複ID ${entry.id} を検出しました。このエントリーはスキップします。`);
          return false;
        }
        
        // 使用したIDをセットに追加
        if (entry.id) {
-         usedIDs.add(entry.id);
+         processedEntryIds.add(entry.id);
        }
        
        // 重複チェック用のマップに追加
@@ -261,7 +258,7 @@ export const useAutoSync = (): AutoSyncState => {
       // 各エントリーをSupabase形式に変換
      const formattedEntries = newEntries
         .filter((entry: any) => {
-          if (!entry || !entry.id || !entry.date || !entry.emotion) {
+          if (!entry || !entry.date || !entry.emotion) {
             console.warn('無効なエントリーをスキップ:', entry);
             return false;
           }
@@ -280,7 +277,8 @@ export const useAutoSync = (): AutoSyncState => {
               } else {
                 // 代替の方法でUUIDを生成
                 entryId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                  const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                  const r = Math.random() * 16 | 0;
+                  const v = c === 'x' ? r : (r & 0x3 | 0x8);
                   return v.toString(16);
                 });
               }
@@ -404,12 +402,19 @@ export const useAutoSync = (): AutoSyncState => {
       }
       
       // 同期に失敗した場合、エラーの詳細をログに出力
-      if (!success && error) {
+      if (!success) {
         console.error('同期エラー:', error);
         
         // 重複キーエラーの場合は特別な処理
-        if (error.includes('duplicate key value violates unique constraint "diary_entries_pkey"')) {
+        if (error && typeof error === 'string' && error.includes('duplicate key value violates unique constraint "diary_entries_pkey"')) {
           console.error('重複IDエラーが発生しました。次回の同期時に自動的に修正されます。');
+          // 重複IDを修正するためのマイグレーションを実行
+          try {
+            await supabase.rpc('fix_duplicate_diary_ids');
+            console.log('重複ID修正関数を実行しました');
+          } catch (fixError) {
+            console.error('重複ID修正関数の実行に失敗しました:', fixError);
+          }
         }
         
         throw new Error(error);
