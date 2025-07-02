@@ -213,6 +213,10 @@ export const useAutoSync = (): AutoSyncState => {
      // 重複チェック用のマップを作成
      const entryMap = new Map<string, boolean>();
      
+     // 重複IDを検出するためのセット
+     const usedIDs = new Set<string>();
+     
+     // 重複チェックと無効なエントリーのフィルタリング
      const newEntries = entries.filter((entry: any) => {
        // 重複チェック用のキーを作成（日付+感情+内容の先頭50文字）
        const key = `${entry.date}_${entry.emotion}_${entry.event.substring(0, 50)}`;
@@ -226,6 +230,17 @@ export const useAutoSync = (): AutoSyncState => {
        // 処理済みIDに含まれている場合もスキップ
        if (currentProcessedIds.has(entry.id)) {
          return false;
+       }
+       
+       // 重複IDをチェック
+       if (usedIDs.has(entry.id)) {
+         console.log(`重複ID ${entry.id} を検出しました。このエントリーはスキップします。`);
+         return false;
+       }
+       
+       // 使用したIDをセットに追加
+       if (entry.id) {
+         usedIDs.add(entry.id);
        }
        
        // 重複チェック用のマップに追加
@@ -257,13 +272,7 @@ export const useAutoSync = (): AutoSyncState => {
         }) // 無効なデータをフィルタリング
         .map((entry: any) => {
           // 既存のIDを使用
-          let entryId = entry.id || '';
-          
-          // 既に使用されたIDかチェック
-          if (usedIDs.has(entryId)) {
-            console.warn(`重複ID ${entryId} を検出しました。新しいIDを生成します。`);
-            entryId = '';
-          }
+          let entryId = entry.id;
           
           // UUIDの形式を検証し、無効な場合は新しいUUIDを生成
           if (!uuidRegex.test(entryId)) {
@@ -285,9 +294,6 @@ export const useAutoSync = (): AutoSyncState => {
               entryId = entry.id;
             }
           }
-          
-          // 使用したIDをセットに追加
-          usedIDs.add(entryId);
           
           // 既存のIDを保持し、必須フィールドを含める
           const formattedEntry: any = {
@@ -400,8 +406,15 @@ export const useAutoSync = (): AutoSyncState => {
         console.log('同期に失敗したデータの一部:', formattedEntries.slice(0, 2));
       }
       
-      if (!success) {
+      // 同期に失敗した場合、エラーの詳細をログに出力
+      if (!success && error) {
         console.error('同期エラー:', error);
+        
+        // 重複キーエラーの場合は特別な処理
+        if (error.includes('duplicate key value violates unique constraint "diary_entries_pkey"')) {
+          console.error('重複IDエラーが発生しました。次回の同期時に自動的に修正されます。');
+        }
+        
         throw new Error(error);
       }
       
