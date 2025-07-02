@@ -258,9 +258,6 @@ export const useAutoSync = (): AutoSyncState => {
      
      console.log('同期する日記データ:', newEntries.length, '件（全', entries.length, '件中、重複除外後）', 'ユーザーID:', userId);
 
-      // 重複IDを検出するためのセット
-      const usedIDs = new Set<string>();
-      
       // 各エントリーをSupabase形式に変換
      const formattedEntries = newEntries
         .filter((entry: any) => {
