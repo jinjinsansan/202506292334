@@ -766,7 +766,7 @@ const DiarySearchPage: React.FC = () => {
                   {(entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo) && (
                     <div className="mt-3 bg-blue-50 rounded-lg p-3 border border-blue-200">
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-xs font-jp-medium text-blue-700 break-words">
+                        <span className="text-sm font-jp-bold text-blue-700 break-words">
                           {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
                         </span>
                       </div>
