@@ -1,57 +1,71 @@
 /* スマホ: カードの重ね枠を無効化 */
 @media (max-width: 640px){
   .diary-card::before,
-  .diary-card::after {
-    display: none !important;
-  }
-  
+  .diary-card::after,
   .diary-card {
+    display: none !important;
+    content: none !important;
     box-shadow: none !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
     margin: 0 0 1rem 0 !important;
+    position: static !important;
+  }
+
+  /* 重ね枠の親要素も修正 */
+  .diary-card-wrapper {
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid rgba(0,0,0,0.1) !important;
+    background-color: white !important;
   }
 }
 
 /* 基本スタイル - PC表示はそのまま */
 .diary-card {
   width: 100%;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1rem;
-  position: relative;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  padding: 1rem !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  margin-bottom: 1rem !important;
+  position: relative !important;
 }
 
 /* 重ね枠効果 */
 .diary-card::before,
 .diary-card::after {
-  content: "";
+  content: "" !important;
   position: absolute !important;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 0.5rem;
-  pointer-events: none;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0.5rem !important;
+  pointer-events: none !important;
   z-index: -1 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  background-color: white !important;
 }
 
 @media (min-width: 768px) {
   .diary-card {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    position: relative !important;
   }
   
   .diary-card::before {
-    top: 5px;
-    left: 5px;
+    top: 5px !important;
+    left: 5px !important;
+    background-color: white !important;
   }
   
   .diary-card::after {
-    top: 10px;
-    left: 10px;
+    top: 10px !important;
+    left: 10px !important;
+    background-color: white !important;
   }
 }
