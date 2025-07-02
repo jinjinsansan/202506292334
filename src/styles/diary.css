@@ -17,6 +17,26 @@
   display: none !important;
 }
 
+/* モバイル表示の修正 */
+@media (max-width:640px){
+  .bg-white.rounded-xl.shadow-lg.p-6{
+    background:transparent !important;
+    box-shadow:none !important;
+    padding:0 !important;
+    border-radius:0 !important;
+  }
+  .diary-card{
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    padding:1rem !important;
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+    overflow-wrap:anywhere;
+  }
+}
+
 /* カードの背景色を設定 */
 .diary-card[data-emotion="恐怖"] { background-color: #F5F3FF; }
 .diary-card[data-emotion="悲しみ"] { background-color: #EFF6FF; }
