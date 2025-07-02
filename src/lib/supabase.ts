@@ -174,7 +174,7 @@ export const diaryService = {
           // 必須フィールドを含むエントリーを作成
           const formattedEntry: any = {
             id: diaryId,
-             user_id: diary.user_id || userId, // user_idが存在する場合はそれを使用、ない場合はuserIdを使用
+            user_id: diary.user_id || userId, // user_idが存在する場合はそれを使用、ない場合はuserIdを使用
             date: diary.date || new Date().toISOString().split('T')[0],
             emotion: diary.emotion || '無価値感',
             event: diary.event || '',

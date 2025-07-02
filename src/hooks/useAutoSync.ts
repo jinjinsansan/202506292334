@@ -310,6 +310,8 @@ export const useAutoSync = (): AutoSyncState => {
             } else if (typeof entry.worthlessness_score === 'string') {
               formattedEntry.worthlessness_score = parseInt(entry.worthlessness_score) || 50;
               formattedEntry.worthlessness_score = parseInt(entry.worthlessness_score) || 50;
+              formattedEntry.worthlessness_score = parseInt(entry.worthlessness_score) || 50;
+              formattedEntry.worthlessness_score = parseInt(entry.worthlessness_score) || 50;
             } else {
               formattedEntry.worthlessness_score = 50;
             }
