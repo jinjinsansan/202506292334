@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "db:migrate": "supabase migration up"
+    "db:migrate": "supabase migration up"
   },
   "dependencies": {
     "@radix-ui/react-tabs": "^1.1.12",
