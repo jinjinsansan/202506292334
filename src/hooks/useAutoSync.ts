@@ -123,6 +123,9 @@ export const useAutoSync = (): AutoSyncState => {
       // 重複チェック用のマップをリセット（手動同期の場合）
       setProcessedEntryMap(new Map());
       
+      // 重複IDを検出するためのセット
+      const usedIDs = new Set<string>();
+      
       // 現在のユーザーを取得
       const user = getCurrentUser();
       // ユーザー情報がない場合はローカルストレージから取得
@@ -210,10 +213,11 @@ export const useAutoSync = (): AutoSyncState => {
      // 既に処理済みのエントリーIDを取得
      const currentProcessedIds = new Set(processedEntryIds);
      
-     // 重複チェック用のマップを作成
-     const entryMap = new Map<string, boolean>();
      // 重複IDを検出するためのセット
      const usedIDs = new Set<string>();
+     
+     // 重複チェック用のマップを作成
+     const entryMap = new Map<string, boolean>();
      
      const newEntries = entries.filter((entry: any) => {
        // 重複チェック用のキーを作成（日付+感情+内容の先頭50文字）
@@ -247,9 +251,14 @@ export const useAutoSync = (): AutoSyncState => {
 
       // 各エントリーをSupabase形式に変換
      const formattedEntries = newEntries
-        .filter((entry: any) => entry && entry.id && entry.date && entry.emotion) // 無効なデータをフィルタリング
-        .map((entry: any) => {          
-          // UUIDの形式を検証し、無効な場合は新しいUUIDを生成
+        .filter((entry: any) => {
+          if (!entry || !entry.id || !entry.date || !entry.emotion) {
+            console.warn('無効なエントリーをスキップ:', entry);
+            return false;
+          }
+          return true;
+        }) // 無効なデータをフィルタリング
+        .map((entry: any) => {
           // 既存のIDを使用
           let entryId = entry.id || '';
           
@@ -259,7 +268,7 @@ export const useAutoSync = (): AutoSyncState => {
             entryId = '';
           }
           
-          // 無効なIDの場合は新しいIDを生成
+          // UUIDの形式を検証し、無効な場合は新しいUUIDを生成
           if (!uuidRegex.test(entryId)) {
             try {
               // crypto.randomUUID()が利用可能な場合はそれを使用
