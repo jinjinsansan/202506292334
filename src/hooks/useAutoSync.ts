@@ -210,11 +210,10 @@ export const useAutoSync = (): AutoSyncState => {
      // 既に処理済みのエントリーIDを取得
      const currentProcessedIds = new Set(processedEntryIds);
      
-     // 重複IDを検出するためのセット
-     const usedIDs = new Set<string>();
-     
      // 重複チェック用のマップを作成
      const entryMap = new Map<string, boolean>();
+     // 重複IDを検出するためのセット
+     const usedIDs = new Set<string>();
      
      const newEntries = entries.filter((entry: any) => {
        // 重複チェック用のキーを作成（日付+感情+内容の先頭50文字）
