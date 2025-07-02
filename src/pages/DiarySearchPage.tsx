@@ -65,7 +65,7 @@ const DiarySearchPage: React.FC = () => {
         
         // 直近5日分の日記を取得
         const sortedEntries = [...parsedEntries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        setRecentEntries(sortedEntries.slice(0, 5));
+        setRecentEntries(sortedEntries.slice(0, 10));
         
         console.log('ローカルストレージからデータを読み込みました');
       }
@@ -682,7 +682,7 @@ const DiarySearchPage: React.FC = () => {
       {/* 検索条件がない場合は直近5日分を表示 */}
       {!searchValue && !selectedEmotion && !dateRange.start && !dateRange.end && (
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6 diary-card">
-          <h2 className="text-xl font-jp-bold text-gray-900 mb-6">直近の日記</h2>
+          <h2 className="text-xl font-jp-bold text-gray-900 mb-6">直近の日記（10件）</h2>
           {recentEntries.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-4">📝</div>
