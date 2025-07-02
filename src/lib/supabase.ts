@@ -336,10 +336,10 @@ export const diaryService = {
       // 一括挿入（競合時は更新）
       const { data, error } = await supabase
         .from('diary_entries')
-        .upsert(sanitized, {
-          onConflict: 'id',
+        .upsert(sanitized, { 
+          onConflict: 'user_id,date,event', // 重複を防ぐための一意制約
           ignoreDuplicates: false,
-          returning: 'minimal'
+          returning: 'minimal' 
         });
       
       if (error) {
@@ -356,7 +356,7 @@ export const diaryService = {
               
               const { error: singleError } = await supabase
                 .from('diary_entries').upsert([sanitizedDiary], {
-                  onConflict: 'id',
+                  onConflict: 'user_id,date,event',
                 ignoreDuplicates: false,
                 returning: 'minimal'
               });
@@ -658,7 +658,7 @@ export const syncService = {
 };
 
 // (user_id, date, event) が同じなら UPDATE／なければ INSERT
-export const upsertDiaryEntries = async (entries: DiaryEntry[]) => {
+export const upsertDiaryEntries = async (entries: any[]) => {
   return supabase
     .from('diary_entries')
     .upsert(entries, { onConflict: 'user_id,date,event' });
