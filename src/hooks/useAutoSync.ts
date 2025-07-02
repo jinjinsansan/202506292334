@@ -362,8 +362,8 @@ export const useAutoSync = (): AutoSyncState => {
           return formattedEntry;
         });
       
-      // 所有者列(username)を送らないようにサニタイズするが、user_idは保持する
-      const sanitized = formattedEntries.map(({ username, ...rest }) => rest);
+      // 所有者列(user_id, username)を送らないようにサニタイズ
+      const sanitized = formattedEntries.map(({ user_id, username, ...rest }) => rest);
       
       // 日記データを同期
       const { success, error } = await diaryService.syncDiaries(userId, sanitized);
