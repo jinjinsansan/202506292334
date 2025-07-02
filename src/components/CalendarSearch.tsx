@@ -400,13 +400,13 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                       <div>
                         <h4 className="font-jp-semibold text-gray-700 mb-1 text-sm">出来事</h4>
-                        <p className="text-gray-600 text-xs sm:text-sm font-jp-normal leading-relaxed break-words">
+                       <p className="text-gray-600 text-xs sm:text-sm font-jp-normal leading-relaxed break-words line-clamp-3">
                           {entry.event.length > 100 ? `${entry.event.substring(0, 100)}...` : entry.event}
                         </p>
                       </div>
                       <div>
                         <h4 className="font-jp-semibold text-gray-700 mb-1 text-sm">気づき</h4>
-                        <p className="text-gray-600 text-xs sm:text-sm font-jp-normal leading-relaxed break-words">
+                       <p className="text-gray-600 text-xs sm:text-sm font-jp-normal leading-relaxed break-words line-clamp-3">
                           {entry.realization && entry.realization.length > 100 ? `${entry.realization.substring(0, 100)}...` : entry.realization}
                         </p>
                       </div>
@@ -414,13 +414,13 @@ const CalendarSearch: React.FC<CalendarSearchProps> = ({ onViewEntry, onDeleteEn
 
                     {/* カウンセラーメモ */}
                     {((entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo)) && (
-                      <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 mb-3">
+                     <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 mb-3 overflow-hidden">
                         <div className="flex items-center space-x-2 mb-1">
-                          <span className="text-xs font-jp-medium text-blue-700 break-words">
+                         <span className="text-xs font-jp-medium text-blue-700 break-words line-clamp-1">
                             {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
                           </span>
                         </div>
-                        <p className="text-blue-800 text-sm font-jp-normal leading-relaxed break-words">
+                       <p className="text-blue-800 text-sm font-jp-normal leading-relaxed break-words line-clamp-3">
                           {entry.counselor_memo || entry.counselorMemo}
                         </p>
                       </div>
