@@ -210,6 +210,9 @@ export const useAutoSync = (): AutoSyncState => {
      // 既に処理済みのエントリーIDを取得
      const currentProcessedIds = new Set(processedEntryIds);
      
+     // 重複IDを検出するためのセット
+     const usedIDs = new Set<string>();
+     
      // 重複チェック用のマップを作成
      const entryMap = new Map<string, boolean>();
      
@@ -248,7 +251,16 @@ export const useAutoSync = (): AutoSyncState => {
         .filter((entry: any) => entry && entry.id && entry.date && entry.emotion) // 無効なデータをフィルタリング
         .map((entry: any) => {          
           // UUIDの形式を検証し、無効な場合は新しいUUIDを生成
-          let entryId = entry.id;
+          // 既存のIDを使用
+          let entryId = entry.id || '';
+          
+          // 既に使用されたIDかチェック
+          if (usedIDs.has(entryId)) {
+            console.warn(`重複ID ${entryId} を検出しました。新しいIDを生成します。`);
+            entryId = '';
+          }
+          
+          // 無効なIDの場合は新しいIDを生成
           if (!uuidRegex.test(entryId)) {
             try {
               // crypto.randomUUID()が利用可能な場合はそれを使用
@@ -261,7 +273,7 @@ export const useAutoSync = (): AutoSyncState => {
                   return v.toString(16);
                 });
               }
-              console.log(`無効なID "${entry.id}" を新しいID "${entryId}" に置き換えました`);
+              console.log(`無効なID "${entry.id || 'なし'}" を新しいID "${entryId}" に置き換えました`);
             } catch (error) {
               console.error('UUID生成エラー:', error);
               // エラーが発生した場合は元のIDを使用
@@ -269,9 +281,12 @@ export const useAutoSync = (): AutoSyncState => {
             }
           }
           
+          // 使用したIDを記録
+          usedIDs.add(entryId);
+          
           // 既存のIDを保持し、必須フィールドを含める
           const formattedEntry: any = {
-            id: entryId,
+            id: entryId, // 検証済みまたは新しく生成されたIDを使用
             user_id: entry.user_id || userId, // 既存のuser_idを保持、なければ新しいIDを使用
             date: entry.date || new Date().toISOString().split('T')[0],
             emotion: entry.emotion || '不明',
