@@ -681,7 +681,7 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
         ) : (
           <div className="space-y-4">
             {filteredEntries.map((entry) => (
-              <div key={entry.id} className={`diary-card ${
+              <div key={entry.id} className={`border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow ${
                 entry.emotion === '恐怖' ? 'bg-purple-50' :
                 entry.emotion === '悲しみ' ? 'bg-blue-50' :
                 entry.emotion === '怒り' ? 'bg-red-50' :
@@ -742,16 +742,16 @@ const AdvancedSearchFilter: React.FC<AdvancedSearchFilterProps> = ({
                 <div className="space-y-2">
                   <div>
                     <span className="text-sm font-jp-medium text-gray-700">出来事: </span>
-                    <span className="text-sm text-gray-900 font-jp-normal break-words">{entry.event}</span>
+                    <span className="text-sm text-gray-900 font-jp-normal">{entry.event}</span>
                   </div>
                   <div>
                     <span className="text-sm font-jp-medium text-gray-700">気づき: </span>
-                    <span className="text-sm text-gray-900 font-jp-normal break-words">{entry.realization}</span>
+                    <span className="text-sm text-gray-900 font-jp-normal">{entry.realization}</span>
                   </div>
                   {(entry.counselor_memo || entry.counselorMemo) && (
                     <div className="bg-yellow-50 p-2 rounded border-l-4 border-yellow-400">
                       <span className="text-sm font-jp-medium text-gray-700">カウンセラーメモ: </span>
-                      <span className="text-sm text-gray-900 font-jp-normal break-words">{entry.counselor_memo || entry.counselorMemo}</span>
+                      <span className="text-sm text-gray-900 font-jp-normal">{entry.counselor_memo || entry.counselorMemo}</span>
                     </div>
                   )}
                 </div>
