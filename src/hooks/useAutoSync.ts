@@ -308,6 +308,7 @@ export const useAutoSync = (): AutoSyncState => {
             } else if (typeof entry.worthlessness_score === 'number') {
               formattedEntry.worthlessness_score = entry.worthlessness_score;
             } else if (typeof entry.worthlessness_score === 'string') {
+              formattedEntry.worthlessness_score = parseInt(entry.worthlessness_score) || 50;
             } else {
               formattedEntry.worthlessness_score = 50;
             }
@@ -361,8 +362,8 @@ export const useAutoSync = (): AutoSyncState => {
           return formattedEntry;
         });
       
-      // 所有者列(user_id, username)を送らないようにサニタイズ
-      const sanitized = formattedEntries.map(({ user_id, username, ...rest }) => rest);
+      // 所有者列(username)を送らないようにサニタイズするが、user_idは保持する
+      const sanitized = formattedEntries.map(({ username, ...rest }) => rest);
       
       // 日記データを同期
       const { success, error } = await diaryService.syncDiaries(userId, sanitized);
@@ -471,6 +472,8 @@ export const useAutoSync = (): AutoSyncState => {
     
     if (!diaryIds || diaryIds.length === 0) {
       console.log('削除する日記IDがありません');
+      return true;
+    }
     
     setIsSyncing(true);
     setError(null);
