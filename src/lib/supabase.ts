@@ -333,11 +333,11 @@ export const diaryService = {
       // 所有者列(username)を送らないようにサニタイズするが、user_idは保持する
       const sanitized = formattedDiaries.map(({ username, ...rest }) => rest);
       
-      // 一括挿入（競合時は更新）
+      // 一括挿入（ユニーク制約と整合するupsert）
       const { data, error } = await supabase
         .from('diary_entries')
-        .upsert(sanitized, { 
-          onConflict: 'user_id,date,event', // 重複を防ぐための一意制約
+        .upsert(sanitized, {
+          onConflict: 'user_id,date,emotion,event', // 衝突キー
           ignoreDuplicates: false,
           returning: 'minimal' 
         });
@@ -661,7 +661,7 @@ export const syncService = {
 export const upsertDiaryEntries = async (entries: any[]) => {
   return supabase
     .from('diary_entries')
-    .upsert(entries, { onConflict: 'user_id,date,event' });
+    .upsert(entries, { onConflict: 'user_id,date,emotion,event' });
 };
 
 // 未読コメント数を取得する関数
