@@ -257,7 +257,7 @@ export const useAutoSync = (): AutoSyncState => {
               } else {
                 // 代替の方法でUUIDを生成
                 entryId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                  const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                  const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
                   return v.toString(16);
                 });
               }
@@ -271,7 +271,7 @@ export const useAutoSync = (): AutoSyncState => {
           
           // 既存のIDを保持し、必須フィールドを含める
           const formattedEntry: any = {
-            id: entry.id, // 既存のIDを保持
+            id: entryId, // 検証済みまたは新しく生成されたID
             user_id: entry.user_id || userId, // 既存のuser_idを保持、なければ新しいIDを使用
             date: entry.date || new Date().toISOString().split('T')[0],
             emotion: entry.emotion || '不明',
@@ -374,7 +374,7 @@ export const useAutoSync = (): AutoSyncState => {
       // 同期結果の詳細をログに出力
       console.log('同期結果:', success ? '成功' : '失敗', error || '', 'データ件数:', formattedEntries.length, 'ユーザーID:', userId);
       
-      // 同期エラーのデバッグ情報
+      // 同期に失敗した場合、エラーの詳細をログに出力
       if (!success) {
         console.error('同期エラーの詳細:', error);
         console.log('同期に失敗したデータの一部:', formattedEntries.slice(0, 2));
