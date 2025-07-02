@@ -123,9 +123,6 @@ export const useAutoSync = (): AutoSyncState => {
       // 重複チェック用のマップをリセット（手動同期の場合）
       setProcessedEntryMap(new Map());
       
-      // 重複IDを検出するためのセット
-      const usedIDs = new Set<string>();
-      
       // 現在のユーザーを取得
       const user = getCurrentUser();
       // ユーザー情報がない場合はローカルストレージから取得
@@ -213,9 +210,6 @@ export const useAutoSync = (): AutoSyncState => {
      // 既に処理済みのエントリーIDを取得
      const currentProcessedIds = new Set(processedEntryIds);
      
-     // 重複IDを検出するためのセット
-     const usedIDs = new Set<string>();
-     
      // 重複チェック用のマップを作成
      const entryMap = new Map<string, boolean>();
      
@@ -288,9 +282,6 @@ export const useAutoSync = (): AutoSyncState => {
               entryId = entry.id;
             }
           }
-          
-          // 使用したIDを記録
-          usedIDs.add(entryId);
           
           // 既存のIDを保持し、必須フィールドを含める
           const formattedEntry: any = {
