@@ -146,7 +146,7 @@ const DiaryEntryList: React.FC<DiaryEntryListProps> = ({
             <div className="text-xs text-gray-500 flex items-center gap-1">
               <User className="w-3 h-3" />
               {/* NULL ガード：username が無い場合は "Unknown User" */}
-              {entry.profiles?.line_username ?? 'Unknown User'}
+              {entry.users?.line_username ?? 'Unknown User'}
             </div>
             {entry.assigned_counselor && (
               <div className="text-xs text-gray-500">
