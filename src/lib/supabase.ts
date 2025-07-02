@@ -174,7 +174,7 @@ export const diaryService = {
           // 必須フィールドを含むエントリーを作成
           const formattedEntry: any = {
             id: diaryId,
-            user_id: userId,
+             user_id: diary.user_id || userId, // user_idが存在する場合はそれを使用、ない場合はuserIdを使用
             date: diary.date || new Date().toISOString().split('T')[0],
             emotion: diary.emotion || '無価値感',
             event: diary.event || '',
@@ -330,8 +330,8 @@ export const diaryService = {
         return { success: true, message: '有効な同期データがありません' };
       }
       
-      // 所有者列(user_id, username)を送らないようにサニタイズ
-      const sanitized = formattedDiaries.map(({ user_id, username, ...rest }) => rest);
+       // 所有者列(username)を送らないようにサニタイズするが、user_idは保持する
+       const sanitized = formattedDiaries.map(({ username, ...rest }) => rest);
       
       // 一括挿入（競合時は更新）
       const { data, error } = await supabase
@@ -352,7 +352,7 @@ export const diaryService = {
           
           for (const diary of formattedDiaries) {
             try {
-              // 所有者列(user_id, username)を送らないようにサニタイズ
+               const { username, ...sanitizedDiary } = diary;
               const { user_id, username, ...sanitizedDiary } = diary;
               
               const { error: singleError } = await supabase

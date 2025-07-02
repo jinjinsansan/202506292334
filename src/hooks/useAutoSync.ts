@@ -471,8 +471,8 @@ export const useAutoSync = (): AutoSyncState => {
     
     if (!diaryIds || diaryIds.length === 0) {
       console.log('削除する日記IDがありません');
-      return false;
-    }
+         // 所有者列(username)を送らないようにサニタイズするが、user_idは保持する
+         const sanitized = formattedEntries.map(({ username, ...rest }) => rest);
     
     setIsSyncing(true);
     setError(null);
