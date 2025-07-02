@@ -2,12 +2,19 @@
 .diary-card {
   width: 100%;
   max-width: 100%;
-  box-shadow: 0 6px 12px rgba(0,0,0,.08);
+  padding: 1rem;
+  background: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,.08);
   overflow-wrap: anywhere;
-  border-radius: 0.5rem;
-  border: 1px solid rgba(0,0,0,0.1);
   margin-bottom: 1rem;
-  background-color: white;
+}
+
+/* 重ね枠を完全に削除 */
+.card-shadow-wrapper,
+.card-shadow-wrapper::before,
+.card-shadow-wrapper::after {
+  display: none !important;
 }
 
 /* カードの背景色を設定 */
@@ -23,13 +30,6 @@
 .diary-card[data-emotion="感謝"] { background-color: #F0FDFA; }
 .diary-card[data-emotion="達成感"] { background-color: #F7FEE7; }
 .diary-card[data-emotion="幸せ"] { background-color: #FFFBEB; }
-
-/* 重ね枠を完全に削除 */
-.card-shadow-wrapper,
-.card-shadow-wrapper::before,
-.card-shadow-wrapper::after {
-  display: none !important;
-}
 
 /* テキスト行数制限 */
 .line-clamp-1 {
