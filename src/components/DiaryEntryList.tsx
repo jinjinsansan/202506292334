@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { useDiaryEntries } from '../hooks/useDiaryEntries';
 import { Eye, Edit3, Trash2, Calendar, User } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase, fetchUnreadCount } from '../lib/supabase';
 import useSWR from 'swr';
-import { fetchUnreadCount } from '../lib/supabase';
-import useSWR from 'swr';
-import { fetchUnreadCount } from '../lib/supabase';
 
 interface DiaryEntryListProps {
   onViewEntry?: (entry: any) => void;
@@ -19,14 +16,21 @@ const DiaryEntryList: React.FC<DiaryEntryListProps> = ({
   onDeleteEntry
 }) => {
   const [onlyUnread, setOnlyUnread] = useState(false);
-  const { entries, loading, error } = useDiaryEntries(onlyUnread);
+  const { entries, loading, error } = useDiaryEntries({ onlyUnread });
 
   // 未読件数バッジ
-  const { data: unread } = useSWR('unread', () => fetchUnreadCount(user.id));
-  const { entries, loading, error } = useDiaryEntries(onlyUnread);
-
-  // 未読件数バッジ
-  const { data: unread } = useSWR('unread', () => fetchUnreadCount(user.id));
+  const { data: unread = 0 } = useSWR('unread-count', async () => {
+    try {
+      // ユーザーIDを取得
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user?.id) return 0;
+      
+      return await fetchUnreadCount(userData.user.id);
+    } catch (error) {
+      console.error('未読カウント取得エラー:', error);
+      return 0;
+    }
+  });
 
   if (loading) {
     return (
@@ -86,33 +90,18 @@ const DiaryEntryList: React.FC<DiaryEntryListProps> = ({
       <h2 className="text-lg font-bold flex items-center gap-2">
         日記一覧
         {unread > 0 && (
-          <span className="inline-flex items-center justify-center
-                           rounded-full bg-red-500 text-white text-xs px-2 py-0.5">
+          <span className="ml-1 inline-flex items-center justify-center
+                          rounded-full bg-red-500 text-white text-xs px-2 py-0.5">
             {unread}
           </span>
         )}
       </h2>
 
       {/* 未読フィルタトグル */}
-      <label className="flex items-center gap-1 text-sm mb-2">
+      <label className="flex items-center gap-1 text-sm mb-3">
         <input type="checkbox" checked={onlyUnread}
                onChange={e => setOnlyUnread(e.target.checked)} />
-        未読のみ表示
-      </label>
-        日記一覧
-        {unread > 0 && (
-          <span className="inline-flex items-center justify-center
-                           rounded-full bg-red-500 text-white text-xs px-2 py-0.5">
-            {unread}
-          </span>
-        )}
-      </h2>
-
-      {/* 未読フィルタトグル */}
-      <label className="flex items-center gap-1 text-sm mb-2">
-        <input type="checkbox" checked={onlyUnread}
-               onChange={e => setOnlyUnread(e.target.checked)} />
-        未読のみ表示
+        未読コメントのみ表示
       </label>
 
       {entries.map((entry) => (
@@ -120,14 +109,14 @@ const DiaryEntryList: React.FC<DiaryEntryListProps> = ({
              onClick={async () => {
                await supabase
                  .from('diary_entries')
-                 .update({ comment_read_at: new Date().toISOString() })
-                 .eq('id', entry.id);
-             }}>
-             onClick={async () => {
-               await supabase
-                 .from('diary_entries')
-                 .update({ comment_read_at: new Date().toISOString() })
-                 .eq('id', entry.id);
+                .update({ 
+                  comment_read_at: new Date().toISOString() 
+                })
+                .eq('id', entry.id)
+                .then(() => {
+                  // 未読カウントを再取得
+                  mutate('unread-count');
+                });
              }}>
           <div className="flex justify-between items-start mb-3">
             <div className="flex items-center space-x-2 flex-wrap">
@@ -187,7 +176,9 @@ const DiaryEntryList: React.FC<DiaryEntryListProps> = ({
 
           {/* カウンセラーコメント表示（表示設定がtrueの場合のみ） */}
           {entry.is_visible_to_user && entry.counselor_memo && (
-            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 mb-3">
+            <div className={`rounded-lg p-3 border mb-3 ${
+              !entry.comment_read_at ? 'bg-blue-100 border-blue-300' : 'bg-blue-50 border-blue-200'
+            }`}>
               <div className="flex items-center space-x-2 mb-1">
                 <span className="text-xs font-jp-medium text-blue-700 break-words">
                   {entry.counselor_name || 'カウンセラー'}からのコメント

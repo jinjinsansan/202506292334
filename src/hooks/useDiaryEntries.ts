@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
-export const useDiaryEntries = (onlyUnread = false) => {
+export const useDiaryEntries = (options = { onlyUnread: false }) => {
+  const { onlyUnread } = options;
   const fetchEntries = async () => {
     let query = supabase
       .from('diary_entries')
@@ -10,8 +11,9 @@ export const useDiaryEntries = (onlyUnread = false) => {
 
     if (onlyUnread) {
       query = query
-        .is('comment_read_at', null)
-        .not('commented_at', 'is', null);
+        .not('counselor_memo', 'is', null)
+        .not('counselor_memo', 'eq', '')
+        .is('comment_read_at', null);
     }
     const { data, error } = await query;
     if (error) throw error;
@@ -37,7 +39,7 @@ export const useDiaryEntries = (onlyUnread = false) => {
     };
 
     loadEntries();
-  }, [onlyUnread]);
+  }, [options.onlyUnread]);
 
   return { entries, loading, error, refetch: fetchEntries };
 };
