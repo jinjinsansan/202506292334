@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDiaryEntries } from '../hooks/useDiaryEntries';
 import { Eye, Edit3, Trash2, Calendar, User } from 'lucide-react';
 import { supabase, fetchUnreadCount } from '../lib/supabase';
-import useSWR from 'swr';
+import useSWR, { mutate } from 'swr';
 
 interface DiaryEntryListProps {
   onViewEntry?: (entry: any) => void;
@@ -107,16 +107,19 @@ const DiaryEntryList: React.FC<DiaryEntryListProps> = ({
       {entries.map((entry) => (
         <div key={entry.id} className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow"
              onClick={async () => {
-               await supabase
-                 .from('diary_entries')
-                .update({ 
-                  comment_read_at: new Date().toISOString() 
-                })
-                .eq('id', entry.id)
-                .then(() => {
-                  // 未読カウントを再取得
-                  mutate('unread-count');
-                });
+               // カウンセラーコメントがある場合は既読にする
+               if (entry.counselor_memo && !entry.comment_read_at) {
+                 await supabase
+                   .from('diary_entries')
+                   .update({ 
+                     comment_read_at: new Date().toISOString() 
+                   })
+                   .eq('id', entry.id)
+                   .then(() => {
+                     // 未読カウントを再取得
+                     mutate('unread-count');
+                   });
+               }
              }}>
           <div className="flex justify-between items-start mb-3">
             <div className="flex items-center space-x-2 flex-wrap">
