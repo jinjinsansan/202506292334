@@ -9,28 +9,11 @@ import { Calendar, Search, Filter, RefreshCw, User, Shield, Database, Download, 
       setEntries(updatedEntries);
       setFilteredEntries(updatedEntries);
       console.log('ローカルストレージを更新しました');
+      localStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
 
-          if (entry.id === selectedEntry.id) {
-            return {
-              ...entry,
-              syncStatus: entry.syncStatus || 'local', // 同期状態を保持
-              counselorMemo: editFormData.counselorMemo,
-              isVisibleToUser: editFormData.isVisibleToUser,
-              counselor_memo: editFormData.counselorMemo, // Supabase形式のフィールドも更新
-              is_visible_to_user: editFormData.isVisibleToUser, // Supabase形式のフィールドも更新
-              assignedCounselor: editFormData.assignedCounselor,
-              assigned_counselor: editFormData.assignedCounselor, // Supabase形式のフィールドも更新
-              urgencyLevel: editFormData.urgencyLevel,
-              urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
-              counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
-              counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー', // Supabase形式のフィールドも更新
-              commented_at: new Date().toISOString() // コメント日時を追加
-            };
-          }
-          return entry;
-      });
-
-      setEntries(updatedEntries);
+      // 自動同期機能を使用してSupabaseに同期
+      if (window.autoSync && typeof window.autoSync.triggerManualSync === 'function') {
+        console.log('自動同期を実行します');
 
                  <div className="flex items-center space-x-2">
                    <span className="text-gray-500 font-jp-medium">自己肯定感:</span>
