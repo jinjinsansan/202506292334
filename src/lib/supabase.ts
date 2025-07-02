@@ -668,4 +668,8 @@ export const fetchUnreadCount = async (uid: string) => {
   const { data, error } = await supabase.rpc<number>('unread_comments', { uid });
   if (error) throw error;
   return data ?? 0;
+export const fetchUnreadCount = async (uid: string) => {
+  const { data, error } = await supabase.rpc<number>('unread_comments', { uid });
+  if (error) throw error;
+  return data ?? 0;
 };

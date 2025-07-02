@@ -4,6 +4,8 @@ import { Eye, Edit3, Trash2, Calendar, User } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import useSWR from 'swr';
 import { fetchUnreadCount } from '../lib/supabase';
+import useSWR from 'swr';
+import { fetchUnreadCount } from '../lib/supabase';
 
 interface DiaryEntryListProps {
   onViewEntry?: (entry: any) => void;
@@ -17,6 +19,10 @@ const DiaryEntryList: React.FC<DiaryEntryListProps> = ({
   onDeleteEntry
 }) => {
   const [onlyUnread, setOnlyUnread] = useState(false);
+  const { entries, loading, error } = useDiaryEntries(onlyUnread);
+
+  // 未読件数バッジ
+  const { data: unread } = useSWR('unread', () => fetchUnreadCount(user.id));
   const { entries, loading, error } = useDiaryEntries(onlyUnread);
 
   // 未読件数バッジ
@@ -93,9 +99,30 @@ const DiaryEntryList: React.FC<DiaryEntryListProps> = ({
                onChange={e => setOnlyUnread(e.target.checked)} />
         未読のみ表示
       </label>
+        日記一覧
+        {unread > 0 && (
+          <span className="inline-flex items-center justify-center
+                           rounded-full bg-red-500 text-white text-xs px-2 py-0.5">
+            {unread}
+          </span>
+        )}
+      </h2>
+
+      {/* 未読フィルタトグル */}
+      <label className="flex items-center gap-1 text-sm mb-2">
+        <input type="checkbox" checked={onlyUnread}
+               onChange={e => setOnlyUnread(e.target.checked)} />
+        未読のみ表示
+      </label>
 
       {entries.map((entry) => (
         <div key={entry.id} className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow"
+             onClick={async () => {
+               await supabase
+                 .from('diary_entries')
+                 .update({ comment_read_at: new Date().toISOString() })
+                 .eq('id', entry.id);
+             }}>
              onClick={async () => {
                await supabase
                  .from('diary_entries')
