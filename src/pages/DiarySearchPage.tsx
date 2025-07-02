@@ -820,7 +820,7 @@ const DiarySearchPage: React.FC = () => {
             <h2 className="text-xl font-jp-bold text-gray-900 mb-6">検索結果</h2>
             <div className="space-y-4">
           {filteredEntries.map((entry) => (
-            <div key={entry.id} className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow ${
+            <div key={entry.id} className={`diary-card ${
               entry.emotion === '恐怖' ? 'bg-purple-50' :
               entry.emotion === '悲しみ' ? 'bg-blue-50' :
               entry.emotion === '怒り' ? 'bg-red-50' :
@@ -872,13 +872,13 @@ const DiarySearchPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <h4 className="font-jp-semibold text-gray-700 mb-2">出来事</h4>
-                  <p className="text-gray-600 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap">
+                  <p className="text-gray-600 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap line-clamp-4">
                     {highlightText(entry.event, searchValue)}
                   </p>
                 </div>
                 <div>
                   <h4 className="font-jp-semibold text-gray-700 mb-2">気づき</h4>
-                  <p className="text-gray-600 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap">
+                  <p className="text-gray-600 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap line-clamp-4">
                     {highlightText(entry.realization, searchValue)}
                   </p>
                 </div>
@@ -887,12 +887,12 @@ const DiarySearchPage: React.FC = () => {
               {/* カウンセラーコメント表示（表示設定がtrueの場合のみ） */}
               {(entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo) && (
                 <div className="mt-4 bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <div className="flex items-start space-x-2 mb-2">
+                  <div className="flex items-start space-x-2 mb-2 break-words">
                     <span className="text-sm font-jp-bold text-blue-700">
                       {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
                     </span>
                   </div>
-                  <p className="text-blue-800 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap">
+                  <p className="text-blue-800 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap line-clamp-4">
                     {entry.counselor_memo || entry.counselorMemo}
                   </p>
                 </div>
