@@ -512,7 +512,7 @@ const AdminPanel: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <User className="w-4 h-4 text-gray-500" />
                       <span className="text-gray-700 font-jp-medium">
-                        {selectedEntry.user.line_username}
+                        {selectedEntry?.user?.line_username || 'Unknown User'}
                       </span>
                     </div>
                   )}
