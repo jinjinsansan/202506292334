@@ -213,7 +213,6 @@ const AdminPanel: React.FC = () => {
             counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
             counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー', // Supabase形式のフィールドも更新
             commented_at: new Date().toISOString() // コメント日時を追加
-            commented_at: new Date().toISOString() // コメント日時を追加
           };
         }
         return entry;
