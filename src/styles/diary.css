@@ -1,71 +1,48 @@
-/* スマホ: カードの重ね枠を無効化 */
-@media (max-width: 640px){
-  .diary-card::before,
-  .diary-card::after,
-  .diary-card {
-    display: none !important;
-    content: none !important;
-    box-shadow: none !important;
-    border: 1px solid rgba(0,0,0,0.1) !important;
-    margin: 0 0 1rem 0 !important;
-    position: static !important;
-  }
-
-  /* 重ね枠の親要素も修正 */
-  .diary-card-wrapper {
-    position: static !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-    border-radius: 0.5rem !important;
-    border: 1px solid rgba(0,0,0,0.1) !important;
-    background-color: white !important;
-  }
-}
-
-/* 基本スタイル - PC表示はそのまま */
+/* 日記カードの基本スタイル */
 .diary-card {
   width: 100%;
   overflow-wrap: break-word !important;
   word-break: break-word !important;
   padding: 1rem !important;
   border-radius: 0.5rem !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(0,0,0,0.1) !important;
   margin-bottom: 1rem !important;
-  position: relative !important;
-}
-
-/* 重ね枠効果 */
-.diary-card::before,
-.diary-card::after {
-  content: "" !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  border-radius: 0.5rem !important;
-  pointer-events: none !important;
-  z-index: -1 !important;
+  background-color: inherit !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-  background-color: white !important;
 }
 
+/* PC表示用のスタイル */
 @media (min-width: 768px) {
   .diary-card {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-    position: relative !important;
   }
-  
-  .diary-card::before {
-    top: 5px !important;
-    left: 5px !important;
-    background-color: white !important;
-  }
-  
-  .diary-card::after {
-    top: 10px !important;
-    left: 10px !important;
-    background-color: white !important;
-  }
+}
+
+/* テキスト行数制限 */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
