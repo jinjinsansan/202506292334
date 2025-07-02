@@ -1,8 +1,11 @@
 /* スマホ: カードの重ね枠を無効化 */
 @media (max-width: 640px){
   .diary-card::before,
-  .diary-card::after{
+  .diary-card::after,
+  .diary-card{
     content:none!important;
+    box-shadow: none!important;
+    border: 1px solid rgba(0,0,0,0.1);
   }
 }
 
@@ -15,6 +18,22 @@
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 1rem;
+  position: relative;
+}
+
+/* 重ね枠効果 */
+.diary-card::before,
+.diary-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.5rem;
+  pointer-events: none;
+  z-index: -1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 @media (min-width: 768px) {

@@ -1,1 +1,1 @@
-<div className="w-full px-4 sm:mx-auto sm:max-w-md space-y-4">
+<div className="w-full px-4 sm:mx-auto sm:max-w-md space-y-6">
