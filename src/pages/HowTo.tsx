@@ -11,7 +11,7 @@ const HowTo: React.FC = () => {
         
         <div className="text-center mb-8">
           <p className="text-lg font-jp-medium text-gray-800">
-            このノートには<span className="text-blue-600 font-jp-bold">２つの目的</span>があります
+            このアプリには<span className="text-blue-600 font-jp-bold">２つの目的</span>があります
           </p>
         </div>
         
