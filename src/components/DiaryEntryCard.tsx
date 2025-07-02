@@ -106,7 +106,7 @@ const DiaryEntryCard: React.FC<DiaryEntryCardProps> = ({
   };
 
   return (
-    <div className={`diary-card ${getCardBgColor()}`}>
+    <article className="diary-card p-4 rounded-lg bg-white shadow-lg">
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap">
           <span className={`px-2 py-1 rounded-full text-xs font-jp-medium border ${getEmotionColor(entry.emotion)}`}>
@@ -226,7 +226,7 @@ const DiaryEntryCard: React.FC<DiaryEntryCardProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </article>
   );
 };
 

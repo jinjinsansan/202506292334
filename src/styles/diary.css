@@ -1,21 +1,34 @@
 /* 日記カードの基本スタイル */
 .diary-card {
   width: 100%;
-  overflow-wrap: break-word !important;
-  word-break: break-word !important;
-  padding: 1rem !important;
-  border-radius: 0.5rem !important;
-  border: 1px solid rgba(0,0,0,0.1) !important;
-  margin-bottom: 1rem !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-  position: relative !important;
+  max-width: 100%;
+  box-shadow: 0 6px 12px rgba(0,0,0,.08);
+  overflow-wrap: anywhere;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
+  background-color: white;
 }
 
-/* PC表示用のスタイル */
-@media (min-width: 768px) {
-  .diary-card {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-  }
+/* カードの背景色を設定 */
+.diary-card[data-emotion="恐怖"] { background-color: #F5F3FF; }
+.diary-card[data-emotion="悲しみ"] { background-color: #EFF6FF; }
+.diary-card[data-emotion="怒り"] { background-color: #FEF2F2; }
+.diary-card[data-emotion="悔しい"] { background-color: #F0FDF4; }
+.diary-card[data-emotion="無価値感"] { background-color: #F9FAFB; }
+.diary-card[data-emotion="罪悪感"] { background-color: #FFF7ED; }
+.diary-card[data-emotion="寂しさ"] { background-color: #EEF2FF; }
+.diary-card[data-emotion="恥ずかしさ"] { background-color: #FDF2F8; }
+.diary-card[data-emotion="嬉しい"] { background-color: #FEFCE8; }
+.diary-card[data-emotion="感謝"] { background-color: #F0FDFA; }
+.diary-card[data-emotion="達成感"] { background-color: #F7FEE7; }
+.diary-card[data-emotion="幸せ"] { background-color: #FFFBEB; }
+
+/* 重ね枠を完全に削除 */
+.card-shadow-wrapper,
+.card-shadow-wrapper::before,
+.card-shadow-wrapper::after {
+  display: none !important;
 }
 
 /* テキスト行数制限 */
