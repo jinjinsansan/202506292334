@@ -523,13 +523,13 @@ const AdminPanel: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
                   <h3 className="font-jp-bold text-gray-900 mb-3">出来事</h3>
-                  <p className="text-gray-700 font-jp-normal whitespace-pre-wrap">
+                  <p className="text-gray-700 font-jp-normal whitespace-pre-wrap break-words">
                     {selectedEntry.event}
                   </p>
                 </div>
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
                   <h3 className="font-jp-bold text-gray-900 mb-3">気づき</h3>
-                  <p className="text-gray-700 font-jp-normal whitespace-pre-wrap">
+                  <p className="text-gray-700 font-jp-normal whitespace-pre-wrap break-words">
                     {selectedEntry.realization}
                   </p>
                 </div>
