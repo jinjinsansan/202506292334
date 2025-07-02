@@ -94,7 +94,7 @@ const EmotionTypes: React.FC = () => {
 
   return (
     <div className="w-full space-y-6 px-2">
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-white rounded-xl shadow-lg p-6 diary-card">
         <h1 className="text-2xl font-jp-bold text-gray-900 mb-8">
           ネガティブな感情の種類について
         </h1>

@@ -545,7 +545,7 @@ const DiarySearchPage: React.FC = () => {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 px-2">
       {/* 検索ヘッダー */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-100 rounded-xl shadow-lg p-6 border border-blue-200">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-100 rounded-xl shadow-lg p-6 border border-blue-200 diary-card">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <h1 className="text-2xl font-jp-bold text-blue-900">日記検索</h1>
@@ -681,7 +681,7 @@ const DiarySearchPage: React.FC = () => {
 
       {/* 検索条件がない場合は直近5日分を表示 */}
       {!searchValue && !selectedEmotion && !dateRange.start && !dateRange.end && (
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 diary-card">
           <h2 className="text-xl font-jp-bold text-gray-900 mb-6">直近の日記</h2>
           {recentEntries.length === 0 ? (
             <div className="text-center py-8">
@@ -806,7 +806,7 @@ const DiarySearchPage: React.FC = () => {
       {/* 検索結果エリア */}
       <div className="space-y-4">
         {(searchValue || selectedEmotion || dateRange.start || dateRange.end) && filteredEntries.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center diary-card">
             <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-jp-medium text-gray-500 mb-2">
               検索結果がありません
@@ -816,7 +816,7 @@ const DiarySearchPage: React.FC = () => {
             </p>
           </div>
         ) : (searchValue || selectedEmotion || dateRange.start || dateRange.end) && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="bg-white rounded-xl shadow-lg p-6 diary-card">
             <h2 className="text-xl font-jp-bold text-gray-900 mb-6">検索結果</h2>
             <div className="space-y-4">
           {filteredEntries.map((entry) => (

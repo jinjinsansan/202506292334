@@ -599,8 +599,8 @@ const DiaryPage: React.FC = () => {
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6 px-2">
-      {/* 今日の出来事セクション */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      {/* 今日の出来事セクション - diary-cardクラスを追加 */}
+      <div className="bg-white rounded-xl shadow-lg p-6 diary-card">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-jp-bold text-gray-900">今日の出来事</h2>
           <div className="relative">
@@ -752,7 +752,7 @@ const DiaryPage: React.FC = () => {
       </div>
 
       {/* 今日の気持ちセクション */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-white rounded-xl shadow-lg p-6 diary-card">
         <h2 className="text-xl font-jp-bold text-gray-900 mb-4">今日の気持ち</h2>
 
         <div className="mb-6">

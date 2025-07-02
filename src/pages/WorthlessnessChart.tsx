@@ -321,7 +321,7 @@ const WorthlessnessChart: React.FC = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 px-2">
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-white rounded-xl shadow-lg p-6 diary-card">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-jp-bold text-gray-900">無価値感推移</h1>
           <div className="flex space-x-2">
@@ -380,13 +380,13 @@ const WorthlessnessChart: React.FC = () => {
 
         {/* チャート表示エリア */}
         {loading ? (
-          <div className="bg-gray-50 rounded-lg p-12 flex items-center justify-center">
+          <div className="bg-gray-50 rounded-lg p-12 flex items-center justify-center diary-card">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600">
               <span className="sr-only">読み込み中...</span>
             </div>
           </div>
         ) : displayedData.length === 0 ? (
-          <div className="bg-gray-50 rounded-lg p-12 text-center">
+          <div className="bg-gray-50 rounded-lg p-12 text-center diary-card">
             <TrendingUp className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-jp-medium text-gray-500 mb-2">
               データがありません
@@ -405,7 +405,7 @@ const WorthlessnessChart: React.FC = () => {
         ) : (
           <div className="space-y-6">
             {/* Rechartsグラフ */}
-            <div className="bg-white rounded-lg p-4 border border-gray-200 overflow-hidden relative">
+            <div className="bg-white rounded-lg p-4 border border-gray-200 overflow-hidden relative diary-card">
               {initialScore && period === 'all' && (
                 <div className="absolute top-2 left-2 bg-blue-50 rounded-lg p-2 border border-blue-200 text-xs z-10">
                   <span className="font-jp-medium text-blue-800">初期スコア表示中</span>
@@ -458,7 +458,7 @@ const WorthlessnessChart: React.FC = () => {
 
             {/* 最新スコア */}
             {displayedData.length > 0 ? (
-              <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+              <div className="bg-blue-50 rounded-lg p-6 border border-blue-200 diary-card">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-jp-bold text-gray-900 text-lg">最新スコア</h3>
                   <div className="text-sm font-medium text-gray-700">
@@ -528,7 +528,7 @@ const WorthlessnessChart: React.FC = () => {
 
             {/* 感情の出現頻度 */}
             {emotionCounts.length > 0 && (
-              <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
+              <div className="bg-purple-50 rounded-lg p-6 border border-purple-200 diary-card">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-jp-bold text-gray-900 text-lg">感情の出現頻度</h3>
                   <div className="text-sm font-medium text-gray-700">

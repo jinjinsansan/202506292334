@@ -21,7 +21,7 @@ const PrivacyPolicy: React.FC = () => {
 
   return (
     <div className="w-full space-y-6 px-2">
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-white rounded-xl shadow-lg p-6 diary-card">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
             <Shield className="w-8 h-8 text-blue-600" />
