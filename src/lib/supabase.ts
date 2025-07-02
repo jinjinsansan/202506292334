@@ -330,7 +330,7 @@ export const diaryService = {
         return { success: true, message: '有効な同期データがありません' };
       }
       
-       // 所有者列(username)を送らないようにサニタイズするが、user_idは保持する
+      // 所有者列(username)を送らないようにサニタイズするが、user_idは保持する
       const sanitized = formattedDiaries.map(({ username, ...rest }) => rest);
       
       // 一括挿入（競合時は更新）
@@ -655,4 +655,11 @@ export const syncService = {
       return false;
     }
   }
+};
+
+// (user_id, date, event) が同じなら UPDATE／なければ INSERT
+export const upsertDiaryEntries = async (entries: DiaryEntry[]) => {
+  return supabase
+    .from('diary_entries')
+    .upsert(entries, { onConflict: 'user_id,date,event' });
 };

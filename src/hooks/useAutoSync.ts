@@ -269,12 +269,12 @@ export const useAutoSync = (): AutoSyncState => {
             }
           }
           
-          // 必須フィールドのみを含める
-          const formattedEntry = {
-            id: entryId,
-            user_id: userId,
-            date: entry.date,
-            emotion: entry.emotion,
+          // 既存のIDを保持し、必須フィールドを含める
+          const formattedEntry: any = {
+            id: entry.id, // 既存のIDを保持
+            user_id: entry.user_id || userId, // 既存のuser_idを保持、なければ新しいIDを使用
+            date: entry.date || new Date().toISOString().split('T')[0],
+            emotion: entry.emotion || '不明',
             event: entry.event || '',
             realization: entry.realization || '',
             created_at: entry.created_at || new Date().toISOString()
@@ -308,6 +308,7 @@ export const useAutoSync = (): AutoSyncState => {
             } else if (typeof entry.worthlessness_score === 'number') {
               formattedEntry.worthlessness_score = entry.worthlessness_score;
             } else if (typeof entry.worthlessness_score === 'string') {
+              formattedEntry.worthlessness_score = parseInt(entry.worthlessness_score) || 50;
               formattedEntry.worthlessness_score = parseInt(entry.worthlessness_score) || 50;
             } else {
               formattedEntry.worthlessness_score = 50;
@@ -472,7 +473,7 @@ export const useAutoSync = (): AutoSyncState => {
     
     if (!diaryIds || diaryIds.length === 0) {
       console.log('削除する日記IDがありません');
-      return true;
+      return true; // 削除するものがない場合は成功とみなす
     }
     
     setIsSyncing(true);
