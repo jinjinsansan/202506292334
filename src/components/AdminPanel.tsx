@@ -211,7 +211,7 @@ const AdminPanel: React.FC = () => {
             urgencyLevel: editFormData.urgencyLevel,
             urgency_level: editFormData.urgencyLevel, // Supabase形式のフィールドも更新
             counselorName: localStorage.getItem('current_counselor') || 'カウンセラー',
-            counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー' // Supabase形式のフィールドも更新
+            counselor_name: localStorage.getItem('current_counselor') || 'カウンセラー', // Supabase形式のフィールドも更新
             commented_at: new Date().toISOString() // コメント日時を追加
           };
         }
