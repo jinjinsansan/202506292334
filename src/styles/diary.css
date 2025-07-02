@@ -3,7 +3,6 @@
   width: 100%;
   max-width: 100%;
   padding: 1rem;
-  background: #fff;
   border-radius: 0.75rem;
   box-shadow: 0 4px 10px rgba(0,0,0,.08);
   overflow-wrap: anywhere;
@@ -38,18 +37,23 @@
 }
 
 /* カードの背景色を設定 */
-.diary-card[data-emotion="恐怖"] { background-color: #F5F3FF; }
-.diary-card[data-emotion="悲しみ"] { background-color: #EFF6FF; }
-.diary-card[data-emotion="怒り"] { background-color: #FEF2F2; }
-.diary-card[data-emotion="悔しい"] { background-color: #F0FDF4; }
-.diary-card[data-emotion="無価値感"] { background-color: #F9FAFB; }
-.diary-card[data-emotion="罪悪感"] { background-color: #FFF7ED; }
-.diary-card[data-emotion="寂しさ"] { background-color: #EEF2FF; }
-.diary-card[data-emotion="恥ずかしさ"] { background-color: #FDF2F8; }
-.diary-card[data-emotion="嬉しい"] { background-color: #FEFCE8; }
-.diary-card[data-emotion="感謝"] { background-color: #F0FDFA; }
-.diary-card[data-emotion="達成感"] { background-color: #F7FEE7; }
-.diary-card[data-emotion="幸せ"] { background-color: #FFFBEB; }
+.diary-card {
+  background-color: #fff;
+}
+
+/* 感情に応じた背景色 */
+div[class*="bg-purple-50"], .diary-card:has([class*="恐怖"]) { background-color: #F5F3FF !important; }
+div[class*="bg-blue-50"], .diary-card:has([class*="悲しみ"]) { background-color: #EFF6FF !important; }
+div[class*="bg-red-50"], .diary-card:has([class*="怒り"]) { background-color: #FEF2F2 !important; }
+div[class*="bg-green-50"], .diary-card:has([class*="悔しい"]) { background-color: #F0FDF4 !important; }
+div[class*="bg-gray-50"], .diary-card:has([class*="無価値感"]) { background-color: #F9FAFB !important; }
+div[class*="bg-orange-50"], .diary-card:has([class*="罪悪感"]) { background-color: #FFF7ED !important; }
+div[class*="bg-indigo-50"], .diary-card:has([class*="寂しさ"]) { background-color: #EEF2FF !important; }
+div[class*="bg-pink-50"], .diary-card:has([class*="恥ずかしさ"]) { background-color: #FDF2F8 !important; }
+div[class*="bg-yellow-50"], .diary-card:has([class*="嬉しい"]) { background-color: #FEFCE8 !important; }
+div[class*="bg-teal-50"], .diary-card:has([class*="感謝"]) { background-color: #F0FDFA !important; }
+div[class*="bg-lime-50"], .diary-card:has([class*="達成感"]) { background-color: #F7FEE7 !important; }
+div[class*="bg-amber-50"], .diary-card:has([class*="幸せ"]) { background-color: #FFFBEB !important; }
 
 /* テキスト行数制限 */
 .line-clamp-1 {
