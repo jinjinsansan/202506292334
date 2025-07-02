@@ -764,13 +764,13 @@ const DiarySearchPage: React.FC = () => {
                   
                   {/* カウンセラーコメント表示（表示設定がtrueの場合のみ） */}
                   {(entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo) && (
-                    <div className="mt-3 bg-blue-50 rounded-lg p-3 border border-blue-200 overflow-hidden">
+                    <div className="mt-3 bg-blue-50 rounded-lg p-3 border border-blue-200">
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-sm font-jp-bold text-blue-700 break-words line-clamp-1">
+                        <span className="text-xs font-jp-medium text-blue-700 break-words">
                           {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
                         </span>
                       </div>
-                      <p className="text-blue-800 text-sm font-jp-normal leading-relaxed break-words line-clamp-3">
+                      <p className="text-blue-800 text-sm font-jp-normal leading-relaxed break-words">
                         {entry.counselor_memo || entry.counselorMemo}
                       </p>
                     </div>
@@ -872,13 +872,13 @@ const DiarySearchPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <h4 className="font-jp-semibold text-gray-700 mb-2">出来事</h4>
-                  <p className="text-gray-600 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap overflow-auto max-h-40">
+                  <p className="text-gray-600 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap">
                     {highlightText(entry.event, searchValue)}
                   </p>
                 </div>
                 <div>
                   <h4 className="font-jp-semibold text-gray-700 mb-2">気づき</h4>
-                  <p className="text-gray-600 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap overflow-auto max-h-40">
+                  <p className="text-gray-600 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap">
                     {highlightText(entry.realization, searchValue)}
                   </p>
                 </div>
@@ -886,13 +886,13 @@ const DiarySearchPage: React.FC = () => {
               
               {/* カウンセラーコメント表示（表示設定がtrueの場合のみ） */}
               {(entry.is_visible_to_user || entry.isVisibleToUser) && (entry.counselor_memo || entry.counselorMemo) && (
-                <div className="mt-4 bg-blue-50 rounded-lg p-4 border border-blue-200 overflow-hidden">
+                <div className="mt-4 bg-blue-50 rounded-lg p-4 border border-blue-200">
                   <div className="flex items-start space-x-2 mb-2">
-                    <span className="text-sm font-jp-bold text-blue-700 line-clamp-1">
+                    <span className="text-sm font-jp-bold text-blue-700">
                       {entry.counselor_name || entry.counselorName || 'カウンセラー'}からのコメント
                     </span>
                   </div>
-                  <p className="text-blue-800 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap line-clamp-4">
+                  <p className="text-blue-800 text-sm font-jp-normal leading-relaxed break-words whitespace-pre-wrap">
                     {entry.counselor_memo || entry.counselorMemo}
                   </p>
                 </div>
