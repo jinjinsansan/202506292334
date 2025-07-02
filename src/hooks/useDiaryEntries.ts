@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
-// ✨ 追記 or 置換 start
-// user_id と profiles テーブルを join し、line_username を一緒に取得する
-export const useDiaryEntries = () => {
-  const fetchDiaryEntries = async () => {
-    const { data, error } = await supabase
+export const useDiaryEntries = (onlyUnread = false) => {
+  const fetchEntries = async () => {
+    let query = supabase
       .from('diary_entries')
-      .select(`
-        *,                                   -- 既存の全カラム
-        users!diary_entries_user_id_fkey (line_username)  -- join でユーザー名を取得
-      `)
+      .select('*, profiles!user_id (line_username)')
       .order('date', { ascending: false });
 
+    if (onlyUnread) {
+      query = query
+        .is('comment_read_at', null)
+        .not('commented_at', 'is', null);
+    }
+    const { data, error } = await query;
     if (error) throw error;
     return data ?? [];
   };
@@ -25,7 +26,7 @@ export const useDiaryEntries = () => {
     const loadEntries = async () => {
       try {
         setLoading(true);
-        const data = await fetchDiaryEntries();
+        const data = await fetchEntries();
         setEntries(data);
       } catch (err) {
         console.error('日記エントリーの取得エラー:', err);
@@ -36,8 +37,7 @@ export const useDiaryEntries = () => {
     };
 
     loadEntries();
-  }, []);
+  }, [onlyUnread]);
 
-  return { entries, loading, error, refetch: fetchDiaryEntries };
+  return { entries, loading, error, refetch: fetchEntries };
 };
-// ✨ 追記 or 置換 end
